@@ -3,6 +3,8 @@ package main
 import (
 	"net/http"
 
+	"github.com/KochKevin/effective-spoon-v2/internal/products"
+	productsapi "github.com/KochKevin/effective-spoon-v2/internal/products/generated"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -10,9 +12,14 @@ import (
 
 func main() {
 
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
 
+
+
+	//Router Setup
+	r := chi.NewRouter()
+
+	//Middlewear
+	r.Use(middleware.Logger)
 	r.Use(cors.Handler(cors.Options{
 		// WICHTIG FÜR CODESPACES:
 		// Da sich deine Codespace-Frontend-URLs ständig ändern können,
@@ -31,6 +38,13 @@ func main() {
 		w.Write([]byte(`{"status": "pong"}`))
 	})
 
+
+
+	//Routes
+
+	productsapi.HandlerFromMux(&products.Api{}, r)
+
+	//Serve
 	http.ListenAndServe(":8080", r)
 
 }

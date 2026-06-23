@@ -1,0 +1,42 @@
+openapi: 3.1.0
+info:
+  title: KIOSK API
+  version: 0.0.1
+
+tags:
+  - name: products
+
+paths:
+  /products:
+    get:
+      summary: Load all products
+      tags:
+        - products
+      responses:
+        '200':
+          description: A list of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+components:
+  schemas:
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - price
+      properties:
+        id:
+          type: string
+          example: "00000000-0000-0000-0000-000000000000"
+        name:
+          type: string
+          example: "Wasser"
+        price:
+          type: integer
+          example: 100
