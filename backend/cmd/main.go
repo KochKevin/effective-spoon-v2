@@ -31,6 +31,6 @@ func main() {
 		w.Write([]byte(`{"status": "pong"}`))
 	})
 
-	http.ListenAndServe(":5000", r)
+	http.ListenAndServe(":8080", r)
 
 }
