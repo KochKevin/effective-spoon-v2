@@ -2,7 +2,9 @@ package main
 
 import (
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
 	productsapi "github.com/KochKevin/effective-spoon-v2/internal/products/generated"
@@ -15,6 +17,14 @@ import (
 )
 
 func main() {
+
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+
+	slog.SetDefault(logger)
+
+	slog.Info("Backend Api started")
 
 	//Do Database migrations
 	db, err := goose.OpenDBWithDriver("sqlite", "app/data/main_data.db")
