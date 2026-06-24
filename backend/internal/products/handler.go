@@ -8,12 +8,12 @@ import (
 	"github.com/go-chi/render"
 )
 
-type ProductRepository interface {
+type Repo interface {
 	GetProducts(ctx context.Context) []Product
 }
 
 type Api struct {
-	repo ProductRepository
+	repo Repo
 }
 
 // Load all products

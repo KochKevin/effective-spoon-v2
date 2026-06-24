@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
@@ -8,12 +9,24 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/pressly/goose/v3"
+
+	_ "modernc.org/sqlite"
 )
 
 func main() {
 
+	//Do Database migrations
+	db, err := goose.OpenDBWithDriver("sqlite", "app/data/main_data.db")
 
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 
+	defer db.Close()
+
+	goose.Up(db, "./db/migrations")
 
 	//Router Setup
 	r := chi.NewRouter()
@@ -37,8 +50,6 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status": "pong"}`))
 	})
-
-
 
 	//Routes
 
