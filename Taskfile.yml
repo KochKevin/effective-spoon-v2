@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+vars:
+  GREETING: Hello, world!
+
+tasks:
+  default:
+    desc: Print a greeting message
+    cmds:
+      - echo "{{.GREETING}}"
+    silent: true
+
+  dev:
+    desc: Start GO backend with hot reload and frontend dev server
+    deps:
+      - task: backend
+      - task: frontend
+
+  backend:
+    desc: Start GO backend with hot reload
+    dir: ./backend
+    cmds:
+      - air
+    
+  frontend:
+    desc: Start frontend dev server
+    dir: ./frontend
+    cmds:
+      #- npm install
+      - npm run dev
+
