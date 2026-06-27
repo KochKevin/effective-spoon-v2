@@ -27,12 +27,7 @@ func (tm *TxManager) WithTx(ctx context.Context, fn func(*sql.Tx) error) error {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
-	//Defer Rollback to end
-	if _, err := tx.ExecContext(ctx, "BEGIN IMMEDIATE"); err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed to force immediate transaction: %w", err)
-	}
-
+	//Defer func which handels panics and does an rollbacks on the db
 	defer func() {
 		if p := recover(); p != nil {
 			_ = tx.Rollback()
@@ -40,7 +35,7 @@ func (tm *TxManager) WithTx(ctx context.Context, fn func(*sql.Tx) error) error {
 		}
 	}()
 
-	//Execute function
+	//Execute core logic in function
 	if err := fn(tx); err != nil {
 		if rbErr := tx.Rollback(); rbErr != nil {
 			return fmt.Errorf("tx error: %v, rollback failed: %w", err, rbErr)
