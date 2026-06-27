@@ -8,6 +8,7 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
 	productsapi "github.com/KochKevin/effective-spoon-v2/internal/products/generated"
 	"github.com/go-chi/render"
+	"log/slog"
 )
 
 type Repo interface {
@@ -15,21 +16,27 @@ type Repo interface {
 }
 
 type Api struct {
-	repo Repo
-	txm  infrastructure.TxManager
+	Repo Repo
+	Txm  infrastructure.TxManager
 }
 
 // Load all products
 // (GET /products)
 func (a *Api) GetProducts(w http.ResponseWriter, r *http.Request) {
 
+	//log.Println("Hallo projjjructs")
+
 	var dtos []productsapi.Product
 
-	err := a.txm.WithTx(context.Background(), func(tx *sql.Tx) error {
-		products, err := a.repo.GetProducts(r.Context(), tx)
+	err := a.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+		products, err := a.Repo.GetProducts(r.Context(), tx)
+
+		//log.Println(products)
 
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout
+			slog.Error("Error loading products", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
 
@@ -46,8 +53,12 @@ func (a *Api) GetProducts(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
+		slog.Error("Error in /products transaction", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+
+	//log.Println(dtos)
 
 	render.JSON(w, r, dtos)
 }

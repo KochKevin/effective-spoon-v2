@@ -6,6 +6,7 @@ import (
 
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
+	"log/slog"
 )
 
 type Repo struct {
@@ -18,6 +19,7 @@ func (r *Repo) GetProducts(ctx context.Context, tx *sql.Tx) (domains []products.
 
 	dbProducts, err := r.Queries.WithTx(tx).GetAllProducts(ctx)
 	if err != nil {
+		slog.Error("Error in products query", err)
 		return nil, err
 	}
 

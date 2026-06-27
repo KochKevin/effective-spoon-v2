@@ -7,4 +7,7 @@ CREATE TABLE IF NOT EXISTS products (
   price INTEGER NOT NULL
 );
 
+-- Add test Product
+INSERT INTO products (id, name, price) VALUES ('00000000-0000-0000-0000-000000000000', 'test', 100)
+
 -- +goose StatementEnd
