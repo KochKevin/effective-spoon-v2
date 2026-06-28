@@ -10,6 +10,18 @@ export type Product = {
     price: number;
 };
 
+export type ShoppingCart = {
+    id: string;
+    fullPrice: number;
+    lineItems: Array<LineItem>;
+};
+
+export type LineItem = {
+    productId?: string;
+    amount?: number;
+    price?: number;
+};
+
 export type GetProductsData = {
     body?: never;
     path?: never;
@@ -25,3 +37,71 @@ export type GetProductsResponses = {
 };
 
 export type GetProductsResponse = GetProductsResponses[keyof GetProductsResponses];
+
+export type PostShoppingCartsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/shopping-carts';
+};
+
+export type PostShoppingCartsResponses = {
+    /**
+     * A shopping cart
+     */
+    201: ShoppingCart;
+};
+
+export type PostShoppingCartsResponse = PostShoppingCartsResponses[keyof PostShoppingCartsResponses];
+
+export type PostShoppingCartsByIdIncreaseData = {
+    body?: never;
+    path: {
+        /**
+         * Shopping Cart ID to use
+         */
+        id: string;
+    };
+    query: {
+        /**
+         * Product to add to Shopping Cart
+         */
+        productID: string;
+    };
+    url: '/shopping-carts/{id}/increase';
+};
+
+export type PostShoppingCartsByIdIncreaseResponses = {
+    /**
+     * A shopping cart
+     */
+    200: ShoppingCart;
+};
+
+export type PostShoppingCartsByIdIncreaseResponse = PostShoppingCartsByIdIncreaseResponses[keyof PostShoppingCartsByIdIncreaseResponses];
+
+export type PostShoppingCartsByIdDecreaseData = {
+    body?: never;
+    path: {
+        /**
+         * Shopping Cart ID to use
+         */
+        id: string;
+    };
+    query: {
+        /**
+         * Product to remove from Shopping Cart
+         */
+        productID: string;
+    };
+    url: '/shopping-carts/{id}/decrease';
+};
+
+export type PostShoppingCartsByIdDecreaseResponses = {
+    /**
+     * A shopping cart
+     */
+    200: ShoppingCart;
+};
+
+export type PostShoppingCartsByIdDecreaseResponse = PostShoppingCartsByIdDecreaseResponses[keyof PostShoppingCartsByIdDecreaseResponses];

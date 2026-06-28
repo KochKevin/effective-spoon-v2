@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetProductsData, GetProductsResponses } from './types.gen';
+import type { GetProductsData, GetProductsResponses, PostShoppingCartsByIdDecreaseData, PostShoppingCartsByIdDecreaseResponses, PostShoppingCartsByIdIncreaseData, PostShoppingCartsByIdIncreaseResponses, PostShoppingCartsData, PostShoppingCartsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -22,3 +22,18 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
  * Load all products
  */
 export const getProducts = <ThrowOnError extends boolean = false>(options?: Options<GetProductsData, ThrowOnError>): RequestResult<GetProductsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetProductsResponses, unknown, ThrowOnError>({ url: '/products', ...options });
+
+/**
+ * Create a new shopping cart
+ */
+export const postShoppingCarts = <ThrowOnError extends boolean = false>(options?: Options<PostShoppingCartsData, ThrowOnError>): RequestResult<PostShoppingCartsResponses, unknown, ThrowOnError> => (options?.client ?? client).post<PostShoppingCartsResponses, unknown, ThrowOnError>({ url: '/shopping-carts', ...options });
+
+/**
+ * Add product to shopping cart
+ */
+export const postShoppingCartsByIdIncrease = <ThrowOnError extends boolean = false>(options: Options<PostShoppingCartsByIdIncreaseData, ThrowOnError>): RequestResult<PostShoppingCartsByIdIncreaseResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostShoppingCartsByIdIncreaseResponses, unknown, ThrowOnError>({ url: '/shopping-carts/{id}/increase', ...options });
+
+/**
+ * Remove product from shopping cart
+ */
+export const postShoppingCartsByIdDecrease = <ThrowOnError extends boolean = false>(options: Options<PostShoppingCartsByIdDecreaseData, ThrowOnError>): RequestResult<PostShoppingCartsByIdDecreaseResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostShoppingCartsByIdDecreaseResponses, unknown, ThrowOnError>({ url: '/shopping-carts/{id}/decrease', ...options });
