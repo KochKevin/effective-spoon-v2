@@ -31,3 +31,8 @@ tasks:
       #- npm install
       - npm run dev
 
+  frontend-api:
+    desc: Generate client api from docs/openapi
+    dir: ./frontend
+    cmds:
+      - npm run openapi-ts
