@@ -10,6 +10,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { useProductsStore } from './stores/products';
+
+const productStore = useProductsStore()
+
+
+onMounted( () => {
+  productStore.fetchProducts()
+
+  console.log(productStore.isLoading)
+  console.log(productStore.products)
+})
+
 </script>
 
 
@@ -28,12 +40,15 @@ import {
         <AlertDialogTitle>Produkte</AlertDialogTitle>
       </AlertDialogHeader>
 
-        <div class="grid grid-cols-4 gap-4 flex-8">
-            <Card>T</Card>
-            <Card>T</Card>
-            <Card>T</Card>
-            <Card>T</Card>
-            <Card>T</Card>
+       <p v-if="productStore.isLoading">Lade...</p>
+
+        <div v-else class="grid grid-cols-4 gap-4 flex-8">
+
+         
+          <Card v-for="product in productStore.products" :key="product.id">
+           <p> {{ product.name }} </p>
+          </Card>
+
       
 
           </div>
