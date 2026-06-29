@@ -4,29 +4,32 @@ import (
 	"context"
 	"database/sql"
 
-	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
-	"github.com/KochKevin/effective-spoon-v2/internal/products"
 	"log/slog"
+
+	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
+	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
 )
 
 type Repo struct {
 	Queries sqlc.Queries
 }
 
-//func NewRepo(db)
 
-func (r *Repo) GetProducts(ctx context.Context, tx *sql.Tx) (domains []products.Product, err error) {
+func (r *Repo) CreateShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) (shoppingcarts.ShoppingCart, error) {
 
-	dbProducts, err := r.Queries.WithTx(tx).GetAllProducts(ctx)
+	obj, err := r.Queries.WithTx(tx).CreateShoppingCart(ctx, cart.Id)
 	if err != nil {
 		slog.Error("Error in products query", err)
-		return nil, err
+		return shoppingcarts.ShoppingCart{}, err
 	}
 
-	for _, product := range dbProducts {
+	return shoppingcarts.ShoppingCartFrom(obj, nil), nil
+}
 
-		domains = append(domains, products.NewProduct(product.ID, product.Name, int(product.Price)))
-	}
+func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx) (shoppingcarts.ShoppingCart, error) {
+	panic("not implemented") // TODO: Implement
+}
 
-	return domains, nil
+func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) (shoppingcarts.ShoppingCart, error) {
+	panic("not implemented") // TODO: Implement
 }

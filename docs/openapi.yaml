@@ -133,6 +133,10 @@ components:
 
     LineItem:
       type: object
+      required:
+        - productId
+        - amount
+        - price
       properties:
         productId:
           type: string

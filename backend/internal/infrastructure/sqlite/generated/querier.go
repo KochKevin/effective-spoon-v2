@@ -6,9 +6,12 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
+	CreateShoppingCart(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	GetAllProducts(ctx context.Context) ([]Product, error)
 }
 

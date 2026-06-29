@@ -17,9 +17,9 @@ export type ShoppingCart = {
 };
 
 export type LineItem = {
-    productId?: string;
-    amount?: number;
-    price?: number;
+    productId: string;
+    amount: number;
+    price: number;
 };
 
 export type GetProductsData = {
