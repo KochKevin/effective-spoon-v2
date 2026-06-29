@@ -7,6 +7,8 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const getAllProducts = `-- name: GetAllProducts :many
@@ -34,4 +36,19 @@ func (q *Queries) GetAllProducts(ctx context.Context) ([]Product, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getProduct = `-- name: GetProduct :one
+SELECT 
+id,
+name,
+price
+FROM products WHERE id = ?
+`
+
+func (q *Queries) GetProduct(ctx context.Context, id uuid.UUID) (Product, error) {
+	row := q.db.QueryRowContext(ctx, getProduct, id)
+	var i Product
+	err := row.Scan(&i.ID, &i.Name, &i.Price)
+	return i, err
 }

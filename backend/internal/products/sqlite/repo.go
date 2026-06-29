@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 
+	"log/slog"
+
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
-	"log/slog"
+	"github.com/google/uuid"
 )
 
 type Repo struct {
@@ -29,4 +31,16 @@ func (r *Repo) GetProducts(ctx context.Context, tx *sql.Tx) (domains []products.
 	}
 
 	return domains, nil
+}
+
+func (r *Repo) GetProduct(ctx context.Context, tx *sql.Tx, id uuid.UUID) (products.Product, error) {
+
+	product, err := r.Queries.WithTx(tx).GetProduct(ctx, id)
+	if err != nil {
+		slog.Error("Error in products query", err)
+		return products.Product{}, err
+	}
+	
+	return products.NewProduct(product.ID, product.Name, int(product.Price)),  nil
+
 }

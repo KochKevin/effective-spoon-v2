@@ -25,7 +25,7 @@ import (
 func main() {
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
+		Level: slog.LevelDebug,
 	}))
 
 	slog.SetDefault(logger)
@@ -76,6 +76,9 @@ func main() {
 
 	shoppingcartssapi.HandlerFromMux(&shoppingcarts.Api{
 		Repo: &shoppingcartssqlite.Repo{
+			Queries: *sqlc.New(db),
+		},
+		ProductRepo: &productssqlite.Repo{
 			Queries: *sqlc.New(db),
 		},
 		Txm: *infrastructure.NewTxManager(db),
