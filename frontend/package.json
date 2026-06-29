@@ -8,10 +8,10 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "openapi-ts":  "openapi-ts"
+    "openapi-ts": "openapi-ts"
   },
   "dependencies": {
-    "@lucide/vue": "^1.21.0",
+    "@lucide/vue": "^1.22.0",
     "@nuxt/devtools": "^4.0.0-alpha.7",
     "@nuxt/eslint": "^1.16.0",
     "@nuxt/icon": "^2.2.3",
