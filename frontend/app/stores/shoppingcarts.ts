@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { postShoppingCarts, type ShoppingCart } from "~/api";
+import { postShoppingCarts, postShoppingCartsByIdIncrease, type ShoppingCart } from "~/api";
 
 export const useShoppingCartStore = defineStore('shopping-carts', {
 
@@ -24,6 +24,32 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
             }
             catch(error) {
                 console.error("Error on post on shopping cart api: ", error);
+
+            } finally {
+                this.isLoading = false;
+            }
+
+        },
+
+        async increaseProduct(cartId : string, productId : string) {
+
+            this.isLoading = true;
+
+            try {
+                const response = await postShoppingCartsByIdIncrease({
+                    path: {
+                        id: cartId,
+                    },
+
+                    query: {
+                        productID: productId,
+                    }
+                });
+
+                this.shoppingCart = response.data
+            }
+            catch(error) {
+                console.error("Error on increase on shopping cart api: ", error);
 
             } finally {
                 this.isLoading = false;

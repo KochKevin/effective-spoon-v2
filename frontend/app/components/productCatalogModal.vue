@@ -4,7 +4,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -41,9 +40,12 @@ onMounted( () => {
         <div v-else class="grid grid-cols-4 gap-4 flex-8">
 
          
-          <Card v-for="product in productStore.products" :key="product.id">
-           <p> {{ product.name }} </p>
-          </Card>
+          <ProductCatalogCard v-for="product in productStore.products" :key="product.id"
+          :id="product.id"
+          :name="product.name"
+          :price="product.price">
+          </ProductCatalogCard>
+
 
       
 
