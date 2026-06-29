@@ -14,12 +14,15 @@ type ShoppingCart struct {
 }
 
 func (s *ShoppingCart) GetFullPrice() money.Money {
-	var total money.Money
+	total := money.MoneyFrom(0)
+
+	//slog.Debug("GetFullPrice of shopping cart ", "total", total)
 
 	for _, item := range s.LineItems {
-		total.Add(item.GetPrice())
+		total = total.Add(item.GetPrice())
+		//slog.Debug("GetFullPrice", "total", total)
 	}
-
+	//slog.Debug("Final GetGullPrice", "total", total)
 	return total
 }
 
@@ -67,6 +70,7 @@ type LineItem struct {
 }
 
 func (l *LineItem) GetPrice() money.Money {
+	//slog.Debug("GetPrice of lineItem", "price", money.MoneyFrom(l.Product.Price * l.Amount))
 	return money.MoneyFrom(l.Product.Price * l.Amount)
 }
 

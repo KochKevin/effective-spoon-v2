@@ -128,9 +128,10 @@ func (a *Api) PostShoppingCartsIdIncrease(w http.ResponseWriter, r *http.Request
 			return err
 		}
 
-		slog.Debug("After increase: ", cart)
+		//slog.Debug("After increase: ", "cart", cart)
 
 		dto = a.ToDto(cart)
+		slog.Debug("After increase: ", "dto", dto)
 
 		return nil
 
