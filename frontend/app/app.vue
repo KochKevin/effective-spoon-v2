@@ -13,5 +13,7 @@
 
   <ProductCatalogModal></ProductCatalogModal>
 
+  <ShoppingCartView></ShoppingCartView>
+
 
 </template>
