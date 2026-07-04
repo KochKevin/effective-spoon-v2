@@ -11,6 +11,7 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
 	productsapi "github.com/KochKevin/effective-spoon-v2/internal/products/generated"
 	productssqlite "github.com/KochKevin/effective-spoon-v2/internal/products/sqlite"
+	"github.com/KochKevin/effective-spoon-v2/internal/server"
 	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
 	shoppingcartssapi "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated"
 	shoppingcartssqlite "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/sqlite"
@@ -43,7 +44,6 @@ func main() {
 	defer db.Close()
 
 	goose.Up(db, "./db/migrations")
-	
 
 	//Router Setup
 	r := chi.NewRouter()
@@ -83,6 +83,9 @@ func main() {
 		},
 		Txm: *infrastructure.NewTxManager(db),
 	}, r)
+
+	//Frontend
+	server.ServeFrontend(r)
 
 	//Serve
 	err = http.ListenAndServe(":8080", r)

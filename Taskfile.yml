@@ -36,3 +36,25 @@ tasks:
     dir: ./frontend
     cmds:
       - npm run openapi-ts
+
+  build:frontend:
+    desc: Build frontend
+    dir: ./frontend
+    cmds:
+      - npm run generate
+  
+  build:backend:
+    dir: backend
+    cmds:
+      - go clean -cache
+      - go build -v -o tmp/main ./cmd/main.go
+
+  sync:assets:
+    desc: Move frontend build to backend server folder
+    dir: ./
+    cmds:
+      - rm -rf backend/internal/server/dist
+      # The -L flag dereferences symlinks (turns them into real files)
+      - cp -rL frontend/.output/public backend/internal/server/dist
+  
+  
