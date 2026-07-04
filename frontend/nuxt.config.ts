@@ -15,8 +15,9 @@ export default defineNuxtConfig({
 
 
   icon: {
-    provider: 'server',
-    customCollections: []
+    //Load from client
+    provider: 'iconify',
+    serverBundle: false,
   },
 
   shadcn: {
@@ -51,5 +52,16 @@ export default defineNuxtConfig({
       tailwindcss(),
     ],
   },
+
+  //Activate SPA
+  ssr: false,
+  //Activate Loading Screen when SPA starts, can be changed under app/spa-loading-template.html
+  spaLoadingTemplate: true,
+
+  runtimeConfig: {
+
+  },
+
+  
 
 })

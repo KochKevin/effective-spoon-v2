@@ -1,3 +1,8 @@
+- build system
+    - build frontend
+    - build backend
+    - build frontend into backend (embed)
+
 Problems and Bugs
 
 Backlog
