@@ -44,6 +44,7 @@ id,
 name,
 price
 FROM products WHERE id = ?
+ORDER BY rowid ASC
 `
 
 func (q *Queries) GetProduct(ctx context.Context, id uuid.UUID) (Product, error) {

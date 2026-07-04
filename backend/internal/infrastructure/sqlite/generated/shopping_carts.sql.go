@@ -42,9 +42,12 @@ func (q *Queries) CreateShoppingCartLineItem(ctx context.Context, arg CreateShop
 }
 
 const deleteAllLineItemsOfShoppingCart = `-- name: DeleteAllLineItemsOfShoppingCart :exec
+
+
 DELETE FROM rel_shopping_carts_products WHERE rel_shopping_carts_products.shopping_cart_id = ?
 `
 
+// order by to keep the order in which they are inserted
 func (q *Queries) DeleteAllLineItemsOfShoppingCart(ctx context.Context, shoppingCartID uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteAllLineItemsOfShoppingCart, shoppingCartID)
 	return err
@@ -57,10 +60,10 @@ products.id AS 'productId',
 products.name AS 'productName',
 products.price AS 'productPrice', 
 rel_shopping_carts_products.amount AS 'amount'
-
 FROM rel_shopping_carts_products JOIN 
 products ON products.id = rel_shopping_carts_products.product_id 
 WHERE rel_shopping_carts_products.shopping_cart_id = ?
+ORDER BY rel_shopping_carts_products.rowid ASC
 `
 
 type GetLineItemsOfShoppingCartRow struct {

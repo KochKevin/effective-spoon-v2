@@ -14,10 +14,10 @@ products.id AS 'productId',
 products.name AS 'productName',
 products.price AS 'productPrice', 
 rel_shopping_carts_products.amount AS 'amount'
-
 FROM rel_shopping_carts_products JOIN 
 products ON products.id = rel_shopping_carts_products.product_id 
-WHERE rel_shopping_carts_products.shopping_cart_id = ?;
+WHERE rel_shopping_carts_products.shopping_cart_id = ?
+ORDER BY rel_shopping_carts_products.rowid ASC; --order by to keep the order in which they are inserted
 
 
 -- name: DeleteAllLineItemsOfShoppingCart :exec

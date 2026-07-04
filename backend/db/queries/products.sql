@@ -6,4 +6,5 @@ SELECT
 id,
 name,
 price
-FROM products WHERE id = ?;
+FROM products WHERE id = ?
+ORDER BY rowid ASC;
