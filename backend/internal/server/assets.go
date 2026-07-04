@@ -27,8 +27,15 @@ func ServeFrontend(r chi.Router) {
 	frontendFilesystem := GetFileSystem()
 	fileServer := http.FileServer(frontendFilesystem)
 
-	r.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
+
+		if strings.HasPrefix(path, "/api") {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"error": "API route not found"}`))
+			return
+		}
 
 		// Clean the path to check the internal filesystem
 		filePath := strings.TrimPrefix(path, "/")

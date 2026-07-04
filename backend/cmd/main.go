@@ -59,30 +59,34 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "pong"}`))
+	//Serve everything under /api
+
+	r.Route("/api", func(apiRouter chi.Router) {
+
+		apiRouter.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"status": "pong"}`))
+		})
+
+		//Routes
+		productsapi.HandlerFromMux(&products.Api{
+			Repo: &productssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+			Txm: *infrastructure.NewTxManager(db),
+		}, apiRouter)
+
+		shoppingcartssapi.HandlerFromMux(&shoppingcarts.Api{
+			Repo: &shoppingcartssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+			ProductRepo: &productssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+			Txm: *infrastructure.NewTxManager(db),
+		}, apiRouter)
 	})
-
-	//Routes
-
-	productsapi.HandlerFromMux(&products.Api{
-		Repo: &productssqlite.Repo{
-			Queries: *sqlc.New(db),
-		},
-		Txm: *infrastructure.NewTxManager(db),
-	}, r)
-
-	shoppingcartssapi.HandlerFromMux(&shoppingcarts.Api{
-		Repo: &shoppingcartssqlite.Repo{
-			Queries: *sqlc.New(db),
-		},
-		ProductRepo: &productssqlite.Repo{
-			Queries: *sqlc.New(db),
-		},
-		Txm: *infrastructure.NewTxManager(db),
-	}, r)
 
 	//Frontend
 	server.ServeFrontend(r)
