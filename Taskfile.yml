@@ -37,24 +37,57 @@ tasks:
     cmds:
       - npm run openapi-ts
 
-  build:frontend:
-    desc: Build frontend
-    dir: ./frontend
-    cmds:
-      - npm run generate
-  
-  build:backend:
-    dir: backend
-    cmds:
-      - go clean -cache
-      - go build -v -o tmp/main ./cmd/main.go
 
-  sync:assets:
+
+
+
+  _sync:assets:
     desc: Move frontend build to backend server folder
     dir: ./
     cmds:
       - rm -rf backend/internal/server/dist
       # The -L flag dereferences symlinks (turns them into real files)
       - cp -rL frontend/.output/public backend/internal/server/dist
+  
+  
+
+  _build:frontend:
+    desc: Build frontend
+    dir: ./frontend
+    cmds:
+      - npm run generate
+  
+  _build:backend:
+    desc: Build backend using vars
+    dir: backend
+    env:
+      GOOS: '{{.GOOS}}'
+      GOARCH: '{{.GOARCH}}'
+    cmds:
+      - task: _build:frontend
+      - task: _sync:assets
+      - go build -v -o tmp/main-{{.GOOS}}-{{.GOARCH}}{{.BIN_EXT}} ./cmd/main.go
+
+    
+
+
+  build:linux-amd:
+    desc: Creates a go build for Linux amd64
+    cmds:
+      - task: _build:backend
+        vars: { GOOS: 'linux', GOARCH: 'amd64', BIN_EXT: '' }
+  
+  build:linux-arm:
+    desc: Creates a go build for Linux arm64
+    cmds:
+      - task: _build:backend
+        vars: { GOOS: 'linux', GOARCH: 'arm64', BIN_EXT: '' }
+
+  build:mac-silicon:
+    desc: Creates a go build for Apple Silicon
+    cmds:
+      - task: _build:backend
+        vars: { GOOS: 'darwin', GOARCH: 'arm64', BIN_EXT: '' }
+
   
   
