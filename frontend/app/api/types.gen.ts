@@ -18,6 +18,7 @@ export type ShoppingCart = {
 
 export type LineItem = {
     productId: string;
+    productName: string;
     amount: number;
     price: number;
 };

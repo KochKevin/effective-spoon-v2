@@ -14,9 +14,10 @@ import (
 
 // LineItem defines model for LineItem.
 type LineItem struct {
-	Amount    int     `json:"amount"`
-	Price     float32 `json:"price"`
-	ProductId string  `json:"productId"`
+	Amount      int     `json:"amount"`
+	Price       float32 `json:"price"`
+	ProductId   string  `json:"productId"`
+	ProductName string  `json:"productName"`
 }
 
 // ShoppingCart defines model for Shopping-Cart.

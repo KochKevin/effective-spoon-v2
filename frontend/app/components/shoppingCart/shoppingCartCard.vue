@@ -27,7 +27,7 @@ const shoppingCartStore = useShoppingCartStore()
           </ItemHeader>
 
         <ItemContent>
-            <ItemTitle>Kola</ItemTitle>
+            <ItemTitle>{{ lineItem.productName }}</ItemTitle>
             <ItemTitle>{{lineItem.price}}€</ItemTitle>
           
             <ButtonGroup class="">

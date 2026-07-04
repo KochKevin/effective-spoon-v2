@@ -40,6 +40,7 @@ func (a *Api) ToDto(cart ShoppingCart) shoppingcartsapi.ShoppingCart {
 			Amount:    item.Amount,
 			Price:     float32(item.GetPrice().GetAsEuro()),
 			ProductId: item.Product.Id.String(),
+			ProductName: item.Product.Name,
 		})
 	}
 

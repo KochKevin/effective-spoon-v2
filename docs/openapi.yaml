@@ -135,6 +135,7 @@ components:
       type: object
       required:
         - productId
+        - productName
         - amount
         - price
       properties:
@@ -142,6 +143,10 @@ components:
           type: string
           examples: 
             - "00000000-0000-0000-0000-000000000000"
+        productName:
+          type: string
+          examples: 
+            - "Water"
         amount:
           type: integer
           examples: 
