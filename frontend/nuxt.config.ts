@@ -15,8 +15,9 @@ export default defineNuxtConfig({
 
 
   icon: {
-    provider: 'server',
-    customCollections: []
+    //Load from client
+    provider: 'iconify',
+    serverBundle: false,
   },
 
   shadcn: {
