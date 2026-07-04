@@ -1,14 +1,17 @@
 package products
 
-import "github.com/google/uuid"
+import (
+	"github.com/KochKevin/effective-spoon-v2/internal/money"
+	"github.com/google/uuid"
+)
 
 type Product struct{
 	Id uuid.UUID
 	Name string
-	Price int
+	Price money.Money
 }
 
-func NewProduct(id uuid.UUID, name string, price int) Product {
+func NewProduct(id uuid.UUID, name string, price money.Money) Product {
 	return Product{
 		Id: id,
 		Name: name,

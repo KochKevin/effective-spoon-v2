@@ -1,10 +1,11 @@
 openapi: 3.1.0
 info:
   title: KIOSK API
-  version: 0.0.1
+  version: 0.0.2
 
 tags:
   - name: products
+  - name: shopping-carts
 
 paths:
   /products:
@@ -22,6 +23,72 @@ paths:
                 items:
                   $ref: '#/components/schemas/Product'
 
+  /shopping-carts:
+    post:
+      summary: Create a new shopping cart
+      tags:
+        - shopping-carts
+      responses:
+        '201':
+          description: A shopping cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shopping-Cart'
+
+  /shopping-carts/{id}/increase:
+    post:
+      summary: Add product to shopping cart
+      tags:
+        - shopping-carts
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Shopping Cart ID to use
+        - in: query
+          name: productID
+          schema:
+            type: string
+          required: true
+          description: Product to add to Shopping Cart
+      responses:
+        '200':
+          description: A shopping cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shopping-Cart'
+
+
+  /shopping-carts/{id}/decrease:
+    post:
+      summary: Remove product from shopping cart
+      tags:
+        - shopping-carts
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Shopping Cart ID to use
+        - in: query
+          name: productID
+          schema:
+            type: string
+          required: true
+          description: Product to remove from Shopping Cart
+      responses:
+        '200':
+          description: A shopping cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shopping-Cart'
+
 components:
   schemas:
     Product:
@@ -33,10 +100,58 @@ components:
       properties:
         id:
           type: string
-          example: "00000000-0000-0000-0000-000000000000"
+          examples: 
+            - "00000000-0000-0000-0000-000000000000"
         name:
           type: string
-          example: "Wasser"
+          examples: 
+            - "Example Product"
         price:
+          type: number
+          examples: 
+            - 1.0
+
+    Shopping-Cart:
+      type: object
+      required:
+        - id
+        - fullPrice
+        - lineItems
+      properties:
+        id:
+          type: string
+          examples: 
+            - "00000000-0000-0000-0000-000000000000"
+        fullPrice:
+          type: number
+          examples: 
+            - 10.0
+        lineItems: 
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItem'
+
+    LineItem:
+      type: object
+      required:
+        - productId
+        - productName
+        - amount
+        - price
+      properties:
+        productId:
+          type: string
+          examples: 
+            - "00000000-0000-0000-0000-000000000000"
+        productName:
+          type: string
+          examples: 
+            - "Water"
+        amount:
           type: integer
-          example: 100
+          examples: 
+            - 5
+        price:
+          type: number
+          examples: 
+            - 10.0

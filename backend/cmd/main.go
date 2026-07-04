@@ -11,6 +11,9 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
 	productsapi "github.com/KochKevin/effective-spoon-v2/internal/products/generated"
 	productssqlite "github.com/KochKevin/effective-spoon-v2/internal/products/sqlite"
+	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
+	shoppingcartssapi "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated"
+	shoppingcartssqlite "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/sqlite"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -22,7 +25,7 @@ import (
 func main() {
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
+		Level: slog.LevelDebug,
 	}))
 
 	slog.SetDefault(logger)
@@ -71,7 +74,19 @@ func main() {
 		Txm: *infrastructure.NewTxManager(db),
 	}, r)
 
+	shoppingcartssapi.HandlerFromMux(&shoppingcarts.Api{
+		Repo: &shoppingcartssqlite.Repo{
+			Queries: *sqlc.New(db),
+		},
+		ProductRepo: &productssqlite.Repo{
+			Queries: *sqlc.New(db),
+		},
+		Txm: *infrastructure.NewTxManager(db),
+	}, r)
+
 	//Serve
-	http.ListenAndServe(":8080", r)
+	err = http.ListenAndServe(":8080", r)
+
+	slog.Error("Error serving api", "error", err)
 
 }

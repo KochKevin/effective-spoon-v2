@@ -6,10 +6,19 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
+	CreateShoppingCart(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	CreateShoppingCartLineItem(ctx context.Context, arg CreateShoppingCartLineItemParams) error
+	//order by to keep the order in which they are inserted
+	DeleteAllLineItemsOfShoppingCart(ctx context.Context, shoppingCartID uuid.UUID) error
 	GetAllProducts(ctx context.Context) ([]Product, error)
+	GetLineItemsOfShoppingCart(ctx context.Context, shoppingCartID uuid.UUID) ([]GetLineItemsOfShoppingCartRow, error)
+	GetProduct(ctx context.Context, id uuid.UUID) (Product, error)
+	GetShoppingCart(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 }
 
 var _ Querier = (*Queries)(nil)

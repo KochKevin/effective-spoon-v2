@@ -13,3 +13,13 @@ type Product struct {
 	Name  string    `json:"name"`
 	Price int64     `json:"price"`
 }
+
+type RelShoppingCartsProduct struct {
+	ShoppingCartID uuid.UUID `json:"shopping_cart_id"`
+	ProductID      uuid.UUID `json:"product_id"`
+	Amount         int64     `json:"amount"`
+}
+
+type ShoppingCart struct {
+	ID uuid.UUID `json:"id"`
+}

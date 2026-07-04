@@ -8,10 +8,11 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "openapi-ts":  "openapi-ts"
+    "openapi-ts": "openapi-ts"
   },
   "dependencies": {
-    "@lucide/vue": "^1.21.0",
+    "@iconify/vue": "^5.0.1",
+    "@lucide/vue": "^1.22.0",
     "@nuxt/devtools": "^4.0.0-alpha.7",
     "@nuxt/eslint": "^1.16.0",
     "@nuxt/icon": "^2.2.3",
@@ -20,6 +21,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "eslint": "^10.5.0",
+    "lucide-vue-next": "^1.0.0",
     "nuxt": "^4.4.8",
     "pinia": "^3.0.4",
     "reka-ui": "^2.10.1",

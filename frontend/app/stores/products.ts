@@ -22,8 +22,8 @@ actions: {
 
             this.products = response.data
         }
-        catch {
-            console.error("Error loading products api: ", console.error());
+        catch(error) {
+            console.error("Error loading products api: ", error);
             
         } finally {
             this.isLoading = false;

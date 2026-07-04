@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"net/http"
 
+	"log/slog"
+
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
 	productsapi "github.com/KochKevin/effective-spoon-v2/internal/products/generated"
 	"github.com/go-chi/render"
-	"log/slog"
 )
 
 type Repo interface {
@@ -44,7 +45,7 @@ func (a *Api) GetProducts(w http.ResponseWriter, r *http.Request) {
 			dtos = append(dtos, productsapi.Product{
 				Id:    p.Id.String(),
 				Name:  p.Name,
-				Price: p.Price,
+				Price: p.Price.GetAsEuro(),
 			})
 		}
 
@@ -57,8 +58,9 @@ func (a *Api) GetProducts(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-
 	//log.Println(dtos)
+
+	slog.Debug("Product DTOs", "DTOs", dtos)
 
 	render.JSON(w, r, dtos)
 }
