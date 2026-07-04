@@ -7,6 +7,7 @@ import (
 	"log/slog"
 
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
+	"github.com/KochKevin/effective-spoon-v2/internal/money"
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
 	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
 	"github.com/google/uuid"
@@ -48,7 +49,7 @@ func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (s
 			Product: products.Product{
 				Id:    item.Productid,
 				Name:  item.Productname,
-				Price: int(item.Productprice),
+				Price: money.MoneyFrom(int(item.Productprice)),
 			},
 		})
 	}
@@ -58,9 +59,8 @@ func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (s
 	return cart, nil
 }
 
-func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) ( error) {
-	
-	
+func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) error {
+
 	err := r.Queries.WithTx(tx).DeleteAllLineItemsOfShoppingCart(ctx, cart.Id)
 	if err != nil {
 		slog.Error("Error in deleting all line items of an shopping cart query", err)
@@ -71,15 +71,14 @@ func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingca
 
 		err := r.Queries.WithTx(tx).CreateShoppingCartLineItem(ctx, sqlc.CreateShoppingCartLineItemParams{
 			ShoppingCartID: cart.Id,
-			ProductID: item.Product.Id,
-			Amount: int64(item.Amount),
+			ProductID:      item.Product.Id,
+			Amount:         int64(item.Amount),
 		})
 		if err != nil {
 			slog.Error("Error in creating line item query", err)
 			return err
 		}
 	}
-
 
 	return nil
 }

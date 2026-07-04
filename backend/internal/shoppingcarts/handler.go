@@ -25,9 +25,9 @@ type ProductRepo interface {
 }
 
 type Api struct {
-	Repo Repo
+	Repo        Repo
 	ProductRepo ProductRepo
-	Txm  infrastructure.TxManager
+	Txm         infrastructure.TxManager
 }
 
 func (a *Api) ToDto(cart ShoppingCart) shoppingcartsapi.ShoppingCart {
@@ -37,9 +37,9 @@ func (a *Api) ToDto(cart ShoppingCart) shoppingcartsapi.ShoppingCart {
 	for _, item := range cart.LineItems {
 
 		lineItems = append(lineItems, shoppingcartsapi.LineItem{
-			Amount:    item.Amount,
-			Price:     float32(item.GetPrice().GetAsEuro()),
-			ProductId: item.Product.Id.String(),
+			Amount:      item.Amount,
+			Price:       float32(item.GetPrice().GetAsEuro()),
+			ProductId:   item.Product.Id.String(),
 			ProductName: item.Product.Name,
 		})
 	}
@@ -113,7 +113,6 @@ func (a *Api) PostShoppingCartsIdDecrease(w http.ResponseWriter, r *http.Request
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
-		
 
 		dto = a.ToDto(cart)
 		slog.Debug("After decrease: ", "dto", dto)
@@ -159,7 +158,6 @@ func (a *Api) PostShoppingCartsIdIncrease(w http.ResponseWriter, r *http.Request
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
-
 
 		cart.IncreaseProductAmount(productToAdd)
 

@@ -97,7 +97,7 @@ type LineItem struct {
 
 func (l *LineItem) GetPrice() money.Money {
 	//slog.Debug("GetPrice of lineItem", "price", money.MoneyFrom(l.Product.Price * l.Amount))
-	return money.MoneyFrom(l.Product.Price * l.Amount)
+	return l.Product.Price.Multi(l.Amount)
 }
 
 func (l *LineItem) IncreaseAmount() {

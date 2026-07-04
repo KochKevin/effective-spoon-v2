@@ -7,6 +7,7 @@ import (
 	"log/slog"
 
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
+	"github.com/KochKevin/effective-spoon-v2/internal/money"
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
 	"github.com/google/uuid"
 )
@@ -27,7 +28,7 @@ func (r *Repo) GetProducts(ctx context.Context, tx *sql.Tx) (domains []products.
 
 	for _, product := range dbProducts {
 
-		domains = append(domains, products.NewProduct(product.ID, product.Name, int(product.Price)))
+		domains = append(domains, products.NewProduct(product.ID, product.Name, money.MoneyFrom(int(product.Price))))
 	}
 
 	return domains, nil
@@ -41,6 +42,6 @@ func (r *Repo) GetProduct(ctx context.Context, tx *sql.Tx, id uuid.UUID) (produc
 		return products.Product{}, err
 	}
 	
-	return products.NewProduct(product.ID, product.Name, int(product.Price)),  nil
+	return products.NewProduct(product.ID, product.Name, money.MoneyFrom(int(product.Price))),  nil
 
 }

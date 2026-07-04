@@ -107,9 +107,9 @@ components:
           examples: 
             - "Example Product"
         price:
-          type: integer
+          type: number
           examples: 
-            - 100
+            - 1.0
 
     Shopping-Cart:
       type: object

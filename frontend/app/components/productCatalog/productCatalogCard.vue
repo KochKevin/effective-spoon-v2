@@ -21,7 +21,7 @@ const shoppingCartStore = useShoppingCartStore()
         </CardHeader>
 
         <CardContent>
-            <p>{{price}}cents</p>
+            <p>{{formatCurrency(price)}}</p>
         </CardContent>
 
     <!--

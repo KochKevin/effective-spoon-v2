@@ -85,6 +85,8 @@ func main() {
 	}, r)
 
 	//Serve
-	http.ListenAndServe(":8080", r)
+	err = http.ListenAndServe(":8080", r)
+
+	slog.Error("Error serving api", "error", err)
 
 }
