@@ -52,4 +52,15 @@ export default defineNuxtConfig({
     ],
   },
 
+  //Activate SPA
+  ssr: false,
+  //Activate Loading Screen when SPA starts, can be changed under app/spa-loading-template.html
+  spaLoadingTemplate: true,
+
+  runtimeConfig: {
+
+  },
+
+  
+
 })
