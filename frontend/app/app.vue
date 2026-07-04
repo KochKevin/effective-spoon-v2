@@ -1,5 +1,19 @@
 <script setup lang="ts">
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+
+
+const shoppingCartStore = useShoppingCartStore()
+
 
 </script>
 
@@ -32,7 +46,7 @@
         </Button>
 
           <div class="text-2xl font-bold tracking-tight">
-          TOTAL: 99,99 €
+          TOTAL: {{ shoppingCartStore.shoppingCart?.fullPrice ?? '0,00' }} €
         </div>
 
           <Button size="lg" class="w-32">
