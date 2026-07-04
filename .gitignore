@@ -54,7 +54,7 @@ go.work.sum
 .env
 
 # go temp folder
-tmp
+backend/tmp/
 
 # Editor/IDE
 # .idea/
