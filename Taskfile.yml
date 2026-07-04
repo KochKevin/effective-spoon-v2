@@ -64,9 +64,9 @@ tasks:
       GOOS: '{{.GOOS}}'
       GOARCH: '{{.GOARCH}}'
     cmds:
-      - task: _build:frontend
-      - task: _sync:assets
-      - go clean -cache
+      - task: :_build:frontend
+      - task: :_sync:assets
+     # - go clean -cache
       - go build -v -o tmp/main-{{.GOOS}}-{{.GOARCH}}{{.BIN_EXT}} ./cmd/main.go
 
     
