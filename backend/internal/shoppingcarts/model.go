@@ -50,6 +50,32 @@ func (s *ShoppingCart) AddProduct(product products.Product) {
 	s.LineItems = append(s.LineItems, NewLinteItem(product, 1))
 }
 
+func (s *ShoppingCart) DecreaseProductAmount(productId uuid.UUID) {
+
+	slog.Debug("Searching for product to decrease: ", productId)
+
+	for i := range s.LineItems {
+
+		if s.LineItems[i].Product.Id == productId {
+
+			//Remove LineItems when there is only one left
+			if s.LineItems[i].Amount <= 1 {
+				slog.Debug("Found product to decrese, but it needs to be removed")
+				s.LineItems = append(s.LineItems[:i], s.LineItems[i+1:]...)
+			} else {
+				slog.Debug("Found product to decrese, decresing it")
+				s.LineItems[i].DecreaseAmount()
+			}
+			return
+
+		}
+
+	}
+
+	slog.Error("Did not found product ", productId.String(), " in shopping cart ", s.Id.String(), " to decrease it")
+
+}
+
 func ShoppingCartFrom(id uuid.UUID, lineItems []LineItem) ShoppingCart {
 	return ShoppingCart{
 		Id:        id,
@@ -76,6 +102,10 @@ func (l *LineItem) GetPrice() money.Money {
 
 func (l *LineItem) IncreaseAmount() {
 	l.Amount++
+}
+
+func (l *LineItem) DecreaseAmount() {
+	l.Amount--
 }
 
 func NewLinteItem(product products.Product, amount int) LineItem {

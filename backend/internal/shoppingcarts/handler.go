@@ -87,7 +87,49 @@ func (a *Api) PostShoppingCarts(w http.ResponseWriter, r *http.Request) {
 // Remove product from shopping cart
 // (POST /shopping-carts/{id}/decrease)
 func (a *Api) PostShoppingCartsIdDecrease(w http.ResponseWriter, r *http.Request, id string, params shoppingcartsapi.PostShoppingCartsIdDecreaseParams) {
-	panic("not implemented") // TODO: Implement
+	slog.Debug("Decrease Product by id")
+
+	var dto shoppingcartsapi.ShoppingCart
+
+	err := a.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+
+		cart, err := a.Repo.GetShoppingCart(r.Context(), tx, uuid.MustParse(id))
+
+		slog.Debug("Before decrease: ", cart)
+
+		if err != nil {
+			//TODO: give client more inforamtion instead of an timeout
+			slog.Error("Error getting shopping cart", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
+		cart.DecreaseProductAmount(uuid.MustParse(params.ProductID))
+
+		err = a.Repo.SaveShoppingCart(r.Context(), tx, cart)
+		if err != nil {
+			//TODO: give client more inforamtion instead of an timeout
+			slog.Error("Error getting shopping cart", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+		
+
+		dto = a.ToDto(cart)
+		slog.Debug("After decrease: ", "dto", dto)
+
+		return nil
+
+	})
+
+	if err != nil {
+		slog.Error("Error in /shoppingcart decrease transaction", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	render.JSON(w, r, dto)
+
 }
 
 // Add product to shopping cart
@@ -145,48 +187,4 @@ func (a *Api) PostShoppingCartsIdIncrease(w http.ResponseWriter, r *http.Request
 	}
 
 	render.JSON(w, r, dto)
-}
-
-// Load all products
-// (GET /products)
-func (a *Api) GetProducts(w http.ResponseWriter, r *http.Request) {
-
-	//log.Println("Hallo projjjructs")
-	/*
-		var dtos []productsapi.Product
-
-		err := a.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
-			products, err := a.Repo.GetProducts(r.Context(), tx)
-
-			//log.Println(products)
-
-			if err != nil {
-				//TODO: give client more inforamtion instead of an timeout
-				slog.Error("Error loading products", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-				return err
-			}
-
-			for _, p := range products {
-				dtos = append(dtos, productsapi.Product{
-					Id:    p.Id.String(),
-					Name:  p.Name,
-					Price: p.Price,
-				})
-			}
-
-			return nil
-
-		})
-
-		if err != nil {
-			slog.Error("Error in /products transaction", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		//log.Println(dtos)
-
-		render.JSON(w, r, dtos)
-	*/
 }

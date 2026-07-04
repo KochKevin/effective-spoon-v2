@@ -38,7 +38,7 @@ const shoppingCartStore = useShoppingCartStore()
 
               <ButtonGroupText>{{ lineItem.amount }}</ButtonGroupText>
 
-               <Button variant="outline" size="icon" @click=''>
+               <Button variant="outline" size="icon" @click='shoppingCartStore.decreaseProduct(shoppingCartStore.shoppingCart?.id ?? "", lineItem.productId ?? "")'>
                 <Icon icon="lucide:minus"/>
               </Button>
 
