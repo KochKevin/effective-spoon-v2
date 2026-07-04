@@ -33,7 +33,7 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
 
         async increaseProduct(cartId : string, productId : string) {
 
-            this.isLoading = true;
+            //this.isLoading = true;
 
             try {
                 const response = await postShoppingCartsByIdIncrease({
@@ -52,7 +52,7 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
                 console.error("Error on increase on shopping cart api: ", error);
 
             } finally {
-                this.isLoading = false;
+               // this.isLoading = false;
             }
 
         }

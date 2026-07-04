@@ -5,15 +5,25 @@
 
 
 <template>
-  <div>
-    <NuxtRouteAnnouncer />
-    <NuxtWelcome />
-  </div>
 
 
-  <ProductCatalogModal></ProductCatalogModal>
+  <Card class="flex flex-row">
 
-  <ShoppingCartView></ShoppingCartView>
+    <Card class="flex-4" />
+
+    <ProductCatalogModal class="flex-2"/>
+
+    <Card class="flex-4" />
+
+  </Card>
+
+  
+
+  <ShoppingCartGrid></ShoppingCartGrid>
+
+
+
+
 
 
 </template>

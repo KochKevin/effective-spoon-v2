@@ -10,6 +10,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import ItemGroup from '../ui/item/ItemGroup.vue'
+import {Icon} from '@iconify/vue'
 
 
 const shoppingCartStore = useShoppingCartStore()
@@ -26,13 +28,17 @@ onMounted( () => {
 
 
 <template>
- <Card>
+
 
     <p v-if="shoppingCartStore.isLoading">Lade...</p>
-    <p v-else=> {{shoppingCartStore.shoppingCart}} </p>
- 
- 
- </Card>
 
+    <ItemGroup v-else class="grid grid-cols-4 gap-4 flex-8">
+
+
+      <ShoppingCartCard v-for="lineItem in shoppingCartStore.shoppingCart?.lineItems" :line-item="lineItem"/>
+
+
+
+    </ItemGroup>
 
 </template>

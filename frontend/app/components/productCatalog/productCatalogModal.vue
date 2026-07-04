@@ -27,7 +27,7 @@ onMounted( () => {
 <template>
  <AlertDialog >
     <AlertDialogTrigger as-child>
-        <Button variant="outline">Produkte</Button>
+        <Button variant="outline" size="lg">Produkte</Button>
     </AlertDialogTrigger>
 
     <AlertDialogContent class="flex flex-col">
