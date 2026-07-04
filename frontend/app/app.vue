@@ -46,7 +46,7 @@ const shoppingCartStore = useShoppingCartStore()
         </Button>
 
           <div class="text-2xl font-bold tracking-tight">
-          TOTAL: {{ shoppingCartStore.shoppingCart?.fullPrice ?? '0,00' }} €
+          TOTAL: {{ formatCurrency(shoppingCartStore.shoppingCart?.fullPrice) }}
         </div>
 
           <Button size="lg" class="w-32">
