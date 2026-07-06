@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"net/http"
@@ -18,6 +19,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/google/uuid"
 	"github.com/pressly/goose/v3"
 
 	_ "modernc.org/sqlite"
@@ -62,6 +64,19 @@ func main() {
 	//Serve everything under /api
 
 	r.Route("/api", func(apiRouter chi.Router) {
+
+		//GetLoggedInUser Middlewear
+		apiRouter.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+				// Create/Get test user id
+				userId := uuid.Nil
+
+				r.WithContext(context.WithValue(r.Context(), "user_id", userId))
+
+				next.ServeHTTP(w, r)
+			})
+		})
 
 		apiRouter.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
