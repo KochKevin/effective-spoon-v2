@@ -27,6 +27,7 @@ import (
 
 func main() {
 
+	//Setup Logger
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}))
@@ -45,7 +46,12 @@ func main() {
 
 	defer db.Close()
 
-	goose.Up(db, "./db/migrations")
+	err = goose.Up(db, "./db/migrations")
+
+	if err != nil {
+		slog.Error("Error migrating database", "error", err)
+	}
+	
 
 	//Router Setup
 	r := chi.NewRouter()
