@@ -14,6 +14,7 @@ export type ShoppingCart = {
     id: string;
     fullPrice: number;
     lineItems: Array<LineItem>;
+    userId: string;
 };
 
 export type LineItem = {
@@ -21,6 +22,12 @@ export type LineItem = {
     productName: string;
     amount: number;
     price: number;
+};
+
+export type User = {
+    userId: string;
+    name: string;
+    balance: number;
 };
 
 export type GetProductsData = {
@@ -106,3 +113,19 @@ export type PostShoppingCartsByIdDecreaseResponses = {
 };
 
 export type PostShoppingCartsByIdDecreaseResponse = PostShoppingCartsByIdDecreaseResponses[keyof PostShoppingCartsByIdDecreaseResponses];
+
+export type GetUsersCurrentData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/users/current';
+};
+
+export type GetUsersCurrentResponses = {
+    /**
+     * A user
+     */
+    200: User;
+};
+
+export type GetUsersCurrentResponse = GetUsersCurrentResponses[keyof GetUsersCurrentResponses];

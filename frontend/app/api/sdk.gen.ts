@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetProductsData, GetProductsResponses, PostShoppingCartsByIdDecreaseData, PostShoppingCartsByIdDecreaseResponses, PostShoppingCartsByIdIncreaseData, PostShoppingCartsByIdIncreaseResponses, PostShoppingCartsData, PostShoppingCartsResponses } from './types.gen';
+import type { GetProductsData, GetProductsResponses, GetUsersCurrentData, GetUsersCurrentResponses, PostShoppingCartsByIdDecreaseData, PostShoppingCartsByIdDecreaseResponses, PostShoppingCartsByIdIncreaseData, PostShoppingCartsByIdIncreaseResponses, PostShoppingCartsData, PostShoppingCartsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -37,3 +37,8 @@ export const postShoppingCartsByIdIncrease = <ThrowOnError extends boolean = fal
  * Remove product from shopping cart
  */
 export const postShoppingCartsByIdDecrease = <ThrowOnError extends boolean = false>(options: Options<PostShoppingCartsByIdDecreaseData, ThrowOnError>): RequestResult<PostShoppingCartsByIdDecreaseResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostShoppingCartsByIdDecreaseResponses, unknown, ThrowOnError>({ url: '/shopping-carts/{id}/decrease', ...options });
+
+/**
+ * Get the currently logged in user
+ */
+export const getUsersCurrent = <ThrowOnError extends boolean = false>(options?: Options<GetUsersCurrentData, ThrowOnError>): RequestResult<GetUsersCurrentResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetUsersCurrentResponses, unknown, ThrowOnError>({ url: '/users/current', ...options });
