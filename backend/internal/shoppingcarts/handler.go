@@ -3,6 +3,7 @@ package shoppingcarts
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"net/http"
 
 	"log/slog"
@@ -48,6 +49,7 @@ func (a *Api) ToDto(cart ShoppingCart) shoppingcartsapi.ShoppingCart {
 		Id:        cart.Id.String(),
 		FullPrice: float32(cart.GetFullPrice().GetAsEuro()),
 		LineItems: lineItems,
+		UserId:    cart.UserId.String(),
 	}
 
 }
@@ -60,7 +62,13 @@ func (a *Api) PostShoppingCarts(w http.ResponseWriter, r *http.Request) {
 
 	err := a.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
 
-		cart, err := a.Repo.CreateShoppingCart(r.Context(), tx, NewShoppingCart())
+		userID, ok := r.Context().Value("user_id").(uuid.UUID)
+		if !ok {
+			//slog.Error("Can not get user_id from context")
+			return errors.New("Can not get user_id from context")
+		}
+
+		cart, err := a.Repo.CreateShoppingCart(r.Context(), tx, NewShoppingCart(userID))
 
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout

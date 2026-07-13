@@ -117,6 +117,7 @@ components:
         - id
         - fullPrice
         - lineItems
+        - userId
       properties:
         id:
           type: string
@@ -130,6 +131,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LineItem'
+        userId: 
+          type: string
+          examples: 
+            - "00000000-0000-0000-0000-000000000000"
 
     LineItem:
       type: object

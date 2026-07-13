@@ -1,11 +1,16 @@
 -- name: CreateShoppingCart :one
-INSERT INTO shopping_carts (id) VALUES (?) RETURNING *;
+INSERT INTO shopping_carts (id, user_id) VALUES (?, ?) RETURNING *;
 
 -- name: GetShoppingCart :one
 SELECT
-id
+id,
+user_id
 FROM shopping_carts
 WHERE id = ?;
+
+
+-- Line Items
+
 
 -- name: GetLineItemsOfShoppingCart :many
 SELECT 

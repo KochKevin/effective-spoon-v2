@@ -11,8 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
 INSERT INTO users (id, name) VALUES ('00000000-0000-0000-0000-000000000000', 'nico');
 
 -- Update shopping_carts table, so that its owned by an user
-ALTER TABLE 
-shopping_carts ADD COLUMN user_id UUID REFERENCES users(id);
+ALTER TABLE shopping_carts ADD COLUMN user_id UUID NOT NULL REFERENCES users(id);
 
 
 

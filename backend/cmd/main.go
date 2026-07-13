@@ -58,6 +58,7 @@ func main() {
 
 	//Middlewear
 	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://localhost:*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -78,7 +79,7 @@ func main() {
 				// Create/Get test user id
 				userId := uuid.Nil
 
-				r.WithContext(context.WithValue(r.Context(), "user_id", userId))
+				r = r.WithContext(context.WithValue(r.Context(), "user_id", userId))
 
 				next.ServeHTTP(w, r)
 			})
@@ -108,6 +109,9 @@ func main() {
 			Txm: *infrastructure.NewTxManager(db),
 		}, apiRouter)
 	})
+
+
+	
 
 	//Frontend
 	server.ServeFrontend(r)

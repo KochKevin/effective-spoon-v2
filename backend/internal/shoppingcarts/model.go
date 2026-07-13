@@ -11,6 +11,7 @@ import (
 type ShoppingCart struct {
 	Id        uuid.UUID
 	LineItems []LineItem
+	UserId uuid.UUID
 }
 
 func (s *ShoppingCart) GetFullPrice() money.Money {
@@ -76,17 +77,19 @@ func (s *ShoppingCart) DecreaseProductAmount(productId uuid.UUID) {
 
 }
 
-func ShoppingCartFrom(id uuid.UUID, lineItems []LineItem) ShoppingCart {
+func ShoppingCartFrom(id uuid.UUID, lineItems []LineItem, userID uuid.UUID) ShoppingCart {
 	return ShoppingCart{
 		Id:        id,
 		LineItems: lineItems,
+		UserId: userID,
 	}
 }
 
-func NewShoppingCart() ShoppingCart {
+func NewShoppingCart(userId uuid.UUID) ShoppingCart {
 	return ShoppingCart{
 		Id:        uuid.New(),
 		LineItems: nil,
+		UserId: userId,
 	}
 }
 

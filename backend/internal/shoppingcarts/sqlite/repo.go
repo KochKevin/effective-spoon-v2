@@ -17,19 +17,23 @@ type Repo struct {
 	Queries sqlc.Queries
 }
 
+//TODO: calling Create should also create the line items
 func (r *Repo) CreateShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) (shoppingcarts.ShoppingCart, error) {
 
-	obj, err := r.Queries.WithTx(tx).CreateShoppingCart(ctx, cart.Id)
+	obj, err := r.Queries.WithTx(tx).CreateShoppingCart(ctx, sqlc.CreateShoppingCartParams{
+		ID: cart.Id,
+		UserID: cart.UserId,
+	})
 	if err != nil {
 		slog.Error("Error in products query", err)
 		return shoppingcarts.ShoppingCart{}, err
 	}
 
-	return shoppingcarts.ShoppingCartFrom(obj, nil), nil
+	return shoppingcarts.ShoppingCartFrom(obj.ID, nil, obj.UserID), nil
 }
 
 func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (shoppingcarts.ShoppingCart, error) {
-	data, err := r.Queries.WithTx(tx).GetShoppingCart(ctx, id)
+	shoppingCart, err := r.Queries.WithTx(tx).GetShoppingCart(ctx, id)
 	if err != nil {
 		slog.Error("Error in get shopping cart query", err)
 		return shoppingcarts.ShoppingCart{}, err
@@ -42,6 +46,8 @@ func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (s
 	}
 
 	var cart shoppingcarts.ShoppingCart
+	cart.Id = shoppingCart.ID
+	cart.UserId = shoppingCart.UserID
 
 	for _, item := range lineItems {
 		cart.LineItems = append(cart.LineItems, shoppingcarts.LineItem{
@@ -53,8 +59,6 @@ func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (s
 			},
 		})
 	}
-
-	cart.Id = data
 
 	return cart, nil
 }

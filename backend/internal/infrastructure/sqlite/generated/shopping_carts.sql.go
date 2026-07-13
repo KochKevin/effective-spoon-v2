@@ -12,14 +12,19 @@ import (
 )
 
 const createShoppingCart = `-- name: CreateShoppingCart :one
-INSERT INTO shopping_carts (id) VALUES (?) RETURNING id
+INSERT INTO shopping_carts (id, user_id) VALUES (?, ?) RETURNING id, user_id
 `
 
-func (q *Queries) CreateShoppingCart(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, createShoppingCart, id)
-	var id_2 uuid.UUID
-	err := row.Scan(&id_2)
-	return id_2, err
+type CreateShoppingCartParams struct {
+	ID     uuid.UUID `json:"id"`
+	UserID uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) CreateShoppingCart(ctx context.Context, arg CreateShoppingCartParams) (ShoppingCart, error) {
+	row := q.db.QueryRowContext(ctx, createShoppingCart, arg.ID, arg.UserID)
+	var i ShoppingCart
+	err := row.Scan(&i.ID, &i.UserID)
+	return i, err
 }
 
 const createShoppingCartLineItem = `-- name: CreateShoppingCartLineItem :exec
@@ -54,6 +59,8 @@ func (q *Queries) DeleteAllLineItemsOfShoppingCart(ctx context.Context, shopping
 }
 
 const getLineItemsOfShoppingCart = `-- name: GetLineItemsOfShoppingCart :many
+
+
 SELECT 
 rel_shopping_carts_products.shopping_cart_id AS 'shoppingCartId', 
 products.id AS 'productId',
@@ -74,6 +81,7 @@ type GetLineItemsOfShoppingCartRow struct {
 	Amount         int64     `json:"'amount'"`
 }
 
+// Line Items
 func (q *Queries) GetLineItemsOfShoppingCart(ctx context.Context, shoppingCartID uuid.UUID) ([]GetLineItemsOfShoppingCartRow, error) {
 	rows, err := q.db.QueryContext(ctx, getLineItemsOfShoppingCart, shoppingCartID)
 	if err != nil {
@@ -105,14 +113,15 @@ func (q *Queries) GetLineItemsOfShoppingCart(ctx context.Context, shoppingCartID
 
 const getShoppingCart = `-- name: GetShoppingCart :one
 SELECT
-id
+id,
+user_id
 FROM shopping_carts
 WHERE id = ?
 `
 
-func (q *Queries) GetShoppingCart(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+func (q *Queries) GetShoppingCart(ctx context.Context, id uuid.UUID) (ShoppingCart, error) {
 	row := q.db.QueryRowContext(ctx, getShoppingCart, id)
-	var id_2 uuid.UUID
-	err := row.Scan(&id_2)
-	return id_2, err
+	var i ShoppingCart
+	err := row.Scan(&i.ID, &i.UserID)
+	return i, err
 }

@@ -25,6 +25,7 @@ type ShoppingCart struct {
 	FullPrice float32    `json:"fullPrice"`
 	Id        string     `json:"id"`
 	LineItems []LineItem `json:"lineItems"`
+	UserId    string     `json:"userId"`
 }
 
 // PostShoppingCartsIdDecreaseParams defines parameters for PostShoppingCartsIdDecrease.
