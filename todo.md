@@ -1,5 +1,4 @@
 - Add User System
-    - Shopping Carts connect depend on user
     - Show User Informations and balance in ui
     - Shopping Carts can make transactions and withdrawl from users money
 

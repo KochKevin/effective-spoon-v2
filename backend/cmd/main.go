@@ -16,6 +16,9 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
 	shoppingcartssapi "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated"
 	shoppingcartssqlite "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/sqlite"
+	"github.com/KochKevin/effective-spoon-v2/internal/users"
+	userssapi "github.com/KochKevin/effective-spoon-v2/internal/users/generated"
+	userssqlite "github.com/KochKevin/effective-spoon-v2/internal/users/sqlite"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -104,6 +107,14 @@ func main() {
 				Queries: *sqlc.New(db),
 			},
 			ProductRepo: &productssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+			Txm: *infrastructure.NewTxManager(db),
+		}, apiRouter)
+
+
+		userssapi.HandlerFromMux(&users.Api{
+			Repo: &userssqlite.Repo{
 				Queries: *sqlc.New(db),
 			},
 			Txm: *infrastructure.NewTxManager(db),

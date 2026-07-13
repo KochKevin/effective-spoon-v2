@@ -20,7 +20,7 @@ type Querier interface {
 	GetLineItemsOfShoppingCart(ctx context.Context, shoppingCartID uuid.UUID) ([]GetLineItemsOfShoppingCartRow, error)
 	GetProduct(ctx context.Context, id uuid.UUID) (Product, error)
 	GetShoppingCart(ctx context.Context, id uuid.UUID) (ShoppingCart, error)
-	GetUser(ctx context.Context, id uuid.UUID) (User, error)
+	GetUser(ctx context.Context, id uuid.UUID) (GetUserRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

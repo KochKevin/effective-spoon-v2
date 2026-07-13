@@ -6,6 +6,7 @@ info:
 tags:
   - name: products
   - name: shopping-carts
+  - name: users
 
 paths:
   /products:
@@ -89,6 +90,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/Shopping-Cart'
 
+  /users/current:
+    get:
+      summary: Get the currently logged in user
+      tags:
+        - users
+      responses:
+        '200':
+          description: A user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
 components:
   schemas:
     Product:
@@ -157,6 +171,27 @@ components:
           examples: 
             - 5
         price:
+          type: number
+          examples: 
+            - 10.0
+
+    User:
+      type: object
+      required:
+        - userId
+        - name
+        - balance
+        - price
+      properties:
+        userId:
+          type: string
+          examples: 
+            - "00000000-0000-0000-0000-000000000000"
+        name:
+          type: string
+          examples: 
+            - "Max Musterman"
+        balance:
           type: number
           examples: 
             - 10.0
