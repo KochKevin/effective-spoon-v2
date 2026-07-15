@@ -3,6 +3,7 @@ package shoppingcarts
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"net/http"
 
 	"log/slog"
@@ -10,6 +11,7 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
 	shoppingcartsapi "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated"
+	"github.com/KochKevin/effective-spoon-v2/internal/users"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 )
@@ -24,11 +26,18 @@ type ProductRepo interface {
 	GetProduct(ctx context.Context, tx *sql.Tx, id uuid.UUID) (products.Product, error)
 }
 
+type UserRepo interface {
+	CreateTransaction(ctx context.Context, tx *sql.Tx, transaction users.Transaction) (users.Transaction, error)
+}
+
 type Api struct {
 	Repo        Repo
 	ProductRepo ProductRepo
+	UserRepo    UserRepo
 	Txm         infrastructure.TxManager
 }
+
+//a *Api github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated.ServerInterface
 
 func (a *Api) ToDto(cart ShoppingCart) shoppingcartsapi.ShoppingCart {
 
@@ -45,9 +54,12 @@ func (a *Api) ToDto(cart ShoppingCart) shoppingcartsapi.ShoppingCart {
 	}
 
 	return shoppingcartsapi.ShoppingCart{
-		Id:        cart.Id.String(),
-		FullPrice: float32(cart.GetFullPrice().GetAsEuro()),
-		LineItems: lineItems,
+		Id:            cart.Id.String(),
+		FullPrice:     float32(cart.GetFullPrice().GetAsEuro()),
+		LineItems:     lineItems,
+		UserId:        cart.UserId.String(),
+		TransactionId: cart.TransactionId.UUID.String(),
+		Status:        string(cart.Status),
 	}
 
 }
@@ -60,7 +72,13 @@ func (a *Api) PostShoppingCarts(w http.ResponseWriter, r *http.Request) {
 
 	err := a.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
 
-		cart, err := a.Repo.CreateShoppingCart(r.Context(), tx, NewShoppingCart())
+		userID, ok := r.Context().Value("user_id").(uuid.UUID)
+		if !ok {
+			//slog.Error("Can not get user_id from context")
+			return errors.New("Can not get user_id from context")
+		}
+
+		cart, err := a.Repo.CreateShoppingCart(r.Context(), tx, NewShoppingCart(userID))
 
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout
@@ -100,6 +118,12 @@ func (a *Api) PostShoppingCartsIdDecrease(w http.ResponseWriter, r *http.Request
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout
 			slog.Error("Error getting shopping cart", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
+		if cart.Status != ShoppingCartActive {
+			slog.Error("Error shopping cart is not active, can not decrease amounts")
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
@@ -151,6 +175,12 @@ func (a *Api) PostShoppingCartsIdIncrease(w http.ResponseWriter, r *http.Request
 			return err
 		}
 
+		if cart.Status != ShoppingCartActive {
+			slog.Error("Error shopping cart is not active, can not increase amounts")
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
 		productToAdd, err := a.ProductRepo.GetProduct(r.Context(), tx, uuid.MustParse(params.ProductID))
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout
@@ -173,6 +203,69 @@ func (a *Api) PostShoppingCartsIdIncrease(w http.ResponseWriter, r *http.Request
 
 		dto = a.ToDto(cart)
 		slog.Debug("After increase: ", "dto", dto)
+
+		return nil
+
+	})
+
+	if err != nil {
+		slog.Error("Error in /products transaction", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	render.JSON(w, r, dto)
+}
+
+// Buy products in shopping cart
+// (POST /shopping-carts/{id}/checkout)
+func (a *Api) PostShoppingCartsIdCheckout(w http.ResponseWriter, r *http.Request, id string) {
+
+	var dto shoppingcartsapi.ShoppingCart
+
+	err := a.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+
+		/*
+			userID, ok := r.Context().Value("user_id").(uuid.UUID)
+			if !ok {
+				//slog.Error("Can not get user_id from context")
+				return errors.New("Can not get user_id from context")
+			}
+		*/
+
+		cart, err := a.Repo.GetShoppingCart(r.Context(), tx, uuid.MustParse(id))
+		if err != nil {
+			//TODO: give client more inforamtion instead of an timeout
+			slog.Error("Error getting shopping cart", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
+		if cart.Status != ShoppingCartActive {
+			slog.Error("Error shopping cart is not active, can not check out")
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
+		transaction := cart.GenerateTransaction()
+
+		transaction, err = a.UserRepo.CreateTransaction(r.Context(), tx, transaction)
+		if err != nil {
+			slog.Error("Error creating transaction", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
+		cart.Checkout(transaction.Id)
+
+		err = a.Repo.SaveShoppingCart(r.Context(), tx, cart)
+		if err != nil {
+			slog.Error("Error saving shoppingcart", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
+		dto = a.ToDto(cart)
 
 		return nil
 

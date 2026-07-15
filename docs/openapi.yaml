@@ -1,11 +1,12 @@
 openapi: 3.1.0
 info:
   title: KIOSK API
-  version: 0.0.2
+  version: 0.0.3
 
 tags:
   - name: products
   - name: shopping-carts
+  - name: users
 
 paths:
   /products:
@@ -89,6 +90,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/Shopping-Cart'
 
+  /shopping-carts/{id}/checkout:
+    post:
+      summary: Buy products in shopping cart
+      tags:
+        - shopping-carts
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Shopping Cart ID to use
+      responses:
+        '200':
+          description: Successfully checked out the shopping cart
+          content:
+            application/json:
+                schema:
+                  $ref: '#/components/schemas/Shopping-Cart'
+
+          
+
+  /users/current:
+    get:
+      summary: Get the currently logged in user
+      tags:
+        - users
+      responses:
+        '200':
+          description: A user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
 components:
   schemas:
     Product:
@@ -117,6 +153,9 @@ components:
         - id
         - fullPrice
         - lineItems
+        - userId
+        - status
+        - transactionId
       properties:
         id:
           type: string
@@ -130,6 +169,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LineItem'
+        userId: 
+          type: string
+          examples: 
+            - "00000000-0000-0000-0000-000000000000"
+        status:
+          type: string
+          examples:
+            - "active"
+            - "checked-out"
+        transactionId: 
+          type: string
+          examples: 
+            - "00000000-0000-0000-0000-000000000000"
 
     LineItem:
       type: object
@@ -152,6 +204,27 @@ components:
           examples: 
             - 5
         price:
+          type: number
+          examples: 
+            - 10.0
+
+    User:
+      type: object
+      required:
+        - userId
+        - name
+        - balance
+        - price
+      properties:
+        userId:
+          type: string
+          examples: 
+            - "00000000-0000-0000-0000-000000000000"
+        name:
+          type: string
+          examples: 
+            - "Max Musterman"
+        balance:
           type: number
           examples: 
             - 10.0

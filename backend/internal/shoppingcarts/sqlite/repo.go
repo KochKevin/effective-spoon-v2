@@ -17,19 +17,25 @@ type Repo struct {
 	Queries sqlc.Queries
 }
 
+// TODO: calling Create should also create the line items
 func (r *Repo) CreateShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) (shoppingcarts.ShoppingCart, error) {
 
-	obj, err := r.Queries.WithTx(tx).CreateShoppingCart(ctx, cart.Id)
+	obj, err := r.Queries.WithTx(tx).CreateShoppingCart(ctx, sqlc.CreateShoppingCartParams{
+		ID:            cart.Id,
+		UserID:        cart.UserId,
+		TransactionID: cart.TransactionId,
+		Status:        string(cart.Status),
+	})
 	if err != nil {
 		slog.Error("Error in products query", err)
 		return shoppingcarts.ShoppingCart{}, err
 	}
 
-	return shoppingcarts.ShoppingCartFrom(obj, nil), nil
+	return shoppingcarts.ShoppingCartFrom(obj.ID, nil, obj.UserID, obj.TransactionID, shoppingcarts.ShoppingCartStatus(obj.Status)), nil
 }
 
 func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (shoppingcarts.ShoppingCart, error) {
-	data, err := r.Queries.WithTx(tx).GetShoppingCart(ctx, id)
+	shoppingCart, err := r.Queries.WithTx(tx).GetShoppingCart(ctx, id)
 	if err != nil {
 		slog.Error("Error in get shopping cart query", err)
 		return shoppingcarts.ShoppingCart{}, err
@@ -42,6 +48,10 @@ func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (s
 	}
 
 	var cart shoppingcarts.ShoppingCart
+	cart.Id = shoppingCart.ID
+	cart.UserId = shoppingCart.UserID
+	cart.TransactionId = shoppingCart.TransactionID
+	cart.Status = shoppingcarts.ShoppingCartStatus(shoppingCart.Status)
 
 	for _, item := range lineItems {
 		cart.LineItems = append(cart.LineItems, shoppingcarts.LineItem{
@@ -54,13 +64,12 @@ func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (s
 		})
 	}
 
-	cart.Id = data
-
 	return cart, nil
 }
 
 func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) error {
 
+	//Update Line Items
 	err := r.Queries.WithTx(tx).DeleteAllLineItemsOfShoppingCart(ctx, cart.Id)
 	if err != nil {
 		slog.Error("Error in deleting all line items of an shopping cart query", err)
@@ -79,6 +88,14 @@ func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingca
 			return err
 		}
 	}
+
+	//Update Shopping Cart
+	r.Queries.WithTx(tx).UpdateShoppingCart(ctx, sqlc.UpdateShoppingCartParams{
+		UserID:        cart.UserId,
+		TransactionID: cart.TransactionId,
+		ID:            cart.Id,
+		Status:        string(cart.Status),
+	})
 
 	return nil
 }

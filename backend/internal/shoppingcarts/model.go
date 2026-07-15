@@ -5,12 +5,23 @@ import (
 
 	"github.com/KochKevin/effective-spoon-v2/internal/money"
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
+	"github.com/KochKevin/effective-spoon-v2/internal/users"
 	"github.com/google/uuid"
 )
 
+type ShoppingCartStatus string
+
+var (
+	ShoppingCartActive     ShoppingCartStatus = "active"
+	ShoppingCartCheckedOut ShoppingCartStatus = "checked-out"
+)
+
 type ShoppingCart struct {
-	Id        uuid.UUID
-	LineItems []LineItem
+	Id            uuid.UUID
+	LineItems     []LineItem
+	UserId        uuid.UUID
+	TransactionId uuid.NullUUID
+	Status        ShoppingCartStatus
 }
 
 func (s *ShoppingCart) GetFullPrice() money.Money {
@@ -76,17 +87,47 @@ func (s *ShoppingCart) DecreaseProductAmount(productId uuid.UUID) {
 
 }
 
-func ShoppingCartFrom(id uuid.UUID, lineItems []LineItem) ShoppingCart {
+//TODO: Combine Generate Transaction and Checkout to one Checkout Function which returns an transaction
+
+// Creates a new Transaction for the buying user based on the data in the shoppingcart
+func (s *ShoppingCart) GenerateTransaction() (transaction users.Transaction) {
+
+	slog.Debug("Generate Transaction", "shopping cart Full price", s.GetFullPrice())
+
+	slog.Debug("Generate Transaction", "transaction amount", money.MoneyFrom(0).Sub(s.GetFullPrice()))
+
+	return users.NewTransaction(
+		s.UserId,
+		money.MoneyFrom(0).Sub(s.GetFullPrice()), //Withdrawl money from user with this Transaction
+	)
+}
+
+func (s *ShoppingCart) Checkout(transactionId uuid.UUID) {
+	s.TransactionId = uuid.NullUUID{
+		Valid: true,
+		UUID:  transactionId,
+	}
+
+	s.Status = ShoppingCartCheckedOut
+}
+
+func ShoppingCartFrom(id uuid.UUID, lineItems []LineItem, userID uuid.UUID, transactionId uuid.NullUUID, status ShoppingCartStatus) ShoppingCart {
 	return ShoppingCart{
-		Id:        id,
-		LineItems: lineItems,
+		Id:            id,
+		LineItems:     lineItems,
+		UserId:        userID,
+		TransactionId: transactionId,
+		Status:        status,
 	}
 }
 
-func NewShoppingCart() ShoppingCart {
+func NewShoppingCart(userId uuid.UUID) ShoppingCart {
 	return ShoppingCart{
-		Id:        uuid.New(),
-		LineItems: nil,
+		Id:            uuid.New(),
+		LineItems:     nil,
+		UserId:        userId,
+		TransactionId: uuid.NullUUID{Valid: false},
+		Status:        ShoppingCartActive,
 	}
 }
 

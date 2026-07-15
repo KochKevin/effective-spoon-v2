@@ -21,5 +21,19 @@ type RelShoppingCartsProduct struct {
 }
 
 type ShoppingCart struct {
-	ID uuid.UUID `json:"id"`
+	ID            uuid.UUID     `json:"id"`
+	UserID        uuid.UUID     `json:"user_id"`
+	TransactionID uuid.NullUUID `json:"transaction_id"`
+	Status        string        `json:"status"`
+}
+
+type User struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+type UserTransaction struct {
+	ID     uuid.UUID `json:"id"`
+	UserID uuid.UUID `json:"user_id"`
+	Amount int64     `json:"amount"`
 }

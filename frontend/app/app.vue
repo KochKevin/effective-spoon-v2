@@ -10,10 +10,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { useUserStore } from './stores/users';
 
 
 const shoppingCartStore = useShoppingCartStore()
+const userStore = useUserStore()
 
+userStore.getCurrentUser()
 
 </script>
 
@@ -25,11 +28,15 @@ const shoppingCartStore = useShoppingCartStore()
 
     <Card class="flex-none flex flex-row gap-4 h-22 p-4">
 
-      <Card class="flex-4" />
+      <Card class="flex-4">
+       {{userStore.currentUser?.name}}
+      </Card>
 
       <ProductCatalogModal class="flex-2"/>
 
-      <Card class="flex-4" />
+      <Card class="flex-4">
+        {{userStore.currentUser?.balance}}
+      </Card>
 
     </Card>
 
@@ -49,7 +56,7 @@ const shoppingCartStore = useShoppingCartStore()
           TOTAL: {{ formatCurrency(shoppingCartStore.shoppingCart?.fullPrice) }}
         </div>
 
-          <Button size="lg" class="w-32">
+          <Button size="lg" class="w-32" @click="shoppingCartStore.checkoutCart(shoppingCartStore.shoppingCart?.id || '')">
           Kaufen
         </Button>
 

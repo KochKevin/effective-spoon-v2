@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"net/http"
@@ -15,9 +16,13 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
 	shoppingcartssapi "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated"
 	shoppingcartssqlite "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/sqlite"
+	"github.com/KochKevin/effective-spoon-v2/internal/users"
+	userssapi "github.com/KochKevin/effective-spoon-v2/internal/users/generated"
+	userssqlite "github.com/KochKevin/effective-spoon-v2/internal/users/sqlite"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/google/uuid"
 	"github.com/pressly/goose/v3"
 
 	_ "modernc.org/sqlite"
@@ -25,6 +30,7 @@ import (
 
 func main() {
 
+	//Setup Logger
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}))
@@ -43,13 +49,19 @@ func main() {
 
 	defer db.Close()
 
-	goose.Up(db, "./db/migrations")
+	err = goose.Up(db, "./db/migrations")
+
+	if err != nil {
+		slog.Error("Error migrating database", "error", err)
+	}
+	
 
 	//Router Setup
 	r := chi.NewRouter()
 
 	//Middlewear
 	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://localhost:*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -62,6 +74,19 @@ func main() {
 	//Serve everything under /api
 
 	r.Route("/api", func(apiRouter chi.Router) {
+
+		//GetLoggedInUser Middlewear
+		apiRouter.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+				// Create/Get test user id
+				userId := uuid.Nil
+
+				r = r.WithContext(context.WithValue(r.Context(), "user_id", userId))
+
+				next.ServeHTTP(w, r)
+			})
+		})
 
 		apiRouter.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -84,9 +109,23 @@ func main() {
 			ProductRepo: &productssqlite.Repo{
 				Queries: *sqlc.New(db),
 			},
+			UserRepo: &userssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+			Txm: *infrastructure.NewTxManager(db),
+		}, apiRouter)
+
+
+		userssapi.HandlerFromMux(&users.Api{
+			Repo: &userssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
 			Txm: *infrastructure.NewTxManager(db),
 		}, apiRouter)
 	})
+
+
+	
 
 	//Frontend
 	server.ServeFrontend(r)

@@ -20,7 +20,7 @@ func (m Money) Add(money Money) Money {
 
 func (m Money) Sub(money Money) Money {
 	return MoneyFrom(
-		m.Cents - m.Cents,
+		m.Cents - money.Cents,
 	)
 }
 
