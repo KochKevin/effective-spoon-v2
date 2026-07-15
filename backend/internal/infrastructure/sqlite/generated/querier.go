@@ -13,6 +13,7 @@ import (
 type Querier interface {
 	CreateShoppingCart(ctx context.Context, arg CreateShoppingCartParams) (ShoppingCart, error)
 	CreateShoppingCartLineItem(ctx context.Context, arg CreateShoppingCartLineItemParams) error
+	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (UserTransaction, error)
 	//order by to keep the order in which they are inserted
 	DeleteAllLineItemsOfShoppingCart(ctx context.Context, shoppingCartID uuid.UUID) error
 	GetAllProducts(ctx context.Context) ([]Product, error)
@@ -21,6 +22,7 @@ type Querier interface {
 	GetProduct(ctx context.Context, id uuid.UUID) (Product, error)
 	GetShoppingCart(ctx context.Context, id uuid.UUID) (ShoppingCart, error)
 	GetUser(ctx context.Context, id uuid.UUID) (GetUserRow, error)
+	UpdateShoppingCart(ctx context.Context, arg UpdateShoppingCartParams) error
 }
 
 var _ Querier = (*Queries)(nil)

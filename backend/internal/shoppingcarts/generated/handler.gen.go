@@ -45,6 +45,9 @@ type ServerInterface interface {
 	// Create a new shopping cart
 	// (POST /shopping-carts)
 	PostShoppingCarts(w http.ResponseWriter, r *http.Request)
+	// Buy products in shopping cart
+	// (POST /shopping-carts/{id}/checkout)
+	PostShoppingCartsIdCheckout(w http.ResponseWriter, r *http.Request, id string)
 	// Remove product from shopping cart
 	// (POST /shopping-carts/{id}/decrease)
 	PostShoppingCartsIdDecrease(w http.ResponseWriter, r *http.Request, id string, params PostShoppingCartsIdDecreaseParams)
@@ -60,6 +63,12 @@ type Unimplemented struct{}
 // Create a new shopping cart
 // (POST /shopping-carts)
 func (_ Unimplemented) PostShoppingCarts(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Buy products in shopping cart
+// (POST /shopping-carts/{id}/checkout)
+func (_ Unimplemented) PostShoppingCartsIdCheckout(w http.ResponseWriter, r *http.Request, id string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -89,6 +98,32 @@ func (siw *ServerInterfaceWrapper) PostShoppingCarts(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostShoppingCarts(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PostShoppingCartsIdCheckout operation middleware
+func (siw *ServerInterfaceWrapper) PostShoppingCartsIdCheckout(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostShoppingCartsIdCheckout(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -297,6 +332,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/shopping-carts", wrapper.PostShoppingCarts)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/shopping-carts/{id}/checkout", wrapper.PostShoppingCartsIdCheckout)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/shopping-carts/{id}/decrease", wrapper.PostShoppingCartsIdDecrease)

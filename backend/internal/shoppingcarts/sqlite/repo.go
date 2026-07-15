@@ -17,11 +17,11 @@ type Repo struct {
 	Queries sqlc.Queries
 }
 
-//TODO: calling Create should also create the line items
+// TODO: calling Create should also create the line items
 func (r *Repo) CreateShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) (shoppingcarts.ShoppingCart, error) {
 
 	obj, err := r.Queries.WithTx(tx).CreateShoppingCart(ctx, sqlc.CreateShoppingCartParams{
-		ID: cart.Id,
+		ID:     cart.Id,
 		UserID: cart.UserId,
 	})
 	if err != nil {
@@ -29,7 +29,7 @@ func (r *Repo) CreateShoppingCart(ctx context.Context, tx *sql.Tx, cart shopping
 		return shoppingcarts.ShoppingCart{}, err
 	}
 
-	return shoppingcarts.ShoppingCartFrom(obj.ID, nil, obj.UserID), nil
+	return shoppingcarts.ShoppingCartFrom(obj.ID, nil, obj.UserID, obj.TransactionID, shoppingcarts.ShoppingCartStatus(obj.Status)), nil
 }
 
 func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (shoppingcarts.ShoppingCart, error) {
@@ -48,6 +48,7 @@ func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (s
 	var cart shoppingcarts.ShoppingCart
 	cart.Id = shoppingCart.ID
 	cart.UserId = shoppingCart.UserID
+	cart.TransactionId = shoppingCart.TransactionID
 
 	for _, item := range lineItems {
 		cart.LineItems = append(cart.LineItems, shoppingcarts.LineItem{
@@ -65,6 +66,7 @@ func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (s
 
 func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) error {
 
+	//Update Line Items
 	err := r.Queries.WithTx(tx).DeleteAllLineItemsOfShoppingCart(ctx, cart.Id)
 	if err != nil {
 		slog.Error("Error in deleting all line items of an shopping cart query", err)
@@ -83,6 +85,13 @@ func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingca
 			return err
 		}
 	}
+
+	//Update Shopping Cart
+	r.Queries.WithTx(tx).UpdateShoppingCart(ctx, sqlc.UpdateShoppingCartParams{
+		UserID:        cart.UserId,
+		TransactionID: cart.TransactionId,
+		ID:            cart.Id,
+	})
 
 	return nil
 }

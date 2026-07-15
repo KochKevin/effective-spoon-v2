@@ -12,18 +12,30 @@ import (
 )
 
 const createShoppingCart = `-- name: CreateShoppingCart :one
-INSERT INTO shopping_carts (id, user_id) VALUES (?, ?) RETURNING id, user_id
+INSERT INTO shopping_carts (id, user_id, transaction_id, status) VALUES (?, ?, ?, ?) RETURNING id, user_id, transaction_id, status
 `
 
 type CreateShoppingCartParams struct {
-	ID     uuid.UUID `json:"id"`
-	UserID uuid.UUID `json:"user_id"`
+	ID            uuid.UUID     `json:"id"`
+	UserID        uuid.UUID     `json:"user_id"`
+	TransactionID uuid.NullUUID `json:"transaction_id"`
+	Status        string        `json:"status"`
 }
 
 func (q *Queries) CreateShoppingCart(ctx context.Context, arg CreateShoppingCartParams) (ShoppingCart, error) {
-	row := q.db.QueryRowContext(ctx, createShoppingCart, arg.ID, arg.UserID)
+	row := q.db.QueryRowContext(ctx, createShoppingCart,
+		arg.ID,
+		arg.UserID,
+		arg.TransactionID,
+		arg.Status,
+	)
 	var i ShoppingCart
-	err := row.Scan(&i.ID, &i.UserID)
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.TransactionID,
+		&i.Status,
+	)
 	return i, err
 }
 
@@ -114,7 +126,9 @@ func (q *Queries) GetLineItemsOfShoppingCart(ctx context.Context, shoppingCartID
 const getShoppingCart = `-- name: GetShoppingCart :one
 SELECT
 id,
-user_id
+user_id,
+transaction_id,
+status
 FROM shopping_carts
 WHERE id = ?
 `
@@ -122,6 +136,37 @@ WHERE id = ?
 func (q *Queries) GetShoppingCart(ctx context.Context, id uuid.UUID) (ShoppingCart, error) {
 	row := q.db.QueryRowContext(ctx, getShoppingCart, id)
 	var i ShoppingCart
-	err := row.Scan(&i.ID, &i.UserID)
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.TransactionID,
+		&i.Status,
+	)
 	return i, err
+}
+
+const updateShoppingCart = `-- name: UpdateShoppingCart :exec
+UPDATE shopping_carts 
+SET 
+user_id = ?,
+transaction_id = ?,
+status = ?
+WHERE id = ?
+`
+
+type UpdateShoppingCartParams struct {
+	UserID        uuid.UUID     `json:"user_id"`
+	TransactionID uuid.NullUUID `json:"transaction_id"`
+	Status        string        `json:"status"`
+	ID            uuid.UUID     `json:"id"`
+}
+
+func (q *Queries) UpdateShoppingCart(ctx context.Context, arg UpdateShoppingCartParams) error {
+	_, err := q.db.ExecContext(ctx, updateShoppingCart,
+		arg.UserID,
+		arg.TransactionID,
+		arg.Status,
+		arg.ID,
+	)
+	return err
 }

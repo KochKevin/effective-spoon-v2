@@ -11,6 +11,7 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
 	shoppingcartsapi "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated"
+	"github.com/KochKevin/effective-spoon-v2/internal/users"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 )
@@ -25,11 +26,18 @@ type ProductRepo interface {
 	GetProduct(ctx context.Context, tx *sql.Tx, id uuid.UUID) (products.Product, error)
 }
 
+type UserRepo interface {
+	CreateTransaction(ctx context.Context, tx *sql.Tx, transaction users.Transaction) (users.Transaction, error)
+}
+
 type Api struct {
 	Repo        Repo
 	ProductRepo ProductRepo
+	UserRepo    UserRepo
 	Txm         infrastructure.TxManager
 }
+
+//a *Api github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated.ServerInterface
 
 func (a *Api) ToDto(cart ShoppingCart) shoppingcartsapi.ShoppingCart {
 
@@ -181,6 +189,55 @@ func (a *Api) PostShoppingCartsIdIncrease(w http.ResponseWriter, r *http.Request
 
 		dto = a.ToDto(cart)
 		slog.Debug("After increase: ", "dto", dto)
+
+		return nil
+
+	})
+
+	if err != nil {
+		slog.Error("Error in /products transaction", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	render.JSON(w, r, dto)
+}
+
+// Buy products in shopping cart
+// (POST /shopping-carts/{id}/checkout)
+func (a *Api) PostShoppingCartsIdCheckout(w http.ResponseWriter, r *http.Request, id string) {
+
+	var dto shoppingcartsapi.ShoppingCart
+
+	err := a.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+
+		/*
+			userID, ok := r.Context().Value("user_id").(uuid.UUID)
+			if !ok {
+				//slog.Error("Can not get user_id from context")
+				return errors.New("Can not get user_id from context")
+			}
+		*/
+
+		cart, err := a.Repo.GetShoppingCart(r.Context(), tx, uuid.MustParse(id))
+		if err != nil {
+			//TODO: give client more inforamtion instead of an timeout
+			slog.Error("Error getting shopping cart", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
+		transaction := cart.GenerateTransaction()
+
+		a.UserRepo.CreateTransaction(r.Context(), tx, transaction)
+
+		cart.Checkout(transaction.Id)
+
+		a.Repo.SaveShoppingCart(r.Context(), tx, cart)
+
+		a.UserRepo.CreateTransaction(r.Context(), tx, transaction)
+
+		dto = a.ToDto(cart)
 
 		return nil
 

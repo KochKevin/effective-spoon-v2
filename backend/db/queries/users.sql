@@ -11,3 +11,12 @@ CAST(COALESCE(
 ) AS INTEGER) as balance -- Fallback to zero if no transaction exists
 FROM users
 WHERE users.id = ?;
+
+
+-- name: CreateTransaction :one
+INSERT INTO user_transactions (
+id,
+user_id,
+amount
+)
+VALUES (?,?,?) RETURNING *;

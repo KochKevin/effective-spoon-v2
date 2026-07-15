@@ -11,6 +11,28 @@ import (
 	"github.com/google/uuid"
 )
 
+const createTransaction = `-- name: CreateTransaction :one
+INSERT INTO user_transactions (
+id,
+user_id,
+amount
+)
+VALUES (?,?,?) RETURNING id, user_id, amount
+`
+
+type CreateTransactionParams struct {
+	ID     uuid.UUID `json:"id"`
+	UserID uuid.UUID `json:"user_id"`
+	Amount int64     `json:"amount"`
+}
+
+func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (UserTransaction, error) {
+	row := q.db.QueryRowContext(ctx, createTransaction, arg.ID, arg.UserID, arg.Amount)
+	var i UserTransaction
+	err := row.Scan(&i.ID, &i.UserID, &i.Amount)
+	return i, err
+}
+
 const getUser = `-- name: GetUser :one
 SELECT 
 users.id,

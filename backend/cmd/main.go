@@ -109,6 +109,9 @@ func main() {
 			ProductRepo: &productssqlite.Repo{
 				Queries: *sqlc.New(db),
 			},
+			UserRepo: &userssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
 			Txm: *infrastructure.NewTxManager(db),
 		}, apiRouter)
 

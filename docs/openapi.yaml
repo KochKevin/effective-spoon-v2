@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: KIOSK API
-  version: 0.0.2
+  version: 0.0.3
 
 tags:
   - name: products
@@ -90,6 +90,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/Shopping-Cart'
 
+  /shopping-carts/{id}/checkout:
+    post:
+      summary: Buy products in shopping cart
+      tags:
+        - shopping-carts
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Shopping Cart ID to use
+      responses:
+        '200':
+          description: Successfully checked out the shopping cart
+          
+
   /users/current:
     get:
       summary: Get the currently logged in user
@@ -132,6 +149,7 @@ components:
         - fullPrice
         - lineItems
         - userId
+        - status
       properties:
         id:
           type: string
@@ -149,6 +167,11 @@ components:
           type: string
           examples: 
             - "00000000-0000-0000-0000-000000000000"
+        status:
+          type: string
+          examples:
+            - "active"
+            - "checked-out"
 
     LineItem:
       type: object

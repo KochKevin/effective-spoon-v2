@@ -1,12 +1,23 @@
 -- name: CreateShoppingCart :one
-INSERT INTO shopping_carts (id, user_id) VALUES (?, ?) RETURNING *;
+INSERT INTO shopping_carts (id, user_id, transaction_id, status) VALUES (?, ?, ?, ?) RETURNING *;
 
 -- name: GetShoppingCart :one
 SELECT
 id,
-user_id
+user_id,
+transaction_id,
+status
 FROM shopping_carts
 WHERE id = ?;
+
+-- name: UpdateShoppingCart :exec
+UPDATE shopping_carts 
+SET 
+user_id = ?,
+transaction_id = ?,
+status = ?
+WHERE id = ?;
+
 
 
 -- Line Items
