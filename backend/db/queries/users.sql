@@ -2,6 +2,7 @@
 SELECT 
 users.id,
 users.name,
+users.code,
 CAST(COALESCE(
 (
     SELECT SUM(user_transactions.amount) 
@@ -11,6 +12,14 @@ CAST(COALESCE(
 ) AS INTEGER) as balance -- Fallback to zero if no transaction exists
 FROM users
 WHERE users.id = ?;
+
+
+-- name: GetUserIdByCode :one
+SELECT
+users.id
+FROM users
+WHERE users.code = ?;
+
 
 
 -- name: CreateTransaction :one

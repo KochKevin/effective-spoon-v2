@@ -1,19 +1,14 @@
-- Add User System
-    - Shopping Carts can make transactions and withdrawl from users money
-
-
-
-- Auth System
-    - Provide test endpoint to login with user code
-    - Auth Service with global state which lives in memory an saved the current logged in user and the service provides an api to get the logged in user
-    - Use Auth Service in middlewear to get the logged in user
-
 
 Problems and Bugs
-
-- Database locked error when doing to many things
+- fix sqlite wal mode and connection see: https://github.com/KochKevin/effective-spoon-v2/pull/6
 
 Backlog
+
+- Add ENV
+- Add Dev Environment (read from env)
+    - Add test (seed) data to db when its starting -> First Remove test data from migration. An squash of the current migrations should be probably done too
+    - Auto use test user for login when in dev mode
+
 - Shopping Cart Card größe anpassen
 - Use env to point frontend api to backend
 
@@ -25,3 +20,19 @@ Backlog
 
 
 - Combine Generate Transaction and Checkout to one Checkout Function which returns an transaction (shoppingcarts/model)
+
+
+- In main.go, if goose.Up fails, the application logs the error but continues running. It is safer to log the error and terminate the application (log.Fatal) to avoid running with an inconsistent database schema.
+
+- In SaveShoppingCart (backend/internal/shoppingcarts/sqlite/repo.go), the error returned by UpdateShoppingCart is completely ignored. If the update fails, the function will still return nil (success), which can lead to silent data loss or inconsistent state.
+
+- In all handlers, WithTx is called with context.Background() instead of r.Context(). This ignores the request context, meaning database transactions won't be canceled if the client disconnects or the request times out. Please use r.Context().
+
+- Using raw strings like "user_id" as context keys is a Go anti-pattern. Consider defining a custom unexported type for context keys to avoid potential collisions. -> Add an project wide http package with typed context keys and custom middlewear
+
+- Several slog.Error calls pass err directly as the second argument instead of using key-value pairs (e.g., "error", err).
+
+
+To thinker about
+- add more auth to shopping cart
+    - check if the user which is the shopping cart owner is the same as the one who is increasing, decreasing or checking it out

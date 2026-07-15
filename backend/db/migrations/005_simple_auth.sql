@@ -1,0 +1,12 @@
+-- +goose Up
+-- +goose StatementBegin
+
+-- NEEDS TO BE CHANGED LATER 
+ALTER TABLE users ADD COLUMN code text NOT NULL DEFAULT '00000';
+
+UPDATE users SET code = 1 WHERE users.id = '00000000-0000-0000-0000-000000000001';
+UPDATE users SET code = 2 WHERE users.id = '00000000-0000-0000-0000-000000000002';
+UPDATE users SET code = 3 WHERE users.id = '00000000-0000-0000-0000-000000000003';
+
+
+-- +goose StatementEnd

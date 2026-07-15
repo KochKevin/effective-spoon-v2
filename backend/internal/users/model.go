@@ -5,17 +5,21 @@ import (
 	"github.com/google/uuid"
 )
 
+type Usercode string
+
 type User struct {
 	Id      uuid.UUID
 	Name    string
 	Balance money.Money
+	Code    Usercode
 }
 
-func UserFrom(id uuid.UUID, name string, balance money.Money) User {
+func UserFrom(id uuid.UUID, name string, balance money.Money, usercode Usercode) User {
 	return User{
 		Id:      id,
 		Name:    name,
 		Balance: balance,
+		Code:    usercode,
 	}
 }
 
@@ -35,7 +39,7 @@ func NewTransaction(userID uuid.UUID, amount money.Money) Transaction {
 
 func TranscationFrom(id uuid.UUID, userId uuid.UUID, amount money.Money) Transaction {
 	return Transaction{
-		Id: id,
+		Id:     id,
 		UserID: userId,
 		Amount: amount,
 	}

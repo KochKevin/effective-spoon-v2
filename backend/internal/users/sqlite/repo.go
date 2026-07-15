@@ -24,23 +24,35 @@ func (r *Repo) GetUser(ctx context.Context, tx *sql.Tx, id uuid.UUID) (users.Use
 		return users.User{}, err
 	}
 
-	return users.UserFrom(user.ID, user.Name, money.MoneyFrom(int(user.Balance))), nil
+	return users.UserFrom(user.ID, user.Name, money.MoneyFrom(int(user.Balance)), users.Usercode(user.Code)), nil
 }
-
 
 func (r *Repo) CreateTransaction(ctx context.Context, tx *sql.Tx, transaction users.Transaction) (users.Transaction, error) {
 
 	dbObj, err := r.Queries.WithTx(tx).CreateTransaction(ctx, sqlc.CreateTransactionParams{
-		ID: transaction.Id,
+		ID:     transaction.Id,
 		UserID: transaction.UserID,
 		Amount: int64(transaction.Amount.GetAsCents()),
 	})
-	
+
 	if err != nil {
 		slog.Error("Error in get user query", "error", err)
 		return users.Transaction{}, err
 	}
 
 	return users.TranscationFrom(dbObj.ID, dbObj.UserID, money.MoneyFrom(int(dbObj.Amount))), nil
+
+}
+
+func (r *Repo) GetUserIdByCode(ctx context.Context, tx *sql.Tx, usercode users.Usercode) (uuid.UUID, error) {
+
+	userId, err := r.Queries.WithTx(tx).GetUserIdByCode(ctx, string(usercode))
+
+	if err != nil {
+		slog.Error("Error in get user query", "error", err)
+		return uuid.Nil, err
+	}
+
+	return userId, nil
 
 }
