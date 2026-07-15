@@ -54,10 +54,12 @@ func (a *Api) ToDto(cart ShoppingCart) shoppingcartsapi.ShoppingCart {
 	}
 
 	return shoppingcartsapi.ShoppingCart{
-		Id:        cart.Id.String(),
-		FullPrice: float32(cart.GetFullPrice().GetAsEuro()),
-		LineItems: lineItems,
-		UserId:    cart.UserId.String(),
+		Id:            cart.Id.String(),
+		FullPrice:     float32(cart.GetFullPrice().GetAsEuro()),
+		LineItems:     lineItems,
+		UserId:        cart.UserId.String(),
+		TransactionId: cart.TransactionId.UUID.String(),
+		Status:        string(cart.Status),
 	}
 
 }

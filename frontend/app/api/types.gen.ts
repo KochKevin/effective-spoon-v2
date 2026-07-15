@@ -15,6 +15,8 @@ export type ShoppingCart = {
     fullPrice: number;
     lineItems: Array<LineItem>;
     userId: string;
+    status: string;
+    transactionId: string;
 };
 
 export type LineItem = {
@@ -113,6 +115,25 @@ export type PostShoppingCartsByIdDecreaseResponses = {
 };
 
 export type PostShoppingCartsByIdDecreaseResponse = PostShoppingCartsByIdDecreaseResponses[keyof PostShoppingCartsByIdDecreaseResponses];
+
+export type PostShoppingCartsByIdCheckoutData = {
+    body?: never;
+    path: {
+        /**
+         * Shopping Cart ID to use
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/shopping-carts/{id}/checkout';
+};
+
+export type PostShoppingCartsByIdCheckoutResponses = {
+    /**
+     * Successfully checked out the shopping cart
+     */
+    200: unknown;
+};
 
 export type GetUsersCurrentData = {
     body?: never;

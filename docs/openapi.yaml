@@ -150,6 +150,7 @@ components:
         - lineItems
         - userId
         - status
+        - transactionId
       properties:
         id:
           type: string
@@ -172,6 +173,10 @@ components:
           examples:
             - "active"
             - "checked-out"
+        transactionId: 
+          type: string
+          examples: 
+            - "00000000-0000-0000-0000-000000000000"
 
     LineItem:
       type: object

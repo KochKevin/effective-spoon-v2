@@ -22,10 +22,12 @@ type LineItem struct {
 
 // ShoppingCart defines model for Shopping-Cart.
 type ShoppingCart struct {
-	FullPrice float32    `json:"fullPrice"`
-	Id        string     `json:"id"`
-	LineItems []LineItem `json:"lineItems"`
-	UserId    string     `json:"userId"`
+	FullPrice     float32    `json:"fullPrice"`
+	Id            string     `json:"id"`
+	LineItems     []LineItem `json:"lineItems"`
+	Status        string     `json:"status"`
+	TransactionId string     `json:"transactionId"`
+	UserId        string     `json:"userId"`
 }
 
 // PostShoppingCartsIdDecreaseParams defines parameters for PostShoppingCartsIdDecrease.

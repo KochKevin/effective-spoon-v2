@@ -11,6 +11,8 @@
 
 Problems and Bugs
 
+- Database locked error when doing to many things
+
 Backlog
 - Shopping Cart Card größe anpassen
 - Use env to point frontend api to backend
