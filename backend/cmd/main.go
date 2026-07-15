@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/KochKevin/effective-spoon-v2/internal/auth"
+	authapi "github.com/KochKevin/effective-spoon-v2/internal/auth/generated"
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
@@ -39,7 +41,6 @@ func main() {
 
 	slog.Info("Backend Api started")
 
-	
 	//Do Database migrations. Open swlite with WAL mode for writing and reading
 	db, err := goose.OpenDBWithDriver("sqlite", "./db/data/data.db?_journal_mode=WAL&_busy_timeout=5000")
 	if err != nil {
@@ -52,13 +53,11 @@ func main() {
 	//Allow only one Open Connection to sqlite anytime. Forces request to query
 	db.SetMaxOpenConns(1)
 
-
 	err = goose.Up(db, "./db/migrations")
 
 	if err != nil {
 		slog.Error("Error migrating database", "error", err)
 	}
-	
 
 	//Router Setup
 	r := chi.NewRouter()
@@ -78,6 +77,14 @@ func main() {
 	//Serve everything under /api
 
 	r.Route("/api", func(apiRouter chi.Router) {
+
+
+		//The auth api should only be used for testing purposes
+		authapi.HandlerFromMux(&auth.Api{
+			//Repo: auth.Repo,
+			Txm: *infrastructure.NewTxManager(db),
+		}, apiRouter)
+
 
 		//GetLoggedInUser Middlewear
 		apiRouter.Use(func(next http.Handler) http.Handler {
@@ -119,17 +126,15 @@ func main() {
 			Txm: *infrastructure.NewTxManager(db),
 		}, apiRouter)
 
-
 		userssapi.HandlerFromMux(&users.Api{
 			Repo: &userssqlite.Repo{
 				Queries: *sqlc.New(db),
 			},
 			Txm: *infrastructure.NewTxManager(db),
 		}, apiRouter)
+		
+
 	})
-
-
-	
 
 	//Frontend
 	server.ServeFrontend(r)

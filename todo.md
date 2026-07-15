@@ -1,5 +1,4 @@
 - Auth System
-    - Provide test endpoint to login with user code
     - Auth Service with global state which lives in memory an saved the current logged in user and the service provides an api to get the logged in user
     - Use Auth Service in middlewear to get the logged in user
 

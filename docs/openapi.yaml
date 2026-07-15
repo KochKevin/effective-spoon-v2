@@ -7,6 +7,7 @@ tags:
   - name: products
   - name: shopping-carts
   - name: users
+  - name: auth
 
 paths:
   /products:
@@ -23,6 +24,11 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
+
+
+
+
+
 
   /shopping-carts:
     post:
@@ -110,6 +116,9 @@ paths:
                 schema:
                   $ref: '#/components/schemas/Shopping-Cart'
 
+
+
+
           
 
   /users/current:
@@ -124,6 +133,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+
+
+
+
+
+
+  /auth/usercode:
+    post:
+      summary: Login with usercode. Only for testing purposes
+      tags:
+        - auth
+      parameters:
+        - in: query
+          name: usercode
+          schema:
+            type: string
+          required: true
+          description: the usercode with which an user can login to the system
+      responses:
+        '200':
+          description: Login successfull
+
+
+          
 
 components:
   schemas:
