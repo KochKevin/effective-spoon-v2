@@ -1,12 +1,14 @@
-- Auth System
-    - Auth Service with global state which lives in memory an saved the current logged in user and the service provides an api to get the logged in user
-    - Use Auth Service in middlewear to get the logged in user
-
 
 Problems and Bugs
 - fix sqlite wal mode and connection see: https://github.com/KochKevin/effective-spoon-v2/pull/6
 
 Backlog
+
+- Add ENV
+- Add Dev Environment (read from env)
+    - Add test (seed) data to db when its starting -> First Remove test data from migration. An squash of the current migrations should be probably done too
+    - Auto use test user for login when in dev mode
+
 - Shopping Cart Card größe anpassen
 - Use env to point frontend api to backend
 
