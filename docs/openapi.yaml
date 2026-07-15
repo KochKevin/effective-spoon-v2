@@ -105,6 +105,11 @@ paths:
       responses:
         '200':
           description: Successfully checked out the shopping cart
+          content:
+            application/json:
+                schema:
+                  $ref: '#/components/schemas/Shopping-Cart'
+
           
 
   /users/current:

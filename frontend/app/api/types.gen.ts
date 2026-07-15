@@ -132,8 +132,10 @@ export type PostShoppingCartsByIdCheckoutResponses = {
     /**
      * Successfully checked out the shopping cart
      */
-    200: unknown;
+    200: ShoppingCart;
 };
+
+export type PostShoppingCartsByIdCheckoutResponse = PostShoppingCartsByIdCheckoutResponses[keyof PostShoppingCartsByIdCheckoutResponses];
 
 export type GetUsersCurrentData = {
     body?: never;

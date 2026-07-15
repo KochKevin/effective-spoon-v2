@@ -21,8 +21,10 @@ type Repo struct {
 func (r *Repo) CreateShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) (shoppingcarts.ShoppingCart, error) {
 
 	obj, err := r.Queries.WithTx(tx).CreateShoppingCart(ctx, sqlc.CreateShoppingCartParams{
-		ID:     cart.Id,
-		UserID: cart.UserId,
+		ID:            cart.Id,
+		UserID:        cart.UserId,
+		TransactionID: cart.TransactionId,
+		Status:        string(cart.Status),
 	})
 	if err != nil {
 		slog.Error("Error in products query", err)
@@ -49,6 +51,7 @@ func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (s
 	cart.Id = shoppingCart.ID
 	cart.UserId = shoppingCart.UserID
 	cart.TransactionId = shoppingCart.TransactionID
+	cart.Status = shoppingcarts.ShoppingCartStatus(shoppingCart.Status)
 
 	for _, item := range lineItems {
 		cart.LineItems = append(cart.LineItems, shoppingcarts.LineItem{
@@ -91,6 +94,7 @@ func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingca
 		UserID:        cart.UserId,
 		TransactionID: cart.TransactionId,
 		ID:            cart.Id,
+		Status:        string(cart.Status),
 	})
 
 	return nil

@@ -56,7 +56,7 @@ userStore.getCurrentUser()
           TOTAL: {{ formatCurrency(shoppingCartStore.shoppingCart?.fullPrice) }}
         </div>
 
-          <Button size="lg" class="w-32">
+          <Button size="lg" class="w-32" @click="shoppingCartStore.checkoutCart(shoppingCartStore.shoppingCart?.id || '')">
           Kaufen
         </Button>
 

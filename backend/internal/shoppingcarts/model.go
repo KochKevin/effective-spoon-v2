@@ -87,8 +87,15 @@ func (s *ShoppingCart) DecreaseProductAmount(productId uuid.UUID) {
 
 }
 
+//TODO: Combine Generate Transaction and Checkout to one Checkout Function which returns an transaction
+
 // Creates a new Transaction for the buying user based on the data in the shoppingcart
 func (s *ShoppingCart) GenerateTransaction() (transaction users.Transaction) {
+
+	slog.Debug("Generate Transaction", "shopping cart Full price", s.GetFullPrice())
+
+	slog.Debug("Generate Transaction", "transaction amount", money.MoneyFrom(0).Sub(s.GetFullPrice()))
+
 	return users.NewTransaction(
 		s.UserId,
 		money.MoneyFrom(0).Sub(s.GetFullPrice()), //Withdrawl money from user with this Transaction

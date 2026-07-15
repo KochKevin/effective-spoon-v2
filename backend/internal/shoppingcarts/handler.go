@@ -122,6 +122,12 @@ func (a *Api) PostShoppingCartsIdDecrease(w http.ResponseWriter, r *http.Request
 			return err
 		}
 
+		if cart.Status != ShoppingCartActive {
+			slog.Error("Error shopping cart is not active, can not decrease amounts")
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
 		cart.DecreaseProductAmount(uuid.MustParse(params.ProductID))
 
 		err = a.Repo.SaveShoppingCart(r.Context(), tx, cart)
@@ -165,6 +171,12 @@ func (a *Api) PostShoppingCartsIdIncrease(w http.ResponseWriter, r *http.Request
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout
 			slog.Error("Error getting shopping cart", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
+		if cart.Status != ShoppingCartActive {
+			slog.Error("Error shopping cart is not active, can not increase amounts")
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
@@ -229,15 +241,29 @@ func (a *Api) PostShoppingCartsIdCheckout(w http.ResponseWriter, r *http.Request
 			return err
 		}
 
+		if cart.Status != ShoppingCartActive {
+			slog.Error("Error shopping cart is not active, can not check out")
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
 		transaction := cart.GenerateTransaction()
 
-		a.UserRepo.CreateTransaction(r.Context(), tx, transaction)
+		transaction, err = a.UserRepo.CreateTransaction(r.Context(), tx, transaction)
+		if err != nil {
+			slog.Error("Error creating transaction", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
 
 		cart.Checkout(transaction.Id)
 
-		a.Repo.SaveShoppingCart(r.Context(), tx, cart)
-
-		a.UserRepo.CreateTransaction(r.Context(), tx, transaction)
+		err = a.Repo.SaveShoppingCart(r.Context(), tx, cart)
+		if err != nil {
+			slog.Error("Error saving shoppingcart", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
 
 		dto = a.ToDto(cart)
 

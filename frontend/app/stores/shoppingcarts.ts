@@ -96,7 +96,7 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
                 this.shoppingCart = response.data
             }
             catch(error) {
-                console.error("Error on decrease on shopping cart api: ", error);
+                console.error("Error on checkout on shopping cart api: ", error);
 
             } finally {
                // this.isLoading = false;
