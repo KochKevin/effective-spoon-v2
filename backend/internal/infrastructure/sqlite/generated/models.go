@@ -30,6 +30,7 @@ type ShoppingCart struct {
 type User struct {
 	ID   uuid.UUID `json:"id"`
 	Name string    `json:"name"`
+	Code string    `json:"code"`
 }
 
 type UserTransaction struct {

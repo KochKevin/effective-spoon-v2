@@ -37,6 +37,7 @@ const getUser = `-- name: GetUser :one
 SELECT 
 users.id,
 users.name,
+users.code,
 CAST(COALESCE(
 (
     SELECT SUM(user_transactions.amount) 
@@ -51,12 +52,32 @@ WHERE users.id = ?
 type GetUserRow struct {
 	ID      uuid.UUID `json:"id"`
 	Name    string    `json:"name"`
+	Code    string    `json:"code"`
 	Balance int64     `json:"balance"`
 }
 
 func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (GetUserRow, error) {
 	row := q.db.QueryRowContext(ctx, getUser, id)
 	var i GetUserRow
-	err := row.Scan(&i.ID, &i.Name, &i.Balance)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Code,
+		&i.Balance,
+	)
 	return i, err
+}
+
+const getUserIdByCode = `-- name: GetUserIdByCode :one
+SELECT
+users.id
+FROM users
+WHERE users.code = ?
+`
+
+func (q *Queries) GetUserIdByCode(ctx context.Context, code string) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, getUserIdByCode, code)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }

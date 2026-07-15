@@ -20,6 +20,9 @@ type PostAuthUsercodeParams struct {
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Logout current user
+	// (POST /auth/logout)
+	PostAuthLogout(w http.ResponseWriter, r *http.Request)
 	// Login with usercode. Only for testing purposes
 	// (POST /auth/usercode)
 	PostAuthUsercode(w http.ResponseWriter, r *http.Request, params PostAuthUsercodeParams)
@@ -28,6 +31,12 @@ type ServerInterface interface {
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
+
+// Logout current user
+// (POST /auth/logout)
+func (_ Unimplemented) PostAuthLogout(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
 
 // Login with usercode. Only for testing purposes
 // (POST /auth/usercode)
@@ -43,6 +52,20 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// PostAuthLogout operation middleware
+func (siw *ServerInterfaceWrapper) PostAuthLogout(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostAuthLogout(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // PostAuthUsercode operation middleware
 func (siw *ServerInterfaceWrapper) PostAuthUsercode(w http.ResponseWriter, r *http.Request) {
@@ -190,6 +213,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/logout", wrapper.PostAuthLogout)
+	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/auth/usercode", wrapper.PostAuthUsercode)
 	})

@@ -155,6 +155,15 @@ paths:
         '200':
           description: Login successfull
 
+  /auth/logout:
+    post:
+      summary: Logout current user
+      tags:
+        - auth
+      responses:
+        '200':
+          description: Logout successfull
+
 
           
 

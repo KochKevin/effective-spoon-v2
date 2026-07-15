@@ -8,7 +8,9 @@ import (
 	"os"
 
 	"github.com/KochKevin/effective-spoon-v2/internal/auth"
+	"github.com/KochKevin/effective-spoon-v2/internal/auth/authcache"
 	authapi "github.com/KochKevin/effective-spoon-v2/internal/auth/generated"
+	authservice "github.com/KochKevin/effective-spoon-v2/internal/auth/service"
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
@@ -29,6 +31,10 @@ import (
 
 	_ "modernc.org/sqlite"
 )
+
+type AuthService interface {
+	GetCurrentUserId() uuid.UUID
+}
 
 func main() {
 
@@ -78,61 +84,79 @@ func main() {
 
 	r.Route("/api", func(apiRouter chi.Router) {
 
+		authService := &authservice.AuthService{
+			Repo: authcache.New(),
+		}
 
 		//The auth api should only be used for testing purposes
 		authapi.HandlerFromMux(&auth.Api{
-			//Repo: auth.Repo,
-			Txm: *infrastructure.NewTxManager(db),
-		}, apiRouter)
-
-
-		//GetLoggedInUser Middlewear
-		apiRouter.Use(func(next http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-				// Create/Get test user id
-				userId := uuid.Nil
-
-				r = r.WithContext(context.WithValue(r.Context(), "user_id", userId))
-
-				next.ServeHTTP(w, r)
-			})
-		})
-
-		apiRouter.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"status": "pong"}`))
-		})
-
-		//Routes
-		productsapi.HandlerFromMux(&products.Api{
-			Repo: &productssqlite.Repo{
-				Queries: *sqlc.New(db),
-			},
-			Txm: *infrastructure.NewTxManager(db),
-		}, apiRouter)
-
-		shoppingcartssapi.HandlerFromMux(&shoppingcarts.Api{
-			Repo: &shoppingcartssqlite.Repo{
-				Queries: *sqlc.New(db),
-			},
-			ProductRepo: &productssqlite.Repo{
-				Queries: *sqlc.New(db),
-			},
 			UserRepo: &userssqlite.Repo{
 				Queries: *sqlc.New(db),
 			},
-			Txm: *infrastructure.NewTxManager(db),
+			AuthService: authService,
+			Txm:         *infrastructure.NewTxManager(db),
 		}, apiRouter)
 
-		userssapi.HandlerFromMux(&users.Api{
-			Repo: &userssqlite.Repo{
-				Queries: *sqlc.New(db),
-			},
-			Txm: *infrastructure.NewTxManager(db),
-		}, apiRouter)
-		
+		apiRouter.Group(func(protectedRouter chi.Router) {
+
+			//GetLoggedInUser Middlewear
+			protectedRouter.Use(func(next http.Handler) http.Handler {
+				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+					// Create/Get test user id
+					//userId := uuid.Nil
+
+					userId := authService.GetCurrentUserId()
+
+					if userId == uuid.Nil {
+						slog.Error("Error: a user needs to be logged in to access this endpoint")
+						http.Error(w, "Internal Server Error - a user need to be logged in", http.StatusInternalServerError)
+						return
+					}
+
+					slog.Debug("Auth Middlewear uses ", userId , " UserId")
+
+					r = r.WithContext(context.WithValue(r.Context(), "user_id", userId))
+
+					next.ServeHTTP(w, r)
+				})
+			})
+
+			protectedRouter.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"status": "pong"}`))
+			})
+
+			//Routes
+			productsapi.HandlerFromMux(&products.Api{
+				Repo: &productssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				Txm: *infrastructure.NewTxManager(db),
+			}, protectedRouter)
+
+			shoppingcartssapi.HandlerFromMux(&shoppingcarts.Api{
+				Repo: &shoppingcartssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				ProductRepo: &productssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				UserRepo: &userssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				Txm: *infrastructure.NewTxManager(db),
+			}, protectedRouter)
+
+			userssapi.HandlerFromMux(&users.Api{
+				Repo: &userssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				Txm: *infrastructure.NewTxManager(db),
+			}, protectedRouter)
+
+		})
 
 	})
 
