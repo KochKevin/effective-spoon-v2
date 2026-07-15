@@ -5,7 +5,7 @@
 
 
 Problems and Bugs
-
+- fix sqlite wal mode and connection see: https://github.com/KochKevin/effective-spoon-v2/pull/6
 
 Backlog
 - Shopping Cart Card größe anpassen
