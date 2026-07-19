@@ -63,6 +63,7 @@ func main() {
 
 	if err != nil {
 		slog.Error("Error migrating database", "error", err)
+		return
 	}
 
 	//Router Setup
