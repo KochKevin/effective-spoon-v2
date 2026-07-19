@@ -19,6 +19,7 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/server"
 	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
 	shoppingcartssapi "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated"
+	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/shoppingcartcache"
 	shoppingcartssqlite "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/sqlite"
 	"github.com/KochKevin/effective-spoon-v2/internal/users"
 	userssapi "github.com/KochKevin/effective-spoon-v2/internal/users/generated"
@@ -114,7 +115,7 @@ func main() {
 						return
 					}
 
-					slog.Debug("Auth Middlewear uses ", userId , " UserId")
+					slog.Debug("Auth Middlewear uses ", userId, " UserId")
 
 					r = r.WithContext(context.WithValue(r.Context(), "user_id", userId))
 
@@ -146,7 +147,8 @@ func main() {
 				UserRepo: &userssqlite.Repo{
 					Queries: *sqlc.New(db),
 				},
-				Txm: *infrastructure.NewTxManager(db),
+				ShoppingCartCache: shoppingcartcache.New(),
+				Txm:               *infrastructure.NewTxManager(db),
 			}, protectedRouter)
 
 			userssapi.HandlerFromMux(&users.Api{
