@@ -30,11 +30,18 @@ type UserRepo interface {
 	CreateTransaction(ctx context.Context, tx *sql.Tx, transaction users.Transaction) (users.Transaction, error)
 }
 
+type ShoppingCartCache interface {
+	SetCurrentCartId(cartId uuid.UUID)
+	GetCurrentCartId() (cartId uuid.UUID)
+	ClearCurrentCartId()
+}
+
 type Api struct {
-	Repo        Repo
-	ProductRepo ProductRepo
-	UserRepo    UserRepo
-	Txm         infrastructure.TxManager
+	Repo              Repo
+	ProductRepo       ProductRepo
+	UserRepo          UserRepo
+	ShoppingCartCache ShoppingCartCache
+	Txm               infrastructure.TxManager
 }
 
 //a *Api github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated.ServerInterface
@@ -64,10 +71,9 @@ func (a *Api) ToDto(cart ShoppingCart) shoppingcartsapi.ShoppingCart {
 
 }
 
-// Create a new shopping cart
-// (POST /shopping-carts)
-func (a *Api) PostShoppingCarts(w http.ResponseWriter, r *http.Request) {
-
+// Create a new shopping cart and set it as the current cart
+// (POST /shopping-carts/current)
+func (a *Api) PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 	var dto shoppingcartsapi.ShoppingCart
 
 	err := a.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
@@ -87,6 +93,9 @@ func (a *Api) PostShoppingCarts(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 
+		//Ignore if an current cart is already set, replace it!
+		a.ShoppingCartCache.SetCurrentCartId(cart.Id)
+
 		dto = a.ToDto(cart)
 
 		return nil
@@ -102,16 +111,99 @@ func (a *Api) PostShoppingCarts(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, dto)
 }
 
-// Remove product from shopping cart
-// (POST /shopping-carts/{id}/decrease)
-func (a *Api) PostShoppingCartsIdDecrease(w http.ResponseWriter, r *http.Request, id string, params shoppingcartsapi.PostShoppingCartsIdDecreaseParams) {
+// Check out of the current shopping cart
+// (POST /shopping-carts/current/checkout)
+func (a *Api) PostShoppingCartsCurrentCheckout(w http.ResponseWriter, r *http.Request) {
+	var dto shoppingcartsapi.ShoppingCart
+
+	err := a.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+
+		/*
+			userID, ok := r.Context().Value("user_id").(uuid.UUID)
+			if !ok {
+				//slog.Error("Can not get user_id from context")
+				return errors.New("Can not get user_id from context")
+			}
+		*/
+
+		//Get Current Cart id
+		cartId := a.ShoppingCartCache.GetCurrentCartId()
+
+		if cartId == uuid.Nil {
+			slog.Error("Error: no current Cart id is set")
+			http.Error(w, "Internal Server Error, to decrease the product amount in the current shopping cart, an current shopping cart must be set", http.StatusInternalServerError)
+			return errors.New("Error: no current Cart id is set")
+		}
+
+		cart, err := a.Repo.GetShoppingCart(r.Context(), tx, cartId)
+		if err != nil {
+			//TODO: give client more inforamtion instead of an timeout
+			slog.Error("Error getting shopping cart", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
+		if cart.Status != ShoppingCartActive {
+			slog.Error("Error shopping cart is not active, can not check out")
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
+		transaction := cart.GenerateTransaction()
+
+		transaction, err = a.UserRepo.CreateTransaction(r.Context(), tx, transaction)
+		if err != nil {
+			slog.Error("Error creating transaction", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
+		cart.Checkout(transaction.Id)
+
+		err = a.Repo.SaveShoppingCart(r.Context(), tx, cart)
+		if err != nil {
+			slog.Error("Error saving shoppingcart", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
+		//Clear the cart id from state/cache
+		a.ShoppingCartCache.ClearCurrentCartId()
+
+		dto = a.ToDto(cart)
+
+		return nil
+
+	})
+
+	if err != nil {
+		slog.Error("Error in /products transaction", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	render.JSON(w, r, dto)
+}
+
+// Remove product from the current shopping cart
+// (POST /shopping-carts/current/decrease)
+func (a *Api) PostShoppingCartsCurrentDecrease(w http.ResponseWriter, r *http.Request, params shoppingcartsapi.PostShoppingCartsCurrentDecreaseParams) {
 	slog.Debug("Decrease Product by id")
 
 	var dto shoppingcartsapi.ShoppingCart
 
 	err := a.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
 
-		cart, err := a.Repo.GetShoppingCart(r.Context(), tx, uuid.MustParse(id))
+		//Get Current Cart id
+		cartId := a.ShoppingCartCache.GetCurrentCartId()
+
+		if cartId == uuid.Nil {
+			slog.Error("Error: no current Cart id is set")
+			http.Error(w, "Internal Server Error, to decrease the product amount in the current shopping cart, an current shopping cart must be set", http.StatusInternalServerError)
+			return errors.New("Error: no current Cart id is set")
+		}
+
+		cart, err := a.Repo.GetShoppingCart(r.Context(), tx, cartId)
 
 		slog.Debug("Before decrease: ", cart)
 
@@ -152,19 +244,27 @@ func (a *Api) PostShoppingCartsIdDecrease(w http.ResponseWriter, r *http.Request
 	}
 
 	render.JSON(w, r, dto)
-
 }
 
-// Add product to shopping cart
-// (POST /shopping-carts/{id}/increase)
-func (a *Api) PostShoppingCartsIdIncrease(w http.ResponseWriter, r *http.Request, id string, params shoppingcartsapi.PostShoppingCartsIdIncreaseParams) {
+// Add product to the current shopping cart
+// (POST /shopping-carts/current/increase)
+func (a *Api) PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Request, params shoppingcartsapi.PostShoppingCartsCurrentIncreaseParams) {
 	slog.Debug("Increase Product by id")
 
 	var dto shoppingcartsapi.ShoppingCart
 
 	err := a.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
 
-		cart, err := a.Repo.GetShoppingCart(r.Context(), tx, uuid.MustParse(id))
+		//Get Current Cart id
+		cartId := a.ShoppingCartCache.GetCurrentCartId()
+
+		if cartId == uuid.Nil {
+			slog.Error("Error: no current Cart id is set")
+			http.Error(w, "Internal Server Error, to decrease the product amount in the current shopping cart, an current shopping cart must be set", http.StatusInternalServerError)
+			return errors.New("Error: no current Cart id is set")
+		}
+
+		cart, err := a.Repo.GetShoppingCart(r.Context(), tx, cartId)
 
 		slog.Debug("Before increase: ", cart)
 
@@ -203,69 +303,6 @@ func (a *Api) PostShoppingCartsIdIncrease(w http.ResponseWriter, r *http.Request
 
 		dto = a.ToDto(cart)
 		slog.Debug("After increase: ", "dto", dto)
-
-		return nil
-
-	})
-
-	if err != nil {
-		slog.Error("Error in /products transaction", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	render.JSON(w, r, dto)
-}
-
-// Buy products in shopping cart
-// (POST /shopping-carts/{id}/checkout)
-func (a *Api) PostShoppingCartsIdCheckout(w http.ResponseWriter, r *http.Request, id string) {
-
-	var dto shoppingcartsapi.ShoppingCart
-
-	err := a.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
-
-		/*
-			userID, ok := r.Context().Value("user_id").(uuid.UUID)
-			if !ok {
-				//slog.Error("Can not get user_id from context")
-				return errors.New("Can not get user_id from context")
-			}
-		*/
-
-		cart, err := a.Repo.GetShoppingCart(r.Context(), tx, uuid.MustParse(id))
-		if err != nil {
-			//TODO: give client more inforamtion instead of an timeout
-			slog.Error("Error getting shopping cart", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return err
-		}
-
-		if cart.Status != ShoppingCartActive {
-			slog.Error("Error shopping cart is not active, can not check out")
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return err
-		}
-
-		transaction := cart.GenerateTransaction()
-
-		transaction, err = a.UserRepo.CreateTransaction(r.Context(), tx, transaction)
-		if err != nil {
-			slog.Error("Error creating transaction", "error", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return err
-		}
-
-		cart.Checkout(transaction.Id)
-
-		err = a.Repo.SaveShoppingCart(r.Context(), tx, cart)
-		if err != nil {
-			slog.Error("Error saving shoppingcart", "error", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return err
-		}
-
-		dto = a.ToDto(cart)
 
 		return nil
 
