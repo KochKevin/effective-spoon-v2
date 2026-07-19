@@ -328,6 +328,44 @@ func (a *Api) PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Re
 
 	err := a.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
 
+		userID, ok := r.Context().Value("user_id").(uuid.UUID)
+		if !ok {
+			slog.Error("Can not get user_id from context")
+			return errors.New("Can not get user_id from context")
+		}
+
+		//Get Current Cart id
+		cartId := a.ShoppingCartCache.GetCurrentCartId(userID)
+
+		if cartId == uuid.Nil {
+			slog.Error("Error: no current Cart id is set")
+			http.Error(w, "Internal Server Error, to increase the product amount in the current shopping cart, a current shopping cart must be set", http.StatusInternalServerError)
+			return errors.New("Error: no current Cart id is set")
+		}
+
+		cart, err := a.Repo.GetShoppingCart(r.Context(), tx, cartId)
+
+		slog.Debug("Before increase: ", "error:",  cart)
+
+		if err != nil {
+			//TODO: give client more inforamtion instead of an timeout
+			slog.Error("Error getting shopping cart", "error:",  err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return err
+		}
+
+		if cart.UserId != userID {
+			slog.Error("Error: shopping cart does not belong to the logged in user")
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return errors.New("shopping cart does not belong to the logged in user")
+		}
+
+		if cart.Status != ShoppingCartActive {
+			slog.Error("Error shopping cart is not active, can not increase amounts")
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return errors.New("shopping cart is not active")
+		}
+
 		//Get Current Cart id
 		cartId := a.ShoppingCartCache.GetCurrentCartId()
 
