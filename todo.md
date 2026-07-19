@@ -1,4 +1,26 @@
 
+Shopping Cart refactor:
+- move code from handlers into one shopping cart service
+
+
+
+
+Input System 
+- barcode reader should load product and add it to the current cart, if one exists - check this based on the cached/state of the shopping cart service
+- rfid reader should login user using the auth service. if one is already logged in throw error
+- on login of user via rfid, call SocketService to update frontend (switch from dashbaord to shoppingcart screen)
+- on adding products via barcode, call SocketService to update frontend (reload shopping cart)
+
+SocketService
+- Add methods to update stuff in frontend, called from backend
+
+ImageService
+- Expose an image api from which images can be loaded based on an image id
+    - use mime type to respond with the correct type for the image (image/png, image/jpeg, image/svg+xml)
+    - save images in db and load directly from it
+- Products reference to images via its id, Currently only one image per product is needed
+
+
 Problems and Bugs
 - fix sqlite wal mode and connection see: https://github.com/KochKevin/effective-spoon-v2/pull/6
 

@@ -32,13 +32,13 @@ const shoppingCartStore = useShoppingCartStore()
           
             <ButtonGroup class="">
 
-              <Button variant="outline" size="icon" @click='shoppingCartStore.increaseProduct(shoppingCartStore.shoppingCart?.id ?? "", lineItem.productId ?? "")'>
+              <Button variant="outline" size="icon" @click='shoppingCartStore.increaseProduct(lineItem.productId ?? "")'>
                 <Icon icon="lucide:plus"/>
               </Button>
 
               <ButtonGroupText>{{ lineItem.amount }}</ButtonGroupText>
 
-               <Button variant="outline" size="icon" @click='shoppingCartStore.decreaseProduct(shoppingCartStore.shoppingCart?.id ?? "", lineItem.productId ?? "")'>
+               <Button variant="outline" size="icon" @click='shoppingCartStore.decreaseProduct(lineItem.productId ?? "")'>
                 <Icon icon="lucide:minus"/>
               </Button>
 

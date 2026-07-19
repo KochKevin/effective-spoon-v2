@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { postShoppingCarts, postShoppingCartsByIdCheckout, postShoppingCartsByIdDecrease, postShoppingCartsByIdIncrease, type ShoppingCart } from "~/api";
+import { postShoppingCartsCurrent, postShoppingCartsCurrentCheckout, postShoppingCartsCurrentDecrease, postShoppingCartsCurrentIncrease, type ShoppingCart } from "~/api";
 
 export const useShoppingCartStore = defineStore('shopping-carts', {
 
@@ -7,23 +7,23 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
     state: () => {
         return {
             isLoading: true as Boolean,
-            shoppingCart: null as ShoppingCart | undefined | null
+            currentShoppingCart: null as ShoppingCart | undefined | null
         }
     },
 
 
     actions: {
-        async createShoppingCart() {
+        async createCurrentShoppingCart() {
 
             this.isLoading = true;
 
             try {
-                const response = await postShoppingCarts();
+                const response = await postShoppingCartsCurrent()
 
-                this.shoppingCart = response.data
+                this.currentShoppingCart = response.data
             }
             catch(error) {
-                console.error("Error on post on shopping cart api: ", error);
+                console.error("Error on post on current shopping cart api: ", error);
 
             } finally {
                 this.isLoading = false;
@@ -31,72 +31,65 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
 
         },
 
-        async increaseProduct(cartId : string, productId : string) {
+        //Increase Product of current shopping cart
+        async increaseProduct(productId : string) {
 
             //this.isLoading = true;
 
             try {
-                const response = await postShoppingCartsByIdIncrease({
-                    path: {
-                        id: cartId,
-                    },
-
+                const response = await postShoppingCartsCurrentIncrease({
                     query: {
                         productID: productId,
                     }
                 });
 
-                this.shoppingCart = response.data
+                this.currentShoppingCart = response.data
             }
             catch(error) {
-                console.error("Error on increase on shopping cart api: ", error);
+                console.error("Error on increase on current shopping cart api: ", error);
 
             } finally {
                // this.isLoading = false;
             }
 
         },
-        async decreaseProduct(cartId : string, productId : string) {
+
+        //Decrease Product of current shopping cart
+        async decreaseProduct(productId : string) {
 
             //this.isLoading = true;
 
             try {
-                const response = await postShoppingCartsByIdDecrease({
-                    path: {
-                        id: cartId,
-                    },
-
+                const response = await postShoppingCartsCurrentDecrease({
                     query: {
                         productID: productId,
                     }
                 });
 
-                this.shoppingCart = response.data
+                this.currentShoppingCart = response.data
             }
             catch(error) {
-                console.error("Error on decrease on shopping cart api: ", error);
+                console.error("Error on decrease on current shopping cart api: ", error);
 
             } finally {
                // this.isLoading = false;
             }
 
         },
-        async checkoutCart(cartId : string) {
+
+        //Checkout current shopping cart
+        async checkoutCurrentCart() {
 
             //this.isLoading = true;
 
             try {
 
-                const response = await postShoppingCartsByIdCheckout({
-                    path: {
-                        id: cartId,
-                    },
-                });
+                const response = await postShoppingCartsCurrentCheckout();
 
-                this.shoppingCart = response.data
+                this.currentShoppingCart = response.data
             }
             catch(error) {
-                console.error("Error on checkout on shopping cart api: ", error);
+                console.error("Error on checkout on current shopping cart api: ", error);
 
             } finally {
                // this.isLoading = false;

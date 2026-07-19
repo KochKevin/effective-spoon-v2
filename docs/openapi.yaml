@@ -30,9 +30,9 @@ paths:
 
 
 
-  /shopping-carts:
+  /shopping-carts/current:
     post:
-      summary: Create a new shopping cart
+      summary: Create a new shopping cart and set it as the current cart
       tags:
         - shopping-carts
       responses:
@@ -43,24 +43,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/Shopping-Cart'
 
-  /shopping-carts/{id}/increase:
+  /shopping-carts/current/increase:
     post:
-      summary: Add product to shopping cart
+      summary: Add product to the current shopping cart
       tags:
         - shopping-carts
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-          description: Shopping Cart ID to use
         - in: query
           name: productID
           schema:
             type: string
           required: true
-          description: Product to add to Shopping Cart
+          description: Product to add to the current Shopping Cart
       responses:
         '200':
           description: A shopping cart
@@ -70,24 +64,18 @@ paths:
                 $ref: '#/components/schemas/Shopping-Cart'
 
 
-  /shopping-carts/{id}/decrease:
+  /shopping-carts/current/decrease:
     post:
-      summary: Remove product from shopping cart
+      summary: Remove product from the current shopping cart
       tags:
         - shopping-carts
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-          description: Shopping Cart ID to use
         - in: query
           name: productID
           schema:
             type: string
           required: true
-          description: Product to remove from Shopping Cart
+          description: Product to remove from the current Shopping Cart
       responses:
         '200':
           description: A shopping cart
@@ -96,21 +84,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/Shopping-Cart'
 
-  /shopping-carts/{id}/checkout:
+  /shopping-carts/current/checkout:
     post:
-      summary: Buy products in shopping cart
+      summary: Check out of the current shopping cart
       tags:
         - shopping-carts
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-          description: Shopping Cart ID to use
       responses:
         '200':
-          description: Successfully checked out the shopping cart
+          description: Successfully checked out of the current shopping cart
           content:
             application/json:
                 schema:

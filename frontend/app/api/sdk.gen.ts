@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetProductsData, GetProductsResponses, GetUsersCurrentData, GetUsersCurrentResponses, PostShoppingCartsByIdCheckoutData, PostShoppingCartsByIdCheckoutResponses, PostShoppingCartsByIdDecreaseData, PostShoppingCartsByIdDecreaseResponses, PostShoppingCartsByIdIncreaseData, PostShoppingCartsByIdIncreaseResponses, PostShoppingCartsData, PostShoppingCartsResponses } from './types.gen';
+import type { GetProductsData, GetProductsResponses, GetUsersCurrentData, GetUsersCurrentResponses, PostAuthLogoutData, PostAuthLogoutResponses, PostAuthUsercodeData, PostAuthUsercodeResponses, PostShoppingCartsCurrentCheckoutData, PostShoppingCartsCurrentCheckoutResponses, PostShoppingCartsCurrentData, PostShoppingCartsCurrentDecreaseData, PostShoppingCartsCurrentDecreaseResponses, PostShoppingCartsCurrentIncreaseData, PostShoppingCartsCurrentIncreaseResponses, PostShoppingCartsCurrentResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -24,26 +24,36 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 export const getProducts = <ThrowOnError extends boolean = false>(options?: Options<GetProductsData, ThrowOnError>): RequestResult<GetProductsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetProductsResponses, unknown, ThrowOnError>({ url: '/products', ...options });
 
 /**
- * Create a new shopping cart
+ * Create a new shopping cart and set it as the current cart
  */
-export const postShoppingCarts = <ThrowOnError extends boolean = false>(options?: Options<PostShoppingCartsData, ThrowOnError>): RequestResult<PostShoppingCartsResponses, unknown, ThrowOnError> => (options?.client ?? client).post<PostShoppingCartsResponses, unknown, ThrowOnError>({ url: '/shopping-carts', ...options });
+export const postShoppingCartsCurrent = <ThrowOnError extends boolean = false>(options?: Options<PostShoppingCartsCurrentData, ThrowOnError>): RequestResult<PostShoppingCartsCurrentResponses, unknown, ThrowOnError> => (options?.client ?? client).post<PostShoppingCartsCurrentResponses, unknown, ThrowOnError>({ url: '/shopping-carts/current', ...options });
 
 /**
- * Add product to shopping cart
+ * Add product to the current shopping cart
  */
-export const postShoppingCartsByIdIncrease = <ThrowOnError extends boolean = false>(options: Options<PostShoppingCartsByIdIncreaseData, ThrowOnError>): RequestResult<PostShoppingCartsByIdIncreaseResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostShoppingCartsByIdIncreaseResponses, unknown, ThrowOnError>({ url: '/shopping-carts/{id}/increase', ...options });
+export const postShoppingCartsCurrentIncrease = <ThrowOnError extends boolean = false>(options: Options<PostShoppingCartsCurrentIncreaseData, ThrowOnError>): RequestResult<PostShoppingCartsCurrentIncreaseResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostShoppingCartsCurrentIncreaseResponses, unknown, ThrowOnError>({ url: '/shopping-carts/current/increase', ...options });
 
 /**
- * Remove product from shopping cart
+ * Remove product from the current shopping cart
  */
-export const postShoppingCartsByIdDecrease = <ThrowOnError extends boolean = false>(options: Options<PostShoppingCartsByIdDecreaseData, ThrowOnError>): RequestResult<PostShoppingCartsByIdDecreaseResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostShoppingCartsByIdDecreaseResponses, unknown, ThrowOnError>({ url: '/shopping-carts/{id}/decrease', ...options });
+export const postShoppingCartsCurrentDecrease = <ThrowOnError extends boolean = false>(options: Options<PostShoppingCartsCurrentDecreaseData, ThrowOnError>): RequestResult<PostShoppingCartsCurrentDecreaseResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostShoppingCartsCurrentDecreaseResponses, unknown, ThrowOnError>({ url: '/shopping-carts/current/decrease', ...options });
 
 /**
- * Buy products in shopping cart
+ * Check out of the current shopping cart
  */
-export const postShoppingCartsByIdCheckout = <ThrowOnError extends boolean = false>(options: Options<PostShoppingCartsByIdCheckoutData, ThrowOnError>): RequestResult<PostShoppingCartsByIdCheckoutResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostShoppingCartsByIdCheckoutResponses, unknown, ThrowOnError>({ url: '/shopping-carts/{id}/checkout', ...options });
+export const postShoppingCartsCurrentCheckout = <ThrowOnError extends boolean = false>(options?: Options<PostShoppingCartsCurrentCheckoutData, ThrowOnError>): RequestResult<PostShoppingCartsCurrentCheckoutResponses, unknown, ThrowOnError> => (options?.client ?? client).post<PostShoppingCartsCurrentCheckoutResponses, unknown, ThrowOnError>({ url: '/shopping-carts/current/checkout', ...options });
 
 /**
  * Get the currently logged in user
  */
 export const getUsersCurrent = <ThrowOnError extends boolean = false>(options?: Options<GetUsersCurrentData, ThrowOnError>): RequestResult<GetUsersCurrentResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetUsersCurrentResponses, unknown, ThrowOnError>({ url: '/users/current', ...options });
+
+/**
+ * Login with usercode. Only for testing purposes
+ */
+export const postAuthUsercode = <ThrowOnError extends boolean = false>(options: Options<PostAuthUsercodeData, ThrowOnError>): RequestResult<PostAuthUsercodeResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostAuthUsercodeResponses, unknown, ThrowOnError>({ url: '/auth/usercode', ...options });
+
+/**
+ * Logout current user
+ */
+export const postAuthLogout = <ThrowOnError extends boolean = false>(options?: Options<PostAuthLogoutData, ThrowOnError>): RequestResult<PostAuthLogoutResponses, unknown, ThrowOnError> => (options?.client ?? client).post<PostAuthLogoutResponses, unknown, ThrowOnError>({ url: '/auth/logout', ...options });

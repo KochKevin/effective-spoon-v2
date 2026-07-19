@@ -30,59 +30,59 @@ type ShoppingCart struct {
 	UserId        string     `json:"userId"`
 }
 
-// PostShoppingCartsIdDecreaseParams defines parameters for PostShoppingCartsIdDecrease.
-type PostShoppingCartsIdDecreaseParams struct {
-	// ProductID Product to remove from Shopping Cart
+// PostShoppingCartsCurrentDecreaseParams defines parameters for PostShoppingCartsCurrentDecrease.
+type PostShoppingCartsCurrentDecreaseParams struct {
+	// ProductID Product to remove from the current Shopping Cart
 	ProductID string `form:"productID" json:"productID"`
 }
 
-// PostShoppingCartsIdIncreaseParams defines parameters for PostShoppingCartsIdIncrease.
-type PostShoppingCartsIdIncreaseParams struct {
-	// ProductID Product to add to Shopping Cart
+// PostShoppingCartsCurrentIncreaseParams defines parameters for PostShoppingCartsCurrentIncrease.
+type PostShoppingCartsCurrentIncreaseParams struct {
+	// ProductID Product to add to the current Shopping Cart
 	ProductID string `form:"productID" json:"productID"`
 }
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Create a new shopping cart
-	// (POST /shopping-carts)
-	PostShoppingCarts(w http.ResponseWriter, r *http.Request)
-	// Buy products in shopping cart
-	// (POST /shopping-carts/{id}/checkout)
-	PostShoppingCartsIdCheckout(w http.ResponseWriter, r *http.Request, id string)
-	// Remove product from shopping cart
-	// (POST /shopping-carts/{id}/decrease)
-	PostShoppingCartsIdDecrease(w http.ResponseWriter, r *http.Request, id string, params PostShoppingCartsIdDecreaseParams)
-	// Add product to shopping cart
-	// (POST /shopping-carts/{id}/increase)
-	PostShoppingCartsIdIncrease(w http.ResponseWriter, r *http.Request, id string, params PostShoppingCartsIdIncreaseParams)
+	// Create a new shopping cart and set it as the current cart
+	// (POST /shopping-carts/current)
+	PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request)
+	// Check out of the current shopping cart
+	// (POST /shopping-carts/current/checkout)
+	PostShoppingCartsCurrentCheckout(w http.ResponseWriter, r *http.Request)
+	// Remove product from the current shopping cart
+	// (POST /shopping-carts/current/decrease)
+	PostShoppingCartsCurrentDecrease(w http.ResponseWriter, r *http.Request, params PostShoppingCartsCurrentDecreaseParams)
+	// Add product to the current shopping cart
+	// (POST /shopping-carts/current/increase)
+	PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Request, params PostShoppingCartsCurrentIncreaseParams)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
 
-// Create a new shopping cart
-// (POST /shopping-carts)
-func (_ Unimplemented) PostShoppingCarts(w http.ResponseWriter, r *http.Request) {
+// Create a new shopping cart and set it as the current cart
+// (POST /shopping-carts/current)
+func (_ Unimplemented) PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Buy products in shopping cart
-// (POST /shopping-carts/{id}/checkout)
-func (_ Unimplemented) PostShoppingCartsIdCheckout(w http.ResponseWriter, r *http.Request, id string) {
+// Check out of the current shopping cart
+// (POST /shopping-carts/current/checkout)
+func (_ Unimplemented) PostShoppingCartsCurrentCheckout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Remove product from shopping cart
-// (POST /shopping-carts/{id}/decrease)
-func (_ Unimplemented) PostShoppingCartsIdDecrease(w http.ResponseWriter, r *http.Request, id string, params PostShoppingCartsIdDecreaseParams) {
+// Remove product from the current shopping cart
+// (POST /shopping-carts/current/decrease)
+func (_ Unimplemented) PostShoppingCartsCurrentDecrease(w http.ResponseWriter, r *http.Request, params PostShoppingCartsCurrentDecreaseParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Add product to shopping cart
-// (POST /shopping-carts/{id}/increase)
-func (_ Unimplemented) PostShoppingCartsIdIncrease(w http.ResponseWriter, r *http.Request, id string, params PostShoppingCartsIdIncreaseParams) {
+// Add product to the current shopping cart
+// (POST /shopping-carts/current/increase)
+func (_ Unimplemented) PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Request, params PostShoppingCartsCurrentIncreaseParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -95,11 +95,11 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
-// PostShoppingCarts operation middleware
-func (siw *ServerInterfaceWrapper) PostShoppingCarts(w http.ResponseWriter, r *http.Request) {
+// PostShoppingCartsCurrent operation middleware
+func (siw *ServerInterfaceWrapper) PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostShoppingCarts(w, r)
+		siw.Handler.PostShoppingCartsCurrent(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -109,23 +109,11 @@ func (siw *ServerInterfaceWrapper) PostShoppingCarts(w http.ResponseWriter, r *h
 	handler.ServeHTTP(w, r)
 }
 
-// PostShoppingCartsIdCheckout operation middleware
-func (siw *ServerInterfaceWrapper) PostShoppingCartsIdCheckout(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-	_ = err
-
-	// ------------- Path parameter "id" -------------
-	var id string
-
-	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
-		return
-	}
+// PostShoppingCartsCurrentCheckout operation middleware
+func (siw *ServerInterfaceWrapper) PostShoppingCartsCurrentCheckout(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostShoppingCartsIdCheckout(w, r, id)
+		siw.Handler.PostShoppingCartsCurrentCheckout(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -135,23 +123,14 @@ func (siw *ServerInterfaceWrapper) PostShoppingCartsIdCheckout(w http.ResponseWr
 	handler.ServeHTTP(w, r)
 }
 
-// PostShoppingCartsIdDecrease operation middleware
-func (siw *ServerInterfaceWrapper) PostShoppingCartsIdDecrease(w http.ResponseWriter, r *http.Request) {
+// PostShoppingCartsCurrentDecrease operation middleware
+func (siw *ServerInterfaceWrapper) PostShoppingCartsCurrentDecrease(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 	_ = err
-
-	// ------------- Path parameter "id" -------------
-	var id string
-
-	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
-		return
-	}
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params PostShoppingCartsIdDecreaseParams
+	var params PostShoppingCartsCurrentDecreaseParams
 
 	// ------------- Required query parameter "productID" -------------
 
@@ -167,7 +146,7 @@ func (siw *ServerInterfaceWrapper) PostShoppingCartsIdDecrease(w http.ResponseWr
 	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostShoppingCartsIdDecrease(w, r, id, params)
+		siw.Handler.PostShoppingCartsCurrentDecrease(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -177,23 +156,14 @@ func (siw *ServerInterfaceWrapper) PostShoppingCartsIdDecrease(w http.ResponseWr
 	handler.ServeHTTP(w, r)
 }
 
-// PostShoppingCartsIdIncrease operation middleware
-func (siw *ServerInterfaceWrapper) PostShoppingCartsIdIncrease(w http.ResponseWriter, r *http.Request) {
+// PostShoppingCartsCurrentIncrease operation middleware
+func (siw *ServerInterfaceWrapper) PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 	_ = err
 
-	// ------------- Path parameter "id" -------------
-	var id string
-
-	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
-		return
-	}
-
 	// Parameter object where we will unmarshal all parameters from the context
-	var params PostShoppingCartsIdIncreaseParams
+	var params PostShoppingCartsCurrentIncreaseParams
 
 	// ------------- Required query parameter "productID" -------------
 
@@ -209,7 +179,7 @@ func (siw *ServerInterfaceWrapper) PostShoppingCartsIdIncrease(w http.ResponseWr
 	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostShoppingCartsIdIncrease(w, r, id, params)
+		siw.Handler.PostShoppingCartsCurrentIncrease(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -333,16 +303,16 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/shopping-carts", wrapper.PostShoppingCarts)
+		r.Post(options.BaseURL+"/shopping-carts/current", wrapper.PostShoppingCartsCurrent)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/shopping-carts/{id}/checkout", wrapper.PostShoppingCartsIdCheckout)
+		r.Post(options.BaseURL+"/shopping-carts/current/checkout", wrapper.PostShoppingCartsCurrentCheckout)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/shopping-carts/{id}/decrease", wrapper.PostShoppingCartsIdDecrease)
+		r.Post(options.BaseURL+"/shopping-carts/current/decrease", wrapper.PostShoppingCartsCurrentDecrease)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/shopping-carts/{id}/increase", wrapper.PostShoppingCartsIdIncrease)
+		r.Post(options.BaseURL+"/shopping-carts/current/increase", wrapper.PostShoppingCartsCurrentIncrease)
 	})
 
 	return r

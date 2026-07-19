@@ -14,7 +14,7 @@ const shoppingCartStore = useShoppingCartStore()
 
 <template>
 
-    <Card @click='shoppingCartStore.increaseProduct(shoppingCartStore.shoppingCart?.id ?? "", id ?? "")'>
+    <Card @click='shoppingCartStore.increaseProduct(id ?? "")'>
 
         <CardHeader>
             <CardTitle>{{ name }}</CardTitle>
