@@ -88,7 +88,7 @@ func (a *Api) PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout
-			slog.Error("Error creating shopping cart", err)
+			slog.Error("Error creating shopping cart", "error:",  err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
@@ -103,7 +103,7 @@ func (a *Api) PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		slog.Error("Error in /products transaction", err)
+		slog.Error("Error in /products transaction", "error:", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -138,7 +138,7 @@ func (a *Api) PostShoppingCartsCurrentCheckout(w http.ResponseWriter, r *http.Re
 		cart, err := a.Repo.GetShoppingCart(r.Context(), tx, cartId)
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout
-			slog.Error("Error getting shopping cart", err)
+			slog.Error("Error getting shopping cart", "error:",  err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
@@ -177,7 +177,7 @@ func (a *Api) PostShoppingCartsCurrentCheckout(w http.ResponseWriter, r *http.Re
 	})
 
 	if err != nil {
-		slog.Error("Error in /products transaction", err)
+		slog.Error("Error in /products transaction",  "error:", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -205,11 +205,11 @@ func (a *Api) PostShoppingCartsCurrentDecrease(w http.ResponseWriter, r *http.Re
 
 		cart, err := a.Repo.GetShoppingCart(r.Context(), tx, cartId)
 
-		slog.Debug("Before decrease: ", cart)
+		slog.Debug("Before decrease: ", "cart",  cart)
 
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout
-			slog.Error("Error getting shopping cart", err)
+			slog.Error("Error getting shopping cart", "error:",  err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
@@ -225,7 +225,7 @@ func (a *Api) PostShoppingCartsCurrentDecrease(w http.ResponseWriter, r *http.Re
 		err = a.Repo.SaveShoppingCart(r.Context(), tx, cart)
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout
-			slog.Error("Error getting shopping cart", err)
+			slog.Error("Error getting shopping cart", "error:",  err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
@@ -238,7 +238,7 @@ func (a *Api) PostShoppingCartsCurrentDecrease(w http.ResponseWriter, r *http.Re
 	})
 
 	if err != nil {
-		slog.Error("Error in /shoppingcart decrease transaction", err)
+		slog.Error("Error in /shoppingcart decrease transaction", "error:",  err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -266,11 +266,11 @@ func (a *Api) PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Re
 
 		cart, err := a.Repo.GetShoppingCart(r.Context(), tx, cartId)
 
-		slog.Debug("Before increase: ", cart)
+		slog.Debug("Before increase: ", "error:",  cart)
 
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout
-			slog.Error("Error getting shopping cart", err)
+			slog.Error("Error getting shopping cart", "error:",  err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
@@ -284,7 +284,7 @@ func (a *Api) PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Re
 		productToAdd, err := a.ProductRepo.GetProduct(r.Context(), tx, uuid.MustParse(params.ProductID))
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout
-			slog.Error("Error getting product to add to shopping cart", err)
+			slog.Error("Error getting product to add to shopping cart", "error:",  err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
@@ -294,7 +294,7 @@ func (a *Api) PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Re
 		err = a.Repo.SaveShoppingCart(r.Context(), tx, cart)
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout
-			slog.Error("Error getting shopping cart", err)
+			slog.Error("Error getting shopping cart",  "error:", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
@@ -309,7 +309,7 @@ func (a *Api) PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Re
 	})
 
 	if err != nil {
-		slog.Error("Error in /products transaction", err)
+		slog.Error("Error in /products transaction", "error:",  err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
