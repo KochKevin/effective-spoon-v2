@@ -1,9 +1,5 @@
 
 Shopping Cart refactor:
-- introduce current shopping cart
-    - save id in cache/state
-    - change increase and decrese methods to only work on the current shoppingcart
-    - change api and frontend api to use the new current shoppping cart
 - move code from handlers into one shopping cart service
 
 
