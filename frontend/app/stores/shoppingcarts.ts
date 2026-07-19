@@ -77,7 +77,7 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
 
         },
 
-        //Checkout current shopping crt
+        //Checkout current shopping cart
         async checkoutCurrentCart() {
 
             //this.isLoading = true;
