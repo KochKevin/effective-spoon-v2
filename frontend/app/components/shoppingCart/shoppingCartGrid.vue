@@ -18,10 +18,10 @@ const shoppingCartStore = useShoppingCartStore()
 
 
 onMounted( () => {
-  shoppingCartStore.createShoppingCart()
+  shoppingCartStore.createCurrentShoppingCart()
 
   console.log(shoppingCartStore.isLoading)
-  console.log(shoppingCartStore.shoppingCart)
+  console.log(shoppingCartStore.currentShoppingCart)
 })
 
 </script>
@@ -35,7 +35,7 @@ onMounted( () => {
     <ItemGroup v-else class="grid grid-cols-4 gap-4 flex-8">
 
 
-      <ShoppingCartCard v-for="lineItem in shoppingCartStore.shoppingCart?.lineItems" :line-item="lineItem"/>
+      <ShoppingCartCard v-for="lineItem in shoppingCartStore.currentShoppingCart?.lineItems" :line-item="lineItem"/>
 
 
 

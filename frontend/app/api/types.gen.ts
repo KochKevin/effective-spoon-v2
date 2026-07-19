@@ -48,94 +48,79 @@ export type GetProductsResponses = {
 
 export type GetProductsResponse = GetProductsResponses[keyof GetProductsResponses];
 
-export type PostShoppingCartsData = {
+export type PostShoppingCartsCurrentData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/shopping-carts';
+    url: '/shopping-carts/current';
 };
 
-export type PostShoppingCartsResponses = {
+export type PostShoppingCartsCurrentResponses = {
     /**
      * A shopping cart
      */
     201: ShoppingCart;
 };
 
-export type PostShoppingCartsResponse = PostShoppingCartsResponses[keyof PostShoppingCartsResponses];
+export type PostShoppingCartsCurrentResponse = PostShoppingCartsCurrentResponses[keyof PostShoppingCartsCurrentResponses];
 
-export type PostShoppingCartsByIdIncreaseData = {
+export type PostShoppingCartsCurrentIncreaseData = {
     body?: never;
-    path: {
-        /**
-         * Shopping Cart ID to use
-         */
-        id: string;
-    };
+    path?: never;
     query: {
         /**
-         * Product to add to Shopping Cart
+         * Product to add to the current Shopping Cart
          */
         productID: string;
     };
-    url: '/shopping-carts/{id}/increase';
+    url: '/shopping-carts/current/increase';
 };
 
-export type PostShoppingCartsByIdIncreaseResponses = {
+export type PostShoppingCartsCurrentIncreaseResponses = {
     /**
      * A shopping cart
      */
     200: ShoppingCart;
 };
 
-export type PostShoppingCartsByIdIncreaseResponse = PostShoppingCartsByIdIncreaseResponses[keyof PostShoppingCartsByIdIncreaseResponses];
+export type PostShoppingCartsCurrentIncreaseResponse = PostShoppingCartsCurrentIncreaseResponses[keyof PostShoppingCartsCurrentIncreaseResponses];
 
-export type PostShoppingCartsByIdDecreaseData = {
+export type PostShoppingCartsCurrentDecreaseData = {
     body?: never;
-    path: {
-        /**
-         * Shopping Cart ID to use
-         */
-        id: string;
-    };
+    path?: never;
     query: {
         /**
-         * Product to remove from Shopping Cart
+         * Product to remove from the current Shopping Cart
          */
         productID: string;
     };
-    url: '/shopping-carts/{id}/decrease';
+    url: '/shopping-carts/current/decrease';
 };
 
-export type PostShoppingCartsByIdDecreaseResponses = {
+export type PostShoppingCartsCurrentDecreaseResponses = {
     /**
      * A shopping cart
      */
     200: ShoppingCart;
 };
 
-export type PostShoppingCartsByIdDecreaseResponse = PostShoppingCartsByIdDecreaseResponses[keyof PostShoppingCartsByIdDecreaseResponses];
+export type PostShoppingCartsCurrentDecreaseResponse = PostShoppingCartsCurrentDecreaseResponses[keyof PostShoppingCartsCurrentDecreaseResponses];
 
-export type PostShoppingCartsByIdCheckoutData = {
+export type PostShoppingCartsCurrentCheckoutData = {
     body?: never;
-    path: {
-        /**
-         * Shopping Cart ID to use
-         */
-        id: string;
-    };
+    path?: never;
     query?: never;
-    url: '/shopping-carts/{id}/checkout';
+    url: '/shopping-carts/current/checkout';
 };
 
-export type PostShoppingCartsByIdCheckoutResponses = {
+export type PostShoppingCartsCurrentCheckoutResponses = {
     /**
-     * Successfully checked out the shopping cart
+     * Successfully checked out of the current shopping cart
      */
     200: ShoppingCart;
 };
 
-export type PostShoppingCartsByIdCheckoutResponse = PostShoppingCartsByIdCheckoutResponses[keyof PostShoppingCartsByIdCheckoutResponses];
+export type PostShoppingCartsCurrentCheckoutResponse = PostShoppingCartsCurrentCheckoutResponses[keyof PostShoppingCartsCurrentCheckoutResponses];
 
 export type GetUsersCurrentData = {
     body?: never;
@@ -152,3 +137,36 @@ export type GetUsersCurrentResponses = {
 };
 
 export type GetUsersCurrentResponse = GetUsersCurrentResponses[keyof GetUsersCurrentResponses];
+
+export type PostAuthUsercodeData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * the usercode with which an user can login to the system
+         */
+        usercode: string;
+    };
+    url: '/auth/usercode';
+};
+
+export type PostAuthUsercodeResponses = {
+    /**
+     * Login successfull
+     */
+    200: unknown;
+};
+
+export type PostAuthLogoutData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/auth/logout';
+};
+
+export type PostAuthLogoutResponses = {
+    /**
+     * Logout successfull
+     */
+    200: unknown;
+};
