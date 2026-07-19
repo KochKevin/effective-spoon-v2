@@ -22,7 +22,7 @@ ImageService
 
 
 Problems and Bugs
-- fix sqlite wal mode and connection see: https://github.com/KochKevin/effective-spoon-v2/pull/6
+- 
 
 Backlog
 
@@ -44,7 +44,7 @@ Backlog
 - Combine Generate Transaction and Checkout to one Checkout Function which returns an transaction (shoppingcarts/model)
 
 
-- In main.go, if goose.Up fails, the application logs the error but continues running. It is safer to log the error and terminate the application (log.Fatal) to avoid running with an inconsistent database schema.
+
 
 - In SaveShoppingCart (backend/internal/shoppingcarts/sqlite/repo.go), the error returned by UpdateShoppingCart is completely ignored. If the update fails, the function will still return nil (success), which can lead to silent data loss or inconsistent state.
 

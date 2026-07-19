@@ -49,7 +49,10 @@ func main() {
 	slog.Info("Backend Api started")
 
 	//Do Database migrations. Open swlite with WAL mode for writing and reading
-	db, err := goose.OpenDBWithDriver("sqlite", "./db/data/data.db?_journal_mode=WAL&_busy_timeout=5000")
+
+	sqliteConnectionString := "file:./db/data/data.db?_pragma=journal_mode=WAL&_pragma=busy_timeout=5000"
+
+	db, err := goose.OpenDBWithDriver("sqlite", sqliteConnectionString)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -57,13 +60,11 @@ func main() {
 
 	defer db.Close()
 
-	//Allow only one Open Connection to sqlite anytime. Forces request to query
-	db.SetMaxOpenConns(1)
-
 	err = goose.Up(db, "./db/migrations")
 
 	if err != nil {
 		slog.Error("Error migrating database", "error", err)
+		return
 	}
 
 	//Router Setup
