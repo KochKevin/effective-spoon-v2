@@ -12,6 +12,7 @@ type Product struct {
 	ID    uuid.UUID `json:"id"`
 	Name  string    `json:"name"`
 	Price int64     `json:"price"`
+	Code  string    `json:"code"`
 }
 
 type RelShoppingCartsProduct struct {
