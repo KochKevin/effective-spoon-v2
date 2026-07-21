@@ -69,7 +69,7 @@ func (s *ShoppingCartService) checkIfShoppingCartCanBeUsed(cart shoppingcarts.Sh
 // Crate the current Shopping cart
 func (s *ShoppingCartService) CreateCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
 
-	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
 		cart, err = s.Repo.CreateShoppingCart(ctx, tx, shoppingcarts.NewShoppingCart(userId))
 
@@ -97,7 +97,7 @@ func (s *ShoppingCartService) CreateCurrentShoppingCart(ctx context.Context, use
 
 func (s *ShoppingCartService) CheckoutCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
 
-	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
 		//Get Current Cart id
 		cartId, err := s.GetCurrentShoppingCartId()
@@ -150,7 +150,7 @@ func (s *ShoppingCartService) CheckoutCurrentShoppingCart(ctx context.Context, u
 func (s *ShoppingCartService) DecreaseProductOfCurrentShoppingCart(ctx context.Context, userId uuid.UUID, productId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
 	slog.Debug("Decrease Product by id")
 
-	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
 		//Get Current Cart id
 		cartId, err := s.GetCurrentShoppingCartId()
@@ -194,7 +194,7 @@ func (s *ShoppingCartService) DecreaseProductOfCurrentShoppingCart(ctx context.C
 
 func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCart(ctx context.Context, userId uuid.UUID, productId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
 
-	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
 		cart, err = s.IncreaseProductOfCurrentShoppingCartTx(ctx, tx, userId, productId)
 		return err
