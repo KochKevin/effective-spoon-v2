@@ -191,50 +191,59 @@ func (s *ShoppingCartService) DecreaseProductOfCurrentShoppingCart(ctx context.C
 	return cart, nil
 
 }
+
 func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCart(ctx context.Context, userId uuid.UUID, productId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
-	slog.Debug("Increase Product by id")
 
 	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
 
-		//Get Current Cart id
-		cartId, err := s.GetCurrentShoppingCartId()
-		if err != nil {
-			slog.Error("error can not get current shopping cart id", "error:", err)
-			return err
-		}
-
-		cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
-		if err != nil {
-			slog.Error("error getting shopping cart", "error:", err)
-			return err
-		}
-
-		err = s.checkIfShoppingCartCanBeUsed(cart, userId)
-		if err != nil {
-			slog.Error("error cart can not be used for checkout", "error:", err)
-			return err
-		}
-
-		slog.Debug("Before increase: ", "cart", cart)
-
-		product, err := s.ProductRepo.GetProduct(ctx, tx, productId)
-		if err != nil {
-			slog.Error("error cart can not load product which should be added to cart", "error:", err)
-			return err
-		}
-
-		cart.IncreaseProductAmount(product)
-
-		err = s.Repo.SaveShoppingCart(ctx, tx, cart)
-		if err != nil {
-			slog.Error("Error getting shopping cart", "error:", err)
-			return err
-		}
-		return nil
+		cart, err = s.IncreaseProductOfCurrentShoppingCartTx(ctx, tx, userId, productId)
+		return err
 	})
 
 	if err != nil {
-		slog.Error("Error in /shoppingcart decrease transaction", "error:", err)
+		slog.Error("Error in shoppingcart decrease transaction", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	return cart, err
+}
+
+func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCartTx(ctx context.Context, tx *sql.Tx, userId uuid.UUID, productId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
+
+	slog.Debug("Increase Product by id")
+
+	//Get Current Cart id
+	cartId, err := s.GetCurrentShoppingCartId()
+	if err != nil {
+		slog.Error("error can not get current shopping cart id", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
+	if err != nil {
+		slog.Error("error getting shopping cart", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	err = s.checkIfShoppingCartCanBeUsed(cart, userId)
+	if err != nil {
+		slog.Error("error cart can not be used for checkout", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	slog.Debug("Before increase: ", "cart", cart)
+
+	product, err := s.ProductRepo.GetProduct(ctx, tx, productId)
+	if err != nil {
+		slog.Error("error cart can not load product which should be added to cart", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	cart.IncreaseProductAmount(product)
+
+	err = s.Repo.SaveShoppingCart(ctx, tx, cart)
+	if err != nil {
+		slog.Error("Error getting shopping cart", "error:", err)
 		return shoppingcarts.ShoppingCart{}, err
 	}
 
