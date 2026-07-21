@@ -79,8 +79,11 @@ func (i *InputService) EnterBarcode(ctx context.Context, input string) error {
 		}
 
 		//Add Product to Cart
-		i.ShoppingCartService.IncreaseProductOfCurrentShoppingCartTx(ctx, tx, userId, product.Id)
-
+		_, err = i.ShoppingCartService.IncreaseProductOfCurrentShoppingCartTx(ctx, tx, userId, product.Id)
+		if err != nil {
+			slog.Error("error when increasing the amounts of products in the current shopping cart", "error:", err)
+			return err
+		}
 		//Call SocketService
 
 		return nil
