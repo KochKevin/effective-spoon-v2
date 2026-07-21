@@ -50,10 +50,15 @@ Backlog
 - In SaveShoppingCart (backend/internal/shoppingcarts/sqlite/repo.go), the error returned by UpdateShoppingCart is completely ignored. If the update fails, the function will still return nil (success), which can lead to silent data loss or inconsistent state.
 
 - In all handlers, WithTx is called with context.Background() instead of r.Context(). This ignores the request context, meaning database transactions won't be canceled if the client disconnects or the request times out. Please use r.Context().
+-> Ctx is not reached trough correctly
+
 
 - Using raw strings like "user_id" as context keys is a Go anti-pattern. Consider defining a custom unexported type for context keys to avoid potential collisions. -> Add an project wide http package with typed context keys and custom middlewear
 
 - Several slog.Error calls pass err directly as the second argument instead of using key-value pairs (e.g., "error", err).
+
+
+
 
 
 To thinker about
