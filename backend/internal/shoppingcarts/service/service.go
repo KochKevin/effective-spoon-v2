@@ -100,11 +100,10 @@ func (s *ShoppingCartService) CheckoutCurrentShoppingCart(ctx context.Context, u
 	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
 
 		//Get Current Cart id
-		cartId := s.ShoppingCartCache.GetCurrentCartId()
-
-		if cartId == uuid.Nil {
-			slog.Error("Error: no current Cart id is set")
-			return errors.New("Error: no current Cart id is set")
+		cartId, err := s.GetCurrentShoppingCartId()
+		if err != nil {
+			slog.Error("error can not get current shopping cart id", "error:", err)
+			return err
 		}
 
 		cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
@@ -154,11 +153,10 @@ func (s *ShoppingCartService) DecreaseProductOfCurrentShoppingCart(ctx context.C
 	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
 
 		//Get Current Cart id
-		cartId := s.ShoppingCartCache.GetCurrentCartId()
-
-		if cartId == uuid.Nil {
-			slog.Error("Error: no current Cart id is set")
-			return errors.New("Error: no current Cart id is set")
+		cartId, err := s.GetCurrentShoppingCartId()
+		if err != nil {
+			slog.Error("error can not get current shopping cart id", "error:", err)
+			return err
 		}
 
 		cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
@@ -199,11 +197,10 @@ func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCart(ctx context.C
 	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
 
 		//Get Current Cart id
-		cartId := s.ShoppingCartCache.GetCurrentCartId()
-
-		if cartId == uuid.Nil {
-			slog.Error("error: no current Cart id is set")
-			return errors.New("Error: no current Cart id is set")
+		cartId, err := s.GetCurrentShoppingCartId()
+		if err != nil {
+			slog.Error("error can not get current shopping cart id", "error:", err)
+			return err
 		}
 
 		cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
@@ -243,4 +240,16 @@ func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCart(ctx context.C
 
 	return cart, nil
 
+}
+
+var NoCurrentShoppingCart = errors.New("error: no current shopping cart is setted to be getted. Set an current shopping cart first")
+
+func (s *ShoppingCartService) GetCurrentShoppingCartId() (uuid.UUID, error) {
+	cartId := s.ShoppingCartCache.GetCurrentCartId()
+
+	if cartId == uuid.Nil {
+		return uuid.Nil, NoCurrentShoppingCart
+	}
+
+	return cartId, nil
 }
