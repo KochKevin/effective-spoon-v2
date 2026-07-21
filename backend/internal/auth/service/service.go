@@ -31,6 +31,15 @@ func (a *AuthService) Logout() {
 
 }
 
-func (a *AuthService) GetCurrentUserId() uuid.UUID {
-	return a.Repo.GetCurrentUserId()
+var NoCurrentUser = errors.New("error: no current user is setted to be getted. Set an current user first")
+
+func (a *AuthService) GetCurrentUserId() (uuid.UUID, error) {
+
+	userId := a.Repo.GetCurrentUserId()
+
+	if userId == uuid.Nil {
+		return uuid.Nil, NoCurrentUser
+	}
+
+	return userId, nil
 }

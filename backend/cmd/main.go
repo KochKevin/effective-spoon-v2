@@ -109,10 +109,9 @@ func main() {
 					// Create/Get test user id
 					//userId := uuid.Nil
 
-					userId := authService.GetCurrentUserId()
-
-					if userId == uuid.Nil {
-						slog.Error("Error: a user needs to be logged in to access this endpoint")
+					userId, err := authService.GetCurrentUserId()
+					if err != nil {
+						slog.Error("error: a user needs to be logged in to access this endpoint", "error", err)
 						http.Error(w, "Internal Server Error - a user need to be logged in", http.StatusInternalServerError)
 						return
 					}
