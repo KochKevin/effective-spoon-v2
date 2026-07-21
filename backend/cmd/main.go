@@ -144,7 +144,7 @@ func main() {
 					userId, err := authService.GetCurrentUserId()
 					if err != nil {
 						slog.Error("error: a user needs to be logged in to access this endpoint", "error", err)
-						http.Error(w, "Internal Server Error - a user need to be logged in", http.StatusInternalServerError)
+						http.Error(w, "Internal Server Error - a user need to be logged in", http.StatusUnauthorized)
 						return
 					}
 
