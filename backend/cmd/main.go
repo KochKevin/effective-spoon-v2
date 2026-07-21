@@ -125,6 +125,9 @@ func main() {
 					},
 					shoppingCartService,
 					authService,
+					&userssqlite.Repo{
+						Queries: *sqlc.New(db),
+					},
 					*infrastructure.NewTxManager(db),
 				),
 			}, apiRouter)

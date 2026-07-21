@@ -12,6 +12,7 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
 	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
 	shoppingcartservice "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/service"
+	"github.com/KochKevin/effective-spoon-v2/internal/users"
 	"github.com/google/uuid"
 )
 
@@ -21,6 +22,7 @@ type ProductRepo interface {
 
 type AuthService interface {
 	GetCurrentUserId() (uuid.UUID, error)
+	Login(userId uuid.UUID) error
 }
 
 type ShoppingCartService interface {
@@ -28,27 +30,31 @@ type ShoppingCartService interface {
 	IncreaseProductOfCurrentShoppingCartTx(ctx context.Context, tx *sql.Tx, userId uuid.UUID, productId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error)
 }
 
+type UserRepo interface {
+	GetUserIdByCode(ctx context.Context, tx *sql.Tx, usercode users.Usercode) (uuid.UUID, error)
+}
+
 type InputService struct {
 	ProductRepo         ProductRepo
 	ShoppingCartService ShoppingCartService
 	AuthService         AuthService
+	UserRepo            UserRepo
 	Txm                 infrastructure.TxManager
 }
 
-func New(productRepo ProductRepo, shoppingCartService ShoppingCartService, authService AuthService, txm infrastructure.TxManager) *InputService {
+func New(productRepo ProductRepo, shoppingCartService ShoppingCartService, authService AuthService, userRepo UserRepo, txm infrastructure.TxManager) *InputService {
 	return &InputService{
 		ProductRepo:         productRepo,
 		ShoppingCartService: shoppingCartService,
 		AuthService:         authService,
+		UserRepo:            userRepo,
 		Txm:                 txm,
 	}
 }
 
-func (i *InputService) EnterBarcode(input string) error {
+func (i *InputService) EnterBarcode(ctx context.Context, input string) error {
 
-	ctx := context.Background()
-
-	err := i.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+	err := i.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
 		userId, err := i.AuthService.GetCurrentUserId()
 		if errors.Is(err, authservice.NoCurrentUser) {
@@ -75,6 +81,8 @@ func (i *InputService) EnterBarcode(input string) error {
 		//Add Product to Cart
 		i.ShoppingCartService.IncreaseProductOfCurrentShoppingCartTx(ctx, tx, userId, product.Id)
 
+		//Call SocketService
+
 		return nil
 	})
 	if err != nil {
@@ -85,9 +93,28 @@ func (i *InputService) EnterBarcode(input string) error {
 	return nil
 }
 
-func (i *InputService) EnterRfid(input string) error {
+func (i *InputService) EnterRfid(ctx context.Context, input string) error {
 
-	err := i.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+	err := i.Txm.WithTx(ctx, func(tx *sql.Tx) error {
+
+		//Sanitze Input
+		input = strings.TrimSpace(input)
+
+		//Get User by code
+		userId, err := i.UserRepo.GetUserIdByCode(ctx, tx, users.Usercode(input))
+		if err != nil {
+			slog.Error("error when getting an user by its code", "error:", err)
+			return err
+		}
+
+		//Try to login
+		err = i.AuthService.Login(userId)
+		if err != nil {
+			slog.Error("error while trying to log in with the user from the rfid sensor", "error:", err)
+			return err
+		}
+
+		//Call SocketService
 
 		return nil
 	})

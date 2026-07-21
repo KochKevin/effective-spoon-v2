@@ -1,6 +1,7 @@
 package input
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 
@@ -9,8 +10,8 @@ import (
 )
 
 type InputService interface {
-	EnterBarcode(input string) error
-	EnterRfid(input string) error
+	EnterBarcode(ctx context.Context, input string) error
+	EnterRfid(ctx context.Context, input string) error
 }
 
 type Api struct {
@@ -28,7 +29,7 @@ type Api struct {
 // (POST /input/barcode)
 func (a *Api) PostInputBarcode(w http.ResponseWriter, r *http.Request, params inputapi.PostInputBarcodeParams) {
 
-	err := a.InputService.EnterBarcode(params.Input)
+	err := a.InputService.EnterBarcode(r.Context(), params.Input)
 	if err != nil {
 		slog.Error("error while trying enter input with barcode", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -42,7 +43,12 @@ func (a *Api) PostInputBarcode(w http.ResponseWriter, r *http.Request, params in
 // (POST /input/rfid)
 func (a *Api) PostInputRfid(w http.ResponseWriter, r *http.Request, params inputapi.PostInputRfidParams) {
 
-	a.InputService.EnterRfid(params.Input)
+	err := a.InputService.EnterRfid(r.Context(), params.Input)
+	if err != nil {
+		slog.Error("error while trying enter input with rfid sensor", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 
 	render.Status(r, http.StatusOK)
 }
