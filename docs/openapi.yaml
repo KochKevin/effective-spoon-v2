@@ -147,6 +147,39 @@ paths:
           description: Logout successfull
 
 
+
+
+  /input/barcode:
+    post:
+      summary: Use Inputsystem with barcode. Mainly for testing purposes
+      tags:
+        - input
+      parameters:
+        - in: query
+          name: input
+          schema:
+            type: string
+          required: true
+          description: The input which should be inserted with an barcode scanner
+      responses:
+        '200':
+          description: 
+
+  /input/rfid:
+    post:
+      summary: Use Inputsystem with rfid. Mainly for testing purposes
+      tags:
+        - input
+      parameters:
+        - in: query
+          name: input
+          schema:
+            type: string
+          required: true
+          description: The input which should be inserted from an rfid sensor
+      responses:
+        '200':
+          description:
           
 
 components:
