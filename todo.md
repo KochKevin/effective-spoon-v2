@@ -1,6 +1,4 @@
 Input System 
-- barcode reader should load product and add it to the current cart, if one exists - check this based on the cached/state of the shopping cart service
-- rfid reader should login user using the auth service. if one is already logged in throw error
 - on login of user via rfid, call SocketService to update frontend (switch from dashbaord to shoppingcart screen)
 - on adding products via barcode, call SocketService to update frontend (reload shopping cart)
 
@@ -26,6 +24,10 @@ Problems and Bugs
 - 
 
 Backlog
+
+- Better Error handling
+    - Currently there are multiple error logs talking about the same stuff -> There should only be one
+    - More and better error wrapping
 
 - Add ENV
 - Add Dev Environment (read from env)
