@@ -19,6 +19,7 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/server"
 	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
 	shoppingcartssapi "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated"
+	shoppingcartservice "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/service"
 	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/shoppingcartcache"
 	shoppingcartssqlite "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/sqlite"
 	"github.com/KochKevin/effective-spoon-v2/internal/users"
@@ -131,33 +132,38 @@ func main() {
 			})
 
 			//Routes
-			productsapi.HandlerFromMux(&products.Api{
-				Repo: &productssqlite.Repo{
-					Queries: *sqlc.New(db),
-				},
-				Txm: *infrastructure.NewTxManager(db),
-			}, protectedRouter)
+			productsapi.HandlerFromMux(
+				&products.Api{
+					Repo: &productssqlite.Repo{
+						Queries: *sqlc.New(db),
+					},
+					Txm: *infrastructure.NewTxManager(db),
+				}, protectedRouter)
 
-			shoppingcartssapi.HandlerFromMux(&shoppingcarts.Api{
-				Repo: &shoppingcartssqlite.Repo{
-					Queries: *sqlc.New(db),
-				},
-				ProductRepo: &productssqlite.Repo{
-					Queries: *sqlc.New(db),
-				},
-				UserRepo: &userssqlite.Repo{
-					Queries: *sqlc.New(db),
-				},
-				ShoppingCartCache: shoppingcartcache.New(),
-				Txm:               *infrastructure.NewTxManager(db),
-			}, protectedRouter)
+			shoppingcartssapi.HandlerFromMux(
+				&shoppingcarts.Api{
+					Service: shoppingcartservice.New(
+						&shoppingcartssqlite.Repo{
+							Queries: *sqlc.New(db),
+						},
+						&productssqlite.Repo{
+							Queries: *sqlc.New(db),
+						},
+						&userssqlite.Repo{
+							Queries: *sqlc.New(db),
+						},
+						shoppingcartcache.New(),
+						*infrastructure.NewTxManager(db),
+					),
+				}, protectedRouter)
 
-			userssapi.HandlerFromMux(&users.Api{
-				Repo: &userssqlite.Repo{
-					Queries: *sqlc.New(db),
-				},
-				Txm: *infrastructure.NewTxManager(db),
-			}, protectedRouter)
+			userssapi.HandlerFromMux(
+				&users.Api{
+					Repo: &userssqlite.Repo{
+						Queries: *sqlc.New(db),
+					},
+					Txm: *infrastructure.NewTxManager(db),
+				}, protectedRouter)
 
 		})
 
