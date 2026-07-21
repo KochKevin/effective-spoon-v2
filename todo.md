@@ -1,10 +1,3 @@
-
-Shopping Cart refactor:
-- move code from handlers into one shopping cart service
-
-
-
-
 Input System 
 - barcode reader should load product and add it to the current cart, if one exists - check this based on the cached/state of the shopping cart service
 - rfid reader should login user using the auth service. if one is already logged in throw error
@@ -13,6 +6,14 @@ Input System
 
 SocketService
 - Add methods to update stuff in frontend, called from backend
+
+
+ShoppingCart
+- Add an get endpoint to get the current cart
+- When transitioning from dashboard to shoppingcart view upon login, then create a new shopping cart (thinker about doing that on the backend and mabe remove the post on the current shopping cart...)
+- When loading the shopping cart view use the new get endpoint to load the current shopping cart 
+
+
 
 ImageService
 - Expose an image api from which images can be loaded based on an image id
