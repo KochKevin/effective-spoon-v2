@@ -12,7 +12,7 @@ import (
 )
 
 const getAllProducts = `-- name: GetAllProducts :many
-SELECT id, name, price FROM products
+SELECT id, name, price, code FROM products
 `
 
 func (q *Queries) GetAllProducts(ctx context.Context) ([]Product, error) {
@@ -24,7 +24,12 @@ func (q *Queries) GetAllProducts(ctx context.Context) ([]Product, error) {
 	var items []Product
 	for rows.Next() {
 		var i Product
-		if err := rows.Scan(&i.ID, &i.Name, &i.Price); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Price,
+			&i.Code,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -42,7 +47,8 @@ const getProduct = `-- name: GetProduct :one
 SELECT 
 id,
 name,
-price
+price,
+code
 FROM products WHERE id = ?
 ORDER BY rowid ASC
 `
@@ -50,6 +56,33 @@ ORDER BY rowid ASC
 func (q *Queries) GetProduct(ctx context.Context, id uuid.UUID) (Product, error) {
 	row := q.db.QueryRowContext(ctx, getProduct, id)
 	var i Product
-	err := row.Scan(&i.ID, &i.Name, &i.Price)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Price,
+		&i.Code,
+	)
+	return i, err
+}
+
+const getProductByCode = `-- name: GetProductByCode :one
+SELECT 
+id,
+name,
+price,
+code
+FROM products WHERE code = ?
+ORDER BY rowid ASC
+`
+
+func (q *Queries) GetProductByCode(ctx context.Context, code string) (Product, error) {
+	row := q.db.QueryRowContext(ctx, getProductByCode, code)
+	var i Product
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Price,
+		&i.Code,
+	)
 	return i, err
 }

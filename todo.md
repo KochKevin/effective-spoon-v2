@@ -1,6 +1,4 @@
 Input System 
-- barcode reader should load product and add it to the current cart, if one exists - check this based on the cached/state of the shopping cart service
-- rfid reader should login user using the auth service. if one is already logged in throw error
 - on login of user via rfid, call SocketService to update frontend (switch from dashbaord to shoppingcart screen)
 - on adding products via barcode, call SocketService to update frontend (reload shopping cart)
 
@@ -27,6 +25,10 @@ Problems and Bugs
 
 Backlog
 
+- Better Error handling
+    - Currently there are multiple error logs talking about the same stuff -> There should only be one
+    - More and better error wrapping
+
 - Add ENV
 - Add Dev Environment (read from env)
     - Add test (seed) data to db when its starting -> First Remove test data from migration. An squash of the current migrations should be probably done too
@@ -50,10 +52,15 @@ Backlog
 - In SaveShoppingCart (backend/internal/shoppingcarts/sqlite/repo.go), the error returned by UpdateShoppingCart is completely ignored. If the update fails, the function will still return nil (success), which can lead to silent data loss or inconsistent state.
 
 - In all handlers, WithTx is called with context.Background() instead of r.Context(). This ignores the request context, meaning database transactions won't be canceled if the client disconnects or the request times out. Please use r.Context().
+-> Ctx is not reached trough correctly
+
 
 - Using raw strings like "user_id" as context keys is a Go anti-pattern. Consider defining a custom unexported type for context keys to avoid potential collisions. -> Add an project wide http package with typed context keys and custom middlewear
 
 - Several slog.Error calls pass err directly as the second argument instead of using key-value pairs (e.g., "error", err).
+
+
+
 
 
 To thinker about

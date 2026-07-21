@@ -41,7 +41,19 @@ func (r *Repo) GetProduct(ctx context.Context, tx *sql.Tx, id uuid.UUID) (produc
 		slog.Error("Error in products query", err)
 		return products.Product{}, err
 	}
-	
-	return products.NewProduct(product.ID, product.Name, money.MoneyFrom(int(product.Price))),  nil
+
+	return products.NewProduct(product.ID, product.Name, money.MoneyFrom(int(product.Price))), nil
+
+}
+
+func (r *Repo) GetProductByCode(ctx context.Context, tx *sql.Tx, code string) (products.Product, error) {
+
+	product, err := r.Queries.WithTx(tx).GetProductByCode(ctx, code)
+	if err != nil {
+		slog.Error("Error in get products by code query", "error", err)
+		return products.Product{}, err
+	}
+
+	return products.NewProduct(product.ID, product.Name, money.MoneyFrom(int(product.Price))), nil
 
 }

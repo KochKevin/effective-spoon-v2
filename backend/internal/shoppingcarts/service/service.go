@@ -69,7 +69,7 @@ func (s *ShoppingCartService) checkIfShoppingCartCanBeUsed(cart shoppingcarts.Sh
 // Crate the current Shopping cart
 func (s *ShoppingCartService) CreateCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
 
-	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
 		cart, err = s.Repo.CreateShoppingCart(ctx, tx, shoppingcarts.NewShoppingCart(userId))
 
@@ -97,14 +97,13 @@ func (s *ShoppingCartService) CreateCurrentShoppingCart(ctx context.Context, use
 
 func (s *ShoppingCartService) CheckoutCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
 
-	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
 		//Get Current Cart id
-		cartId := s.ShoppingCartCache.GetCurrentCartId()
-
-		if cartId == uuid.Nil {
-			slog.Error("Error: no current Cart id is set")
-			return errors.New("Error: no current Cart id is set")
+		cartId, err := s.GetCurrentShoppingCartId()
+		if err != nil {
+			slog.Error("error can not get current shopping cart id", "error:", err)
+			return err
 		}
 
 		cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
@@ -151,14 +150,13 @@ func (s *ShoppingCartService) CheckoutCurrentShoppingCart(ctx context.Context, u
 func (s *ShoppingCartService) DecreaseProductOfCurrentShoppingCart(ctx context.Context, userId uuid.UUID, productId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
 	slog.Debug("Decrease Product by id")
 
-	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
 		//Get Current Cart id
-		cartId := s.ShoppingCartCache.GetCurrentCartId()
-
-		if cartId == uuid.Nil {
-			slog.Error("Error: no current Cart id is set")
-			return errors.New("Error: no current Cart id is set")
+		cartId, err := s.GetCurrentShoppingCartId()
+		if err != nil {
+			slog.Error("error can not get current shopping cart id", "error:", err)
+			return err
 		}
 
 		cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
@@ -193,54 +191,74 @@ func (s *ShoppingCartService) DecreaseProductOfCurrentShoppingCart(ctx context.C
 	return cart, nil
 
 }
+
 func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCart(ctx context.Context, userId uuid.UUID, productId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
-	slog.Debug("Increase Product by id")
 
-	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
-		//Get Current Cart id
-		cartId := s.ShoppingCartCache.GetCurrentCartId()
-
-		if cartId == uuid.Nil {
-			slog.Error("error: no current Cart id is set")
-			return errors.New("Error: no current Cart id is set")
-		}
-
-		cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
-		if err != nil {
-			slog.Error("error getting shopping cart", "error:", err)
-			return err
-		}
-
-		err = s.checkIfShoppingCartCanBeUsed(cart, userId)
-		if err != nil {
-			slog.Error("error cart can not be used for checkout", "error:", err)
-			return err
-		}
-
-		slog.Debug("Before increase: ", "cart", cart)
-
-		product, err := s.ProductRepo.GetProduct(ctx, tx, productId)
-		if err != nil {
-			slog.Error("error cart can not load product which should be added to cart", "error:", err)
-			return err
-		}
-
-		cart.IncreaseProductAmount(product)
-
-		err = s.Repo.SaveShoppingCart(ctx, tx, cart)
-		if err != nil {
-			slog.Error("Error getting shopping cart", "error:", err)
-			return err
-		}
-		return nil
+		cart, err = s.IncreaseProductOfCurrentShoppingCartTx(ctx, tx, userId, productId)
+		return err
 	})
 
 	if err != nil {
-		slog.Error("Error in /shoppingcart decrease transaction", "error:", err)
+		slog.Error("Error in shoppingcart decrease transaction", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	return cart, err
+}
+
+func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCartTx(ctx context.Context, tx *sql.Tx, userId uuid.UUID, productId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
+
+	slog.Debug("Increase Product by id")
+
+	//Get Current Cart id
+	cartId, err := s.GetCurrentShoppingCartId()
+	if err != nil {
+		slog.Error("error can not get current shopping cart id", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
+	if err != nil {
+		slog.Error("error getting shopping cart", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	err = s.checkIfShoppingCartCanBeUsed(cart, userId)
+	if err != nil {
+		slog.Error("error cart can not be used for checkout", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	slog.Debug("Before increase: ", "cart", cart)
+
+	product, err := s.ProductRepo.GetProduct(ctx, tx, productId)
+	if err != nil {
+		slog.Error("error cart can not load product which should be added to cart", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	cart.IncreaseProductAmount(product)
+
+	err = s.Repo.SaveShoppingCart(ctx, tx, cart)
+	if err != nil {
+		slog.Error("Error getting shopping cart", "error:", err)
 		return shoppingcarts.ShoppingCart{}, err
 	}
 
 	return cart, nil
 
+}
+
+var NoCurrentShoppingCart = errors.New("error: no current shopping cart is setted to be getted. Set an current shopping cart first")
+
+func (s *ShoppingCartService) GetCurrentShoppingCartId() (uuid.UUID, error) {
+	cartId := s.ShoppingCartCache.GetCurrentCartId()
+
+	if cartId == uuid.Nil {
+		return uuid.Nil, NoCurrentShoppingCart
+	}
+
+	return cartId, nil
 }

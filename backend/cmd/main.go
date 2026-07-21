@@ -13,6 +13,9 @@ import (
 	authservice "github.com/KochKevin/effective-spoon-v2/internal/auth/service"
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
+	"github.com/KochKevin/effective-spoon-v2/internal/input"
+	inputapi "github.com/KochKevin/effective-spoon-v2/internal/input/generated"
+	inputservice "github.com/KochKevin/effective-spoon-v2/internal/input/service"
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
 	productsapi "github.com/KochKevin/effective-spoon-v2/internal/products/generated"
 	productssqlite "github.com/KochKevin/effective-spoon-v2/internal/products/sqlite"
@@ -100,6 +103,35 @@ func main() {
 			Txm:         *infrastructure.NewTxManager(db),
 		}, apiRouter)
 
+		shoppingCartService := shoppingcartservice.New(
+			&shoppingcartssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+			&productssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+			&userssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+			shoppingcartcache.New(),
+			*infrastructure.NewTxManager(db),
+		)
+
+		inputapi.HandlerFromMux(
+			&input.Api{
+				InputService: inputservice.New(
+					&productssqlite.Repo{
+						Queries: *sqlc.New(db),
+					},
+					shoppingCartService,
+					authService,
+					&userssqlite.Repo{
+						Queries: *sqlc.New(db),
+					},
+					*infrastructure.NewTxManager(db),
+				),
+			}, apiRouter)
+
 		apiRouter.Group(func(protectedRouter chi.Router) {
 
 			//GetLoggedInUser Middlewear
@@ -109,11 +141,10 @@ func main() {
 					// Create/Get test user id
 					//userId := uuid.Nil
 
-					userId := authService.GetCurrentUserId()
-
-					if userId == uuid.Nil {
-						slog.Error("Error: a user needs to be logged in to access this endpoint")
-						http.Error(w, "Internal Server Error - a user need to be logged in", http.StatusInternalServerError)
+					userId, err := authService.GetCurrentUserId()
+					if err != nil {
+						slog.Error("error: a user needs to be logged in to access this endpoint", "error", err)
+						http.Error(w, "Internal Server Error - a user need to be logged in", http.StatusUnauthorized)
 						return
 					}
 
@@ -142,19 +173,7 @@ func main() {
 
 			shoppingcartssapi.HandlerFromMux(
 				&shoppingcarts.Api{
-					Service: shoppingcartservice.New(
-						&shoppingcartssqlite.Repo{
-							Queries: *sqlc.New(db),
-						},
-						&productssqlite.Repo{
-							Queries: *sqlc.New(db),
-						},
-						&userssqlite.Repo{
-							Queries: *sqlc.New(db),
-						},
-						shoppingcartcache.New(),
-						*infrastructure.NewTxManager(db),
-					),
+					Service: shoppingCartService,
 				}, protectedRouter)
 
 			userssapi.HandlerFromMux(
