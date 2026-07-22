@@ -34,20 +34,27 @@ type UserRepo interface {
 	GetUserIdByCode(ctx context.Context, tx *sql.Tx, usercode users.Usercode) (uuid.UUID, error)
 }
 
+type PushService interface {
+	PushUserLogin()
+	PushShoppingCartUpdate()
+}
+
 type InputService struct {
 	ProductRepo         ProductRepo
 	ShoppingCartService ShoppingCartService
 	AuthService         AuthService
 	UserRepo            UserRepo
+	PushService         PushService
 	Txm                 infrastructure.TxManager
 }
 
-func New(productRepo ProductRepo, shoppingCartService ShoppingCartService, authService AuthService, userRepo UserRepo, txm infrastructure.TxManager) *InputService {
+func New(productRepo ProductRepo, shoppingCartService ShoppingCartService, authService AuthService, userRepo UserRepo, pushService PushService, txm infrastructure.TxManager) *InputService {
 	return &InputService{
 		ProductRepo:         productRepo,
 		ShoppingCartService: shoppingCartService,
 		AuthService:         authService,
 		UserRepo:            userRepo,
+		PushService:         pushService,
 		Txm:                 txm,
 	}
 }
@@ -84,7 +91,9 @@ func (i *InputService) EnterBarcode(ctx context.Context, input string) error {
 			slog.Error("error when increasing the amounts of products in the current shopping cart", "error:", err)
 			return err
 		}
-		//Call SocketService
+
+		//Update Frontend
+		i.PushService.PushShoppingCartUpdate()
 
 		return nil
 	})
@@ -117,7 +126,8 @@ func (i *InputService) EnterRfid(ctx context.Context, input string) error {
 			return err
 		}
 
-		//Call SocketService
+		//Update Frontend
+		i.PushService.PushUserLogin()
 
 		return nil
 	})

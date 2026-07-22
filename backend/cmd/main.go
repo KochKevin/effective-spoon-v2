@@ -19,6 +19,8 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
 	productsapi "github.com/KochKevin/effective-spoon-v2/internal/products/generated"
 	productssqlite "github.com/KochKevin/effective-spoon-v2/internal/products/sqlite"
+	"github.com/KochKevin/effective-spoon-v2/internal/push"
+	pushservice "github.com/KochKevin/effective-spoon-v2/internal/push/service"
 	"github.com/KochKevin/effective-spoon-v2/internal/server"
 	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
 	shoppingcartssapi "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated"
@@ -94,6 +96,8 @@ func main() {
 			Repo: authcache.New(),
 		}
 
+		pushService := pushservice.New()
+
 		//The auth api should only be used for testing purposes
 		authapi.HandlerFromMux(&auth.Api{
 			UserRepo: &userssqlite.Repo{
@@ -128,9 +132,13 @@ func main() {
 					&userssqlite.Repo{
 						Queries: *sqlc.New(db),
 					},
+					pushService,
 					*infrastructure.NewTxManager(db),
 				),
 			}, apiRouter)
+
+		//Server Sent Events, Push Api endpoint
+		(&push.Api{PushService: pushService}).GetEvents(apiRouter)
 
 		apiRouter.Group(func(protectedRouter chi.Router) {
 
