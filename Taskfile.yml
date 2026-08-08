@@ -55,6 +55,7 @@ tasks:
     desc: Build frontend
     dir: ./frontend
     cmds:
+      - npm install
       - npm run generate
   
   _build:backend:
@@ -64,8 +65,8 @@ tasks:
       GOOS: '{{.GOOS}}'
       GOARCH: '{{.GOARCH}}'
     cmds:
-      - task: :_build:frontend
-      - task: :_sync:assets
+      - task: _build:frontend
+      - task: _sync:assets
      # - go clean -cache
       - go build -v -o tmp/main-{{.GOOS}}-{{.GOARCH}}{{.BIN_EXT}} ./cmd/main.go
 
