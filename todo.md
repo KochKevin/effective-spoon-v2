@@ -12,6 +12,8 @@ ShoppingCart
 - When loading the shopping cart view use the new get endpoint to load the current shopping cart 
 
 
+embed database/migrations and queries for easier creaating and loading
+
 
 ImageService
 - Expose an image api from which images can be loaded based on an image id
