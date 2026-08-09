@@ -24,7 +24,7 @@ const lineSeperator = "\n"
 // This system is currently limited to one connection. It would break if multiple clients would be connected. But for its current purpose its enough
 func (a *Api) GetPushes(w http.ResponseWriter, r *http.Request) {
 
-	slog.Debug("GET on /üushes")
+	slog.Debug("GET on /pushes")
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -50,13 +50,7 @@ func (a *Api) GetPushes(w http.ResponseWriter, r *http.Request) {
 
 		case event := <-a.PushService.GetEventChannel():
 
-			if event == pushservice.ShoppingCartUpdateEvent {
-
-				w.Write([]byte("data: " + event + endOfLine + lineSeperator))
-
-			} else if event == pushservice.UserLoginEvent {
-				w.Write([]byte("data: " + event + endOfLine + lineSeperator))
-			}
+			w.Write([]byte("data: " + event + endOfLine + lineSeperator))
 
 			//Push new message
 			if f, ok := w.(http.Flusher); ok {
