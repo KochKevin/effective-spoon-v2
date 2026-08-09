@@ -75,3 +75,7 @@ package-lock.json
 *.sqlite
 node_modules/
 build/
+
+
+# taskfile
+.task

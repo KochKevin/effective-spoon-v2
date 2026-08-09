@@ -60,7 +60,18 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
 
+
+    public: {
+      
+      // Use NUXT_PUBLIC_API_BASE to overwrite this config
+      apiBase: "http://localhost:8080/api/"
+    }
+
+
   },
+
+
+
 
   
 
