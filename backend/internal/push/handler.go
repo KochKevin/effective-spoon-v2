@@ -6,7 +6,6 @@ import (
 	"time"
 
 	pushapi "github.com/KochKevin/effective-spoon-v2/internal/push/generated"
-	pushservice "github.com/KochKevin/effective-spoon-v2/internal/push/service"
 )
 
 type PushService interface {
