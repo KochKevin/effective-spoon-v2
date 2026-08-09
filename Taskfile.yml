@@ -12,6 +12,11 @@ tasks:
       - echo "{{.GREETING}}"
     silent: true
 
+
+
+  # DEV TASKS (RUNNING AND SETUP)
+
+
   setup:
     desc: Install required tooling
     dir: ./
@@ -66,7 +71,28 @@ tasks:
       - npm run openapi-ts
 
 
+  # TEST TASKS
 
+
+  test-rfid:
+    desc: Call the api/input/rfid endpoint and give it an parameter for input. Only works when backends runs on localhost 8080 and curl must be installed
+    vars:
+      INPUT: '{{.INPUT | default "1" }}'
+    cmds:
+      - curl -X POST 'localhost:8080/api/input/rfid?input={{.INPUT}}'
+
+  test-bcode:
+    desc: Call the api/input/barcode endpoint and give it an parameter for input. Only works when backends runs on localhost 8080 and curl must be installed
+    vars:
+      INPUT: '{{.INPUT | default "1" }}'
+    cmds:
+      - curl -X POST 'localhost:8080/api/input/barcode?input={{.INPUT}}'
+
+
+
+
+
+  # BULDING TASKS
 
 
   _sync:assets:
