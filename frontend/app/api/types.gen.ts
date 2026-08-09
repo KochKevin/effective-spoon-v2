@@ -32,6 +32,24 @@ export type User = {
     balance: number;
 };
 
+export type SseEvent = 'user.login' | 'shoppingcart.update';
+
+export type GetPushesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/pushes';
+};
+
+export type GetPushesResponses = {
+    /**
+     * Stream of real time events
+     */
+    200: SseEvent;
+};
+
+export type GetPushesResponse = GetPushesResponses[keyof GetPushesResponses];
+
 export type GetProductsData = {
     body?: never;
     path?: never;
@@ -168,5 +186,37 @@ export type PostAuthLogoutResponses = {
     /**
      * Logout successfull
      */
+    200: unknown;
+};
+
+export type PostInputBarcodeData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The input which should be inserted with an barcode scanner
+         */
+        input: string;
+    };
+    url: '/input/barcode';
+};
+
+export type PostInputBarcodeResponses = {
+    200: unknown;
+};
+
+export type PostInputRfidData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The input which should be inserted from an rfid sensor
+         */
+        input: string;
+    };
+    url: '/input/rfid';
+};
+
+export type PostInputRfidResponses = {
     200: unknown;
 };
