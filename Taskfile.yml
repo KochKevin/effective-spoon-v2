@@ -20,13 +20,21 @@ tasks:
     - task: _setup:frontend
 
   _setup:backend:
+    desc: Only install backend tooling if the dependencies have changedd
     dir: ./backend
+    sources:
+      - go.mod
+      - go.sum
     cmds:
       - go install -x tool
       - echo "finished installing go tools"
 
   _setup:frontend:
+    desc: Only install frontend tooling if the dependencies have changedd
     dir: ./frontend
+    sources:
+      - package.json
+      - package-lock.json
     cmds:
       - npm install
       - echo "finished installing npm dependencies"
@@ -41,13 +49,14 @@ tasks:
     desc: Start GO backend with hot reload
     dir: ./backend
     cmds:
+      - task: _setup:backend
       - air
     
   frontend:
     desc: Start frontend dev server
     dir: ./frontend
     cmds:
-      #- npm install
+      - task: _setup:frontend
       - npm run dev
 
   frontend-api:
