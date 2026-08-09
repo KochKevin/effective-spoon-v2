@@ -37,19 +37,27 @@ func (a *Api) GetPushes(w http.ResponseWriter, r *http.Request) {
 		//DO WORK
 		//slog.Debug("Hallo!")
 
-		w.Write([]byte(": heartbeat" + endOfLine + lineSeperator))
-		if f, ok := w.(http.Flusher); ok {
-			f.Flush()
-		}
-
 		select {
 		//rerun work
 		case <-ticker.C:
+			_, err := w.Write([]byte(": heartbeat" + endOfLine + lineSeperator))
+			if err != nil {
+				slog.Error("closing server sent events on pushes", "err", err)
+				return
+			}
+
+			if f, ok := w.(http.Flusher); ok {
+				f.Flush()
+			}
 			continue
 
 		case event := <-a.PushService.GetEventChannel():
 
-			w.Write([]byte("data: " + event + endOfLine + lineSeperator))
+			_, err := w.Write([]byte("data: " + event + endOfLine + lineSeperator))
+			if err != nil {
+				slog.Error("closing server sent events on pushes", "err", err)
+				return
+			}
 
 			//Push new message
 			if f, ok := w.(http.Flusher); ok {
