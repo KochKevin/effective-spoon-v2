@@ -1,7 +1,7 @@
 package pushservice
 
-const UserLoginEvent string = "user.login"
-const ShoppingCartUpdateEvent string = "shoppingcart.update"
+import pushapi "github.com/KochKevin/effective-spoon-v2/internal/push/generated"
+
 
 type PushService struct {
 	eventChannel chan string
@@ -14,11 +14,11 @@ func New() *PushService {
 }
 
 func (p *PushService) PushUserLogin() {
-	p.eventChannel <- UserLoginEvent
+	p.eventChannel <- string(pushapi.UserLogin)
 }
 
 func (p *PushService) PushShoppingCartUpdate() {
-	p.eventChannel <- ShoppingCartUpdateEvent
+	p.eventChannel <- string(pushapi.ShoppingcartUpdate)
 }
 
 func (p *PushService) GetEventChannel() <-chan string {
