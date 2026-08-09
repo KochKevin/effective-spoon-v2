@@ -12,6 +12,25 @@ tasks:
       - echo "{{.GREETING}}"
     silent: true
 
+  setup:
+    desc: Install required tooling
+    dir: ./
+    cmds:
+    - task: _setup:backend
+    - task: _setup:frontend
+
+  _setup:backend:
+    dir: ./backend
+    cmds:
+      - go install -x tool
+      - echo "finished installing go tools"
+
+  _setup:frontend:
+    dir: ./frontend
+    cmds:
+      - npm install
+      - echo "finished installing npm dependencies"
+
   dev:
     desc: Start GO backend with hot reload and frontend dev server
     deps:
