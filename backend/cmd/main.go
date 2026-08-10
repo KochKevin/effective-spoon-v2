@@ -20,6 +20,7 @@ import (
 	productsapi "github.com/KochKevin/effective-spoon-v2/internal/products/generated"
 	productssqlite "github.com/KochKevin/effective-spoon-v2/internal/products/sqlite"
 	"github.com/KochKevin/effective-spoon-v2/internal/push"
+	pushapi "github.com/KochKevin/effective-spoon-v2/internal/push/generated"
 	pushservice "github.com/KochKevin/effective-spoon-v2/internal/push/service"
 	"github.com/KochKevin/effective-spoon-v2/internal/server"
 	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
@@ -138,7 +139,7 @@ func main() {
 			}, apiRouter)
 
 		//Server Sent Events, Push Api endpoint
-		(&push.Api{PushService: pushService}).GetEvents(apiRouter)
+		pushapi.HandlerFromMux(&push.Api{PushService: pushService}, apiRouter)
 
 		apiRouter.Group(func(protectedRouter chi.Router) {
 

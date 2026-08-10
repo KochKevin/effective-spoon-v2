@@ -11,12 +11,20 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { useUserStore } from './stores/users';
+import { sseBus } from './plugins/02.sse.client';
+
+
+sseBus.on((event) => {
+  console.log(event)
+})
 
 
 const shoppingCartStore = useShoppingCartStore()
 const userStore = useUserStore()
 
 userStore.getCurrentUser()
+
+
 
 </script>
 

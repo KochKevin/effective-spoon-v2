@@ -8,8 +8,26 @@ tags:
   - name: shopping-carts
   - name: users
   - name: auth
+  - name: pushes
 
 paths:
+
+
+  /pushes:
+    get:                                
+      summary: Subscribe to server sent events
+      tags:
+        - pushes
+      responses:
+        '200':
+          description: Stream of real time events
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/SSEEvent'
+
+
+
   /products:
     get:
       summary: Load all products
@@ -285,3 +303,7 @@ components:
           type: number
           examples: 
             - 10.0
+
+    SSEEvent:
+      type: string
+      enum: [user.login, shoppingcart.update]

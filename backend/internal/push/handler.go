@@ -5,8 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	pushservice "github.com/KochKevin/effective-spoon-v2/internal/push/service"
-	"github.com/go-chi/chi/v5"
+	pushapi "github.com/KochKevin/effective-spoon-v2/internal/push/generated"
 )
 
 type PushService interface {
@@ -14,65 +13,62 @@ type PushService interface {
 }
 
 type Api struct {
+	pushapi.Unimplemented
 	PushService PushService
 }
 
 const endOfLine = "\n"
 const lineSeperator = "\n"
 
+// This system is currently limited to one connection. It would break if multiple clients would be connected. But for its current purpose its enough
+func (a *Api) GetPushes(w http.ResponseWriter, r *http.Request) {
 
-//This system is currently limited to one connection. It would break if multiple clients would be connected. But for its current purpose its enough
+	slog.Debug("GET on /pushes")
 
-func (a *Api) GetEvents(r chi.Router) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
 
-	r.Get("/events", func(w http.ResponseWriter, r *http.Request) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
 
-		slog.Debug("GET on /events")
+	for {
 
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Connection", "keep-alive")
+		//DO WORK
+		//slog.Debug("Hallo!")
 
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
+		select {
+		//rerun work
+		case <-ticker.C:
+			_, err := w.Write([]byte(": heartbeat" + endOfLine + lineSeperator))
+			if err != nil {
+				slog.Error("closing server sent events on pushes", "err", err)
+				return
+			}
 
-		for {
-
-			//DO WORK
-			//slog.Debug("Hallo!")
-
-			w.Write([]byte(": heartbeat" + endOfLine + lineSeperator))
 			if f, ok := w.(http.Flusher); ok {
 				f.Flush()
 			}
+			continue
 
-			select {
-			//rerun work
-			case <-ticker.C:
-				continue
+		case event := <-a.PushService.GetEventChannel():
 
-			case event := <-a.PushService.GetEventChannel():
-
-				if event == pushservice.ShoppingCartUpdateEvent {
-
-					w.Write([]byte("data: " + event + endOfLine + lineSeperator))
-
-				} else if event == pushservice.UserLoginEvent {
-					w.Write([]byte("data: " + event + endOfLine + lineSeperator))
-				}
-
-				//Push new message
-				if f, ok := w.(http.Flusher); ok {
-					f.Flush()
-				}
-				continue
-
-			//End Ticker when connection is closed
-			case <-r.Context().Done():
+			_, err := w.Write([]byte("data: " + event + endOfLine + lineSeperator))
+			if err != nil {
+				slog.Error("closing server sent events on pushes", "err", err)
 				return
 			}
-		}
 
-	})
+			//Push new message
+			if f, ok := w.(http.Flusher); ok {
+				f.Flush()
+			}
+			continue
+
+		//End Ticker when connection is closed
+		case <-r.Context().Done():
+			return
+		}
+	}
 
 }

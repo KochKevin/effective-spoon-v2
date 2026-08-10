@@ -12,6 +12,38 @@ tasks:
       - echo "{{.GREETING}}"
     silent: true
 
+
+
+  # DEV TASKS (RUNNING AND SETUP)
+
+
+  setup:
+    desc: Install required tooling
+    dir: ./
+    cmds:
+    - task: _setup:backend
+    - task: _setup:frontend
+
+  _setup:backend:
+    desc: Only install backend tooling if the dependencies have changedd
+    dir: ./backend
+    sources:
+      - go.mod
+      - go.sum
+    cmds:
+      - go install -x tool
+      - echo "finished installing go tools"
+
+  _setup:frontend:
+    desc: Only install frontend tooling if the dependencies have changedd
+    dir: ./frontend
+    sources:
+      - package.json
+      - package-lock.json
+    cmds:
+      - npm install
+      - echo "finished installing npm dependencies"
+
   dev:
     desc: Start GO backend with hot reload and frontend dev server
     deps:
@@ -22,13 +54,14 @@ tasks:
     desc: Start GO backend with hot reload
     dir: ./backend
     cmds:
+      - task: _setup:backend
       - air
     
   frontend:
     desc: Start frontend dev server
     dir: ./frontend
     cmds:
-      #- npm install
+      - task: _setup:frontend
       - npm run dev
 
   frontend-api:
@@ -38,7 +71,28 @@ tasks:
       - npm run openapi-ts
 
 
+  # TEST TASKS
 
+
+  test-rfid:
+    desc: Call the api/input/rfid endpoint and give it an parameter for input. Only works when backends runs on localhost 8080 and curl must be installed
+    vars:
+      INPUT: '{{.INPUT | default "1" }}'
+    cmds:
+      - curl -X POST 'localhost:8080/api/input/rfid?input={{.INPUT}}'
+
+  test-bcode:
+    desc: Call the api/input/barcode endpoint and give it an parameter for input. Only works when backends runs on localhost 8080 and curl must be installed
+    vars:
+      INPUT: '{{.INPUT | default "1" }}'
+    cmds:
+      - curl -X POST 'localhost:8080/api/input/barcode?input={{.INPUT}}'
+
+
+
+
+
+  # BULDING TASKS
 
 
   _sync:assets:
@@ -55,6 +109,7 @@ tasks:
     desc: Build frontend
     dir: ./frontend
     cmds:
+      - npm install
       - npm run generate
   
   _build:backend:
@@ -64,8 +119,8 @@ tasks:
       GOOS: '{{.GOOS}}'
       GOARCH: '{{.GOARCH}}'
     cmds:
-      - task: :_build:frontend
-      - task: :_sync:assets
+      - task: _build:frontend
+      - task: _sync:assets
      # - go clean -cache
       - go build -v -o tmp/main-{{.GOOS}}-{{.GOARCH}}{{.BIN_EXT}} ./cmd/main.go
 
