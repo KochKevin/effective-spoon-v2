@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { postShoppingCartsCurrent, postShoppingCartsCurrentCheckout, postShoppingCartsCurrentDecrease, postShoppingCartsCurrentIncrease, type ShoppingCart } from "~/api";
+import { getShoppingCartsCurrent, postShoppingCartsCurrent, postShoppingCartsCurrentCheckout, postShoppingCartsCurrentDecrease, postShoppingCartsCurrentIncrease, type ShoppingCart } from "~/api";
 
 export const useShoppingCartStore = defineStore('shopping-carts', {
 
@@ -31,6 +31,23 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
 
         },
 
+        async getCurrentShoppingCart() {
+            
+            this.isLoading = true;
+
+            try {
+                const response = await getShoppingCartsCurrent()
+
+                this.currentShoppingCart = response.data
+            }
+            catch(error) {
+                console.error("Error on post on current shopping cart api: ", error);
+
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
         //Increase Product of current shopping cart
         async increaseProduct(productId : string) {
 
@@ -46,7 +63,7 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
                 this.currentShoppingCart = response.data
             }
             catch(error) {
-                console.error("Error on increase on current shopping cart api: ", error);
+                console.error("Error on getting the current shopping cart on its api: ", error);
 
             } finally {
                // this.isLoading = false;
