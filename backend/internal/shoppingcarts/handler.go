@@ -13,6 +13,7 @@ import (
 )
 
 type ShoppingCartService interface {
+	GetCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (cart ShoppingCart, err error)
 	CreateCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (cart ShoppingCart, err error)
 	CheckoutCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (cart ShoppingCart, err error)
 	DecreaseProductOfCurrentShoppingCart(ctx context.Context, userId uuid.UUID, productId uuid.UUID) (cart ShoppingCart, err error)
@@ -132,6 +133,28 @@ func (a *Api) PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Re
 	cart, err := a.Service.IncreaseProductOfCurrentShoppingCart(r.Context(), userID, uuid.MustParse(params.ProductID))
 	if err != nil {
 		slog.Error("error while checking out current shopping cart", "error", err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	render.JSON(w, r, a.ToDto(cart))
+}
+
+// GetShoppingCartsCurrent Get the current shopping cart
+// (GET /shopping-carts/current)
+func (a *Api) GetShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
+
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		err := errors.New("cannot get user_id from context")
+		slog.Error(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	cart, err := a.Service.GetCurrentShoppingCart(r.Context(), userID)
+	if err != nil {
+		slog.Error("error while getting current shopping cart", "error", err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
