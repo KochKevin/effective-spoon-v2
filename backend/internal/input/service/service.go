@@ -92,15 +92,15 @@ func (i *InputService) EnterBarcode(ctx context.Context, input string) error {
 			return err
 		}
 
-		//Update Frontend
-		i.PushService.PushShoppingCartUpdate()
-
 		return nil
 	})
 	if err != nil {
 		slog.Error("error when using input system when entering barcode", "error:", err)
 		return err
 	}
+
+	//Update Frontend
+	i.PushService.PushShoppingCartUpdate()
 
 	return nil
 }
