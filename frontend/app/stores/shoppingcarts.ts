@@ -33,7 +33,8 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
 
         async getCurrentShoppingCart() {
             
-            this.isLoading = true;
+            //Dont go into loading state to keep an clean update look
+            //this.isLoading = true;
 
             try {
                 const response = await getShoppingCartsCurrent()
