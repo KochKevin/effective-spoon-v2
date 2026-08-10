@@ -126,15 +126,15 @@ func (i *InputService) EnterRfid(ctx context.Context, input string) error {
 			return err
 		}
 
-		//Update Frontend
-		i.PushService.PushUserLogin()
-
 		return nil
 	})
 	if err != nil {
 		slog.Error("error when using input system when entering rfid", "error:", err)
 		return err
 	}
+
+	//Update Frontend
+	i.PushService.PushUserLogin()
 
 	return nil
 }
