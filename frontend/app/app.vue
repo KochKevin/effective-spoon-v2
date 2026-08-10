@@ -14,15 +14,20 @@ import { useUserStore } from './stores/users';
 import { sseBus } from './plugins/02.sse.client';
 
 
-sseBus.on((event) => {
-  console.log(event)
-})
-
-
 const shoppingCartStore = useShoppingCartStore()
 const userStore = useUserStore()
 
-userStore.getCurrentUser()
+sseBus.on((event) => {
+  console.log(event)
+
+  if (event === "user.login") {
+    userStore.getCurrentUser()
+    shoppingCartStore.createCurrentShoppingCart()
+  }
+
+})
+
+
 
 
 

@@ -18,7 +18,7 @@ const shoppingCartStore = useShoppingCartStore()
 
 
 onMounted( () => {
-  shoppingCartStore.createCurrentShoppingCart()
+  
 
   console.log(shoppingCartStore.isLoading)
   console.log(shoppingCartStore.currentShoppingCart)

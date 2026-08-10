@@ -262,3 +262,32 @@ func (s *ShoppingCartService) GetCurrentShoppingCartId() (uuid.UUID, error) {
 
 	return cartId, nil
 }
+
+func (s *ShoppingCartService) GetCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
+
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
+
+		//Get Current Cart id
+		cartId, err := s.GetCurrentShoppingCartId()
+		if err != nil {
+			slog.Error("error can not get current shopping cart id", "error:", err)
+			return err
+		}
+
+		cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
+		if err != nil {
+			slog.Error("error getting shopping cart", "error:", err)
+			return err
+		}
+
+		return err
+	})
+
+	if err != nil {
+		slog.Error("Error in shoppingcart decrease transaction", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	return cart, err
+
+}
