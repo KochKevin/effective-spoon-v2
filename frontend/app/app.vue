@@ -16,6 +16,7 @@ import { sseBus } from './plugins/02.sse.client';
 
 const shoppingCartStore = useShoppingCartStore()
 const userStore = useUserStore()
+const productStore = useProductsStore()
 
 sseBus.on((event) => {
   console.log(event)
@@ -23,7 +24,16 @@ sseBus.on((event) => {
   if (event === "user.login") {
     userStore.getCurrentUser()
     shoppingCartStore.createCurrentShoppingCart()
+    productStore.fetchProducts()
   }
+
+  
+
+  if (event === "shoppingcart.update") {
+    shoppingCartStore.getCurrentShoppingCart()
+  }
+
+  
 
 })
 
