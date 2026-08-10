@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, ServerSentEventsResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetProductsData, GetProductsResponses, GetPushesData, GetPushesResponse, GetPushesResponses, GetUsersCurrentData, GetUsersCurrentResponses, PostAuthLogoutData, PostAuthLogoutResponses, PostAuthUsercodeData, PostAuthUsercodeResponses, PostInputBarcodeData, PostInputBarcodeResponses, PostInputRfidData, PostInputRfidResponses, PostShoppingCartsCurrentCheckoutData, PostShoppingCartsCurrentCheckoutResponses, PostShoppingCartsCurrentData, PostShoppingCartsCurrentDecreaseData, PostShoppingCartsCurrentDecreaseResponses, PostShoppingCartsCurrentIncreaseData, PostShoppingCartsCurrentIncreaseResponses, PostShoppingCartsCurrentResponses } from './types.gen';
+import type { GetProductsData, GetProductsResponses, GetPushesData, GetPushesResponse, GetPushesResponses, GetShoppingCartsCurrentData, GetShoppingCartsCurrentResponses, GetUsersCurrentData, GetUsersCurrentResponses, PostAuthLogoutData, PostAuthLogoutResponses, PostAuthUsercodeData, PostAuthUsercodeResponses, PostInputBarcodeData, PostInputBarcodeResponses, PostInputRfidData, PostInputRfidResponses, PostShoppingCartsCurrentCheckoutData, PostShoppingCartsCurrentCheckoutResponses, PostShoppingCartsCurrentData, PostShoppingCartsCurrentDecreaseData, PostShoppingCartsCurrentDecreaseResponses, PostShoppingCartsCurrentIncreaseData, PostShoppingCartsCurrentIncreaseResponses, PostShoppingCartsCurrentResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -27,6 +27,11 @@ export const getPushes = <ThrowOnError extends boolean = false>(options?: Option
  * Load all products
  */
 export const getProducts = <ThrowOnError extends boolean = false>(options?: Options<GetProductsData, ThrowOnError>): RequestResult<GetProductsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetProductsResponses, unknown, ThrowOnError>({ url: '/products', ...options });
+
+/**
+ * Get the current shopping cart
+ */
+export const getShoppingCartsCurrent = <ThrowOnError extends boolean = false>(options?: Options<GetShoppingCartsCurrentData, ThrowOnError>): RequestResult<GetShoppingCartsCurrentResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetShoppingCartsCurrentResponses, unknown, ThrowOnError>({ url: '/shopping-carts/current', ...options });
 
 /**
  * Create a new shopping cart and set it as the current cart

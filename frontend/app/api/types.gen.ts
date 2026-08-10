@@ -66,6 +66,22 @@ export type GetProductsResponses = {
 
 export type GetProductsResponse = GetProductsResponses[keyof GetProductsResponses];
 
+export type GetShoppingCartsCurrentData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/shopping-carts/current';
+};
+
+export type GetShoppingCartsCurrentResponses = {
+    /**
+     * A shopping cart
+     */
+    200: ShoppingCart;
+};
+
+export type GetShoppingCartsCurrentResponse = GetShoppingCartsCurrentResponses[keyof GetShoppingCartsCurrentResponses];
+
 export type PostShoppingCartsCurrentData = {
     body?: never;
     path?: never;
