@@ -9,9 +9,40 @@ tags:
   - name: users
   - name: auth
   - name: pushes
+  - name: reload
 
 paths:
 
+  add-balance:
+    post:
+      summary: Add new balance to the currently logged in user, using stripe
+      tags:
+        - reload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amountToAdd
+              properties:
+                amountToAdd:
+                  type: number
+                  example: 20.0
+      responses:
+        '200':
+          description: Payment link generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - paymentLink
+                properties:
+                  paymentLink:
+                    type: string
+                    example: "link-to-stripe"
 
   /pushes:
     get:                                
