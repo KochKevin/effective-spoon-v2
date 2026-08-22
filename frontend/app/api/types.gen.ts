@@ -34,6 +34,26 @@ export type User = {
 
 export type SseEvent = 'user.login' | 'shoppingcart.update';
 
+export type PostAddBalanceData = {
+    body: {
+        amountToAdd: number;
+    };
+    path?: never;
+    query?: never;
+    url: 'add-balance';
+};
+
+export type PostAddBalanceResponses = {
+    /**
+     * Payment link generated successfully
+     */
+    200: {
+        paymentLink: string;
+    };
+};
+
+export type PostAddBalanceResponse = PostAddBalanceResponses[keyof PostAddBalanceResponses];
+
 export type GetPushesData = {
     body?: never;
     path?: never;

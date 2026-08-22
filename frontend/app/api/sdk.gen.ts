@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, ServerSentEventsResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetProductsData, GetProductsResponses, GetPushesData, GetPushesResponse, GetPushesResponses, GetShoppingCartsCurrentData, GetShoppingCartsCurrentResponses, GetUsersCurrentData, GetUsersCurrentResponses, PostAuthLogoutData, PostAuthLogoutResponses, PostAuthUsercodeData, PostAuthUsercodeResponses, PostInputBarcodeData, PostInputBarcodeResponses, PostInputRfidData, PostInputRfidResponses, PostShoppingCartsCurrentCheckoutData, PostShoppingCartsCurrentCheckoutResponses, PostShoppingCartsCurrentData, PostShoppingCartsCurrentDecreaseData, PostShoppingCartsCurrentDecreaseResponses, PostShoppingCartsCurrentIncreaseData, PostShoppingCartsCurrentIncreaseResponses, PostShoppingCartsCurrentResponses } from './types.gen';
+import type { GetProductsData, GetProductsResponses, GetPushesData, GetPushesResponse, GetPushesResponses, GetShoppingCartsCurrentData, GetShoppingCartsCurrentResponses, GetUsersCurrentData, GetUsersCurrentResponses, PostAddBalanceData, PostAddBalanceResponses, PostAuthLogoutData, PostAuthLogoutResponses, PostAuthUsercodeData, PostAuthUsercodeResponses, PostInputBarcodeData, PostInputBarcodeResponses, PostInputRfidData, PostInputRfidResponses, PostShoppingCartsCurrentCheckoutData, PostShoppingCartsCurrentCheckoutResponses, PostShoppingCartsCurrentData, PostShoppingCartsCurrentDecreaseData, PostShoppingCartsCurrentDecreaseResponses, PostShoppingCartsCurrentIncreaseData, PostShoppingCartsCurrentIncreaseResponses, PostShoppingCartsCurrentResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -17,6 +17,18 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * Add new balance to the currently logged in user, using stripe
+ */
+export const postAddBalance = <ThrowOnError extends boolean = false>(options: Options<PostAddBalanceData, ThrowOnError>): RequestResult<PostAddBalanceResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostAddBalanceResponses, unknown, ThrowOnError>({
+    url: 'add-balance',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * Subscribe to server sent events

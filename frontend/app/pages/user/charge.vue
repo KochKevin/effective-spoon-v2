@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Label } from 'reka-ui';
+import { postAddBalance } from '~/api';
 import Card from '~/components/ui/card/Card.vue';
 import NumberField from '~/components/ui/number-field/NumberField.vue';
 import NumberFieldContent from '~/components/ui/number-field/NumberFieldContent.vue';
@@ -11,8 +12,24 @@ const userStore = useUserStore()
 
 const balanceToAdd = ref(15)
 
+async function createStripeCheckoutLink(amount: number): Promise<string | null> {
+  try {
+    const response = await postAddBalance({
+      body: { amountToAdd: amount }
+    })
+
+    console.log("paymentLink: ", response.data?.paymentLink ?? null)
+    return response.data?.paymentLink ?? null
+  } catch (error) {
+    console.error('Error post add-balance:', error)
+    return null
+  }
+}
+
+
+
 </script>
-‚
+
 <template>
 
     <div>
@@ -24,11 +41,7 @@ const balanceToAdd = ref(15)
             </CardHeader>
 
 
-            <NumberField 
-            v-model="balanceToAdd"
-            id="balance" 
-            :min="0" 
-            :format-options="{
+            <NumberField v-model="balanceToAdd" id="balance" :min="0" :format-options="{
                 style: 'currency',
                 currency: 'EUR',
                 currencyDisplay: 'code',
@@ -42,7 +55,7 @@ const balanceToAdd = ref(15)
                 </NumberFieldContent>
             </NumberField>
 
-            <Button>Jetzt {{balanceToAdd}}€ mit STRIPE auf dein Profil buchen</Button>
+            <Button @click="createStripeCheckoutLink(balanceToAdd)">Jetzt {{ balanceToAdd }}€ mit STRIPE auf dein Profil buchen</Button>
 
         </Card>
 
