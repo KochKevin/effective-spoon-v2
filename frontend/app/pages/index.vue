@@ -31,7 +31,7 @@ const userStore = useUserStore()
             <Card class="flex-4">
                 <NuxtLink to="/user/charge">
                     {{ userStore.currentUser?.name }}
-                </NuxtLink>‚
+                </NuxtLink>
             </Card>
 
             <ProductCatalogModal class="flex-2" />
