@@ -13,7 +13,7 @@ tags:
 
 paths:
 
-  add-balance:
+  /add-balance:
     post:
       summary: Add new balance to the currently logged in user, using stripe
       tags:
@@ -23,26 +23,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - amountToAdd
-              properties:
-                amountToAdd:
-                  type: number
-                  example: 20.0
+              $ref: '#/components/schemas/AddBalanceRequest'
       responses:
         '200':
           description: Payment link generated successfully
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - paymentLink
-                properties:
-                  paymentLink:
-                    type: string
-                    example: "link-to-stripe"
+                $ref: '#/components/schemas/AddBalanceResponse'
 
   /pushes:
     get:                                
@@ -350,3 +338,25 @@ components:
     SSEEvent:
       type: string
       enum: [user.login, shoppingcart.update]
+
+
+
+    
+
+    AddBalanceRequest:
+      type: object
+      required:
+        - amountToAdd
+      properties:
+        amountToAdd:
+          type: number
+          example: 20.0
+
+    AddBalanceResponse:
+      type: object
+      required:
+        - paymentLink
+      properties:
+        paymentLink:
+          type: string
+          example: "https://checkout.stripe.com/..."

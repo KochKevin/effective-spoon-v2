@@ -22,7 +22,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
  * Add new balance to the currently logged in user, using stripe
  */
 export const postAddBalance = <ThrowOnError extends boolean = false>(options: Options<PostAddBalanceData, ThrowOnError>): RequestResult<PostAddBalanceResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostAddBalanceResponses, unknown, ThrowOnError>({
-    url: 'add-balance',
+    url: '/add-balance',
     ...options,
     headers: {
         'Content-Type': 'application/json',

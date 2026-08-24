@@ -8,6 +8,15 @@ import (
 	"github.com/google/uuid"
 )
 
+type Chargement struct {
+	ID               uuid.UUID `json:"id"`
+	Status           string    `json:"status"`
+	UserID           uuid.UUID `json:"user_id"`
+	Amount           int64     `json:"amount"`
+	StripeCheckoutID *string   `json:"stripe_checkout_id"`
+	TransactionID    uuid.UUID `json:"transaction_id"`
+}
+
 type Product struct {
 	ID    uuid.UUID `json:"id"`
 	Name  string    `json:"name"`
@@ -26,6 +35,11 @@ type ShoppingCart struct {
 	UserID        uuid.UUID     `json:"user_id"`
 	TransactionID uuid.NullUUID `json:"transaction_id"`
 	Status        string        `json:"status"`
+}
+
+type StripeLastEventID struct {
+	ID      int64  `json:"id"`
+	EventID string `json:"event_id"`
 }
 
 type User struct {
