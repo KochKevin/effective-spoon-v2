@@ -10,33 +10,43 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// AddBalanceRequest defines model for AddBalanceRequest.
-type AddBalanceRequest struct {
+// Chargement defines model for Chargement.
+type Chargement struct {
+	Amount      *float32 `json:"amount,omitempty"`
+	PaymentLink *string  `json:"paymentLink,omitempty"`
+}
+
+// CreateChargement defines model for CreateChargement.
+type CreateChargement struct {
 	AmountToAdd float32 `json:"amountToAdd"`
 }
 
-// AddBalanceResponse defines model for AddBalanceResponse.
-type AddBalanceResponse struct {
-	PaymentLink string `json:"paymentLink"`
-}
-
-// PostAddBalanceJSONRequestBody defines body for PostAddBalance for application/json ContentType.
-type PostAddBalanceJSONRequestBody = AddBalanceRequest
+// PostChargementsCurrentJSONRequestBody defines body for PostChargementsCurrent for application/json ContentType.
+type PostChargementsCurrentJSONRequestBody = CreateChargement
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// PostAddBalance Add new balance to the currently logged in user, using stripe
-	// (POST /add-balance)
-	PostAddBalance(w http.ResponseWriter, r *http.Request)
+	// PostChargementsCurrent Create a new chargement and set it as the current one
+	// (POST /chargements/current)
+	PostChargementsCurrent(w http.ResponseWriter, r *http.Request)
+	// PostChargementsCurrentCancel Cancel current Chargement
+	// (POST /chargements/current/cancel)
+	PostChargementsCurrentCancel(w http.ResponseWriter, r *http.Request)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
 
-// PostAddBalance Add new balance to the currently logged in user, using stripe
-// (POST /add-balance)
-func (_ Unimplemented) PostAddBalance(w http.ResponseWriter, r *http.Request) {
+// PostChargementsCurrent Create a new chargement and set it as the current one
+// (POST /chargements/current)
+func (_ Unimplemented) PostChargementsCurrent(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// PostChargementsCurrentCancel Cancel current Chargement
+// (POST /chargements/current/cancel)
+func (_ Unimplemented) PostChargementsCurrentCancel(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -49,11 +59,25 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
-// PostAddBalance operation middleware
-func (siw *ServerInterfaceWrapper) PostAddBalance(w http.ResponseWriter, r *http.Request) {
+// PostChargementsCurrent operation middleware
+func (siw *ServerInterfaceWrapper) PostChargementsCurrent(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostAddBalance(w, r)
+		siw.Handler.PostChargementsCurrent(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PostChargementsCurrentCancel operation middleware
+func (siw *ServerInterfaceWrapper) PostChargementsCurrentCancel(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostChargementsCurrentCancel(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -177,7 +201,10 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/add-balance", wrapper.PostAddBalance)
+		r.Post(options.BaseURL+"/chargements/current", wrapper.PostChargementsCurrent)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/chargements/current/cancel", wrapper.PostChargementsCurrentCancel)
 	})
 
 	return r

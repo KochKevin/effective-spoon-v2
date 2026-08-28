@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 
 	chargementsapi "github.com/KochKevin/effective-spoon-v2/internal/chargements/generated"
@@ -22,6 +23,7 @@ type Api struct {
 
 // PostAddBalance Add new balance to the currently logged in user, using stripe
 // (POST /add-balance)
+/*
 func (a *Api) PostAddBalance(w http.ResponseWriter, r *http.Request) {
 
 	bodyBytes, err := io.ReadAll(r.Body)
@@ -42,9 +44,9 @@ func (a *Api) PostAddBalance(w http.ResponseWriter, r *http.Request) {
 			slog.Error(err.Error())
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
-		}
-	*/
-	
+}
+
+
 
 	url, err := a.Service.CreatePaymentLink()
 	if err != nil {
@@ -52,4 +54,35 @@ func (a *Api) PostAddBalance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.JSON(w, r, chargementsapi.AddBalanceResponse{PaymentLink: url})
+}
+*/
+
+// PostChargementsCurrent Create a new chargement and set it as the current one
+// (POST /chargements/current)
+func (a *Api) PostChargementsCurrent(w http.ResponseWriter, r *http.Request) {
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		slog.Error("error reading body: %v", err)
+	}
+	defer r.Body.Close()
+
+	createChargement := chargementsapi.CreateChargement{}
+	err = json.Unmarshal(bodyBytes, &createChargement)
+	if err != nil {
+		log.Fatalf("error unmarshaling json to struct: %v", err)
+	}
+
+	url, err := a.Service.CreatePaymentLink()
+	if err != nil {
+		slog.Error("error createing chargement intent: %v", err)
+	}
+
+	render.JSON(w, r, chargementsapi.Chargement{PaymentLink: &url, Amount: &createChargement.AmountToAdd})
+
+}
+
+// PostChargementsCurrentCancel Cancel current Chargement
+// (POST /chargements/current/cancel)
+func (a *Api) PostChargementsCurrentCancel(w http.ResponseWriter, r *http.Request) {
+	panic("not implemented") // TODO: Implement
 }

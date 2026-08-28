@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Label } from 'reka-ui';
-import { postAddBalance } from '~/api';
+import { postChargementsCurrent } from '~/api';
 import Card from '~/components/ui/card/Card.vue';
 import NumberField from '~/components/ui/number-field/NumberField.vue';
 import NumberFieldContent from '~/components/ui/number-field/NumberFieldContent.vue';
@@ -14,7 +14,7 @@ const balanceToAdd = ref(15)
 
 async function createStripeCheckoutLink(amount: number): Promise<string | null> {
   try {
-    const response = await postAddBalance({
+    const response = await postChargementsCurrent({
       body: { amountToAdd: amount }
     })
 

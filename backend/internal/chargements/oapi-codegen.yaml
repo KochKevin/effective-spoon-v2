@@ -7,4 +7,4 @@ output: ./generated/handler.gen.go
 
 output-options:
   include-tags:
-    - reload
+    - chargements

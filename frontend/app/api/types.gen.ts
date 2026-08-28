@@ -34,29 +34,44 @@ export type User = {
 
 export type SseEvent = 'user.login' | 'shoppingcart.update';
 
-export type AddBalanceRequest = {
+export type CreateChargement = {
     amountToAdd: number;
 };
 
-export type AddBalanceResponse = {
-    paymentLink: string;
+export type Chargement = {
+    paymentLink?: string;
+    amount?: number;
 };
 
-export type PostAddBalanceData = {
-    body: AddBalanceRequest;
+export type PostChargementsCurrentData = {
+    body: CreateChargement;
     path?: never;
     query?: never;
-    url: '/add-balance';
+    url: '/chargements/current';
 };
 
-export type PostAddBalanceResponses = {
+export type PostChargementsCurrentResponses = {
     /**
      * Payment link generated successfully
      */
-    200: AddBalanceResponse;
+    200: Chargement;
 };
 
-export type PostAddBalanceResponse = PostAddBalanceResponses[keyof PostAddBalanceResponses];
+export type PostChargementsCurrentResponse = PostChargementsCurrentResponses[keyof PostChargementsCurrentResponses];
+
+export type PostChargementsCurrentCancelData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/chargements/current/cancel';
+};
+
+export type PostChargementsCurrentCancelResponses = {
+    /**
+     * Successfully canceled chargement
+     */
+    200: unknown;
+};
 
 export type GetPushesData = {
     body?: never;

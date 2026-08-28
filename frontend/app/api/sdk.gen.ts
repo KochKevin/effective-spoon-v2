@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, ServerSentEventsResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetProductsData, GetProductsResponses, GetPushesData, GetPushesResponse, GetPushesResponses, GetShoppingCartsCurrentData, GetShoppingCartsCurrentResponses, GetUsersCurrentData, GetUsersCurrentResponses, PostAddBalanceData, PostAddBalanceResponses, PostAuthLogoutData, PostAuthLogoutResponses, PostAuthUsercodeData, PostAuthUsercodeResponses, PostInputBarcodeData, PostInputBarcodeResponses, PostInputRfidData, PostInputRfidResponses, PostShoppingCartsCurrentCheckoutData, PostShoppingCartsCurrentCheckoutResponses, PostShoppingCartsCurrentData, PostShoppingCartsCurrentDecreaseData, PostShoppingCartsCurrentDecreaseResponses, PostShoppingCartsCurrentIncreaseData, PostShoppingCartsCurrentIncreaseResponses, PostShoppingCartsCurrentResponses } from './types.gen';
+import type { GetProductsData, GetProductsResponses, GetPushesData, GetPushesResponse, GetPushesResponses, GetShoppingCartsCurrentData, GetShoppingCartsCurrentResponses, GetUsersCurrentData, GetUsersCurrentResponses, PostAuthLogoutData, PostAuthLogoutResponses, PostAuthUsercodeData, PostAuthUsercodeResponses, PostChargementsCurrentCancelData, PostChargementsCurrentCancelResponses, PostChargementsCurrentData, PostChargementsCurrentResponses, PostInputBarcodeData, PostInputBarcodeResponses, PostInputRfidData, PostInputRfidResponses, PostShoppingCartsCurrentCheckoutData, PostShoppingCartsCurrentCheckoutResponses, PostShoppingCartsCurrentData, PostShoppingCartsCurrentDecreaseData, PostShoppingCartsCurrentDecreaseResponses, PostShoppingCartsCurrentIncreaseData, PostShoppingCartsCurrentIncreaseResponses, PostShoppingCartsCurrentResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -19,16 +19,21 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 /**
- * Add new balance to the currently logged in user, using stripe
+ * Create a new chargement and set it as the current one
  */
-export const postAddBalance = <ThrowOnError extends boolean = false>(options: Options<PostAddBalanceData, ThrowOnError>): RequestResult<PostAddBalanceResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostAddBalanceResponses, unknown, ThrowOnError>({
-    url: '/add-balance',
+export const postChargementsCurrent = <ThrowOnError extends boolean = false>(options: Options<PostChargementsCurrentData, ThrowOnError>): RequestResult<PostChargementsCurrentResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostChargementsCurrentResponses, unknown, ThrowOnError>({
+    url: '/chargements/current',
     ...options,
     headers: {
         'Content-Type': 'application/json',
         ...options.headers
     }
 });
+
+/**
+ * Cancel current Chargement
+ */
+export const postChargementsCurrentCancel = <ThrowOnError extends boolean = false>(options?: Options<PostChargementsCurrentCancelData, ThrowOnError>): RequestResult<PostChargementsCurrentCancelResponses, unknown, ThrowOnError> => (options?.client ?? client).post<PostChargementsCurrentCancelResponses, unknown, ThrowOnError>({ url: '/chargements/current/cancel', ...options });
 
 /**
  * Subscribe to server sent events
