@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
-	"log/slog"
 
 	"github.com/KochKevin/effective-spoon-v2/internal/chargements"
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
@@ -14,8 +12,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v86"
 )
-
-const MetadataBalanceChargementIntentId = "balance_chargemen_intent_id"
 
 type Repo interface {
 	SetStripeLastEventId(ctx context.Context, tx *sql.Tx, lastEventId string) error
@@ -38,29 +34,44 @@ type Service struct {
 	StripeClient                 *stripe.Client
 }
 
-func (s *Service) CreatePaymentLink() (string, error) {
+func (s *Service) CreateChargementIntent(ctx context.Context, userId uuid.UUID, amount float32) (chargements.ChargementIntent, error) {
 
-	var chargemnet chargements.ChargementIntent
+	chargementIntent, err := chargements.NewChargementIntent(money.MoneyFrom(int(amount*100)), userId)
+	if err != nil {
+		return chargements.ChargementIntent{}, fmt.Errorf("error creating chargement intent: %w", err)
+	}
 
-	err := s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+	chargementIntent, err = s.createStripePaymentLink(ctx, chargementIntent)
+	if err != nil {
+		return chargements.ChargementIntent{}, fmt.Errorf("error creating stripe payment link: %w", err)
+	}
 
-		var err error
-		chargemnet, err = chargements.NewChargementIntent(money.MoneyFrom(500), uuid.MustParse("00000000-0000-0000-0000-000000000001"))
+	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+
+		err := s.Repo.CreateBalanceChargementIntent(context.Background(), tx, chargementIntent)
+
 		if err != nil {
-			return err
+			return fmt.Errorf("error creating chargement intent on persitent volume: %w", err)
 		}
-
-		s.Repo.CreateBalanceChargementIntent(context.Background(), tx, chargemnet)
 
 		return nil
 	})
 	if err != nil {
-		slog.Error("error in transaction", err)
-		return "", err
+		return chargements.ChargementIntent{}, fmt.Errorf("error in transaction: %w", err)
 	}
 
+	return chargementIntent, nil
+
+}
+
+const MetadataBalanceChargementIntentId = "balance_chargement_intent_id"
+const PaymentLinkCustomMessage = "🎉 Danke für das Aufladen deines Kontos. Du kannst den Browser nun schließen. Jeden moment sollte deine aufladung verarbeitet sein 💸"
+const PaymentLinkChargementIntentProductName = "%.2f€ Getränkekasse Guthabenaufladung"
+
+func (s *Service) createStripePaymentLink(ctx context.Context, chargementIntent chargements.ChargementIntent) (chargements.ChargementIntent, error) {
+
 	metadata := map[string]string{
-		MetadataBalanceChargementIntentId: chargemnet.Id.String(),
+		MetadataBalanceChargementIntentId: chargementIntent.Id.String(),
 	}
 
 	params := &stripe.PaymentLinkCreateParams{
@@ -68,7 +79,7 @@ func (s *Service) CreatePaymentLink() (string, error) {
 		AfterCompletion: &stripe.PaymentLinkCreateAfterCompletionParams{
 			Type: stripe.String("hosted_confirmation"),
 			HostedConfirmation: &stripe.PaymentLinkCreateAfterCompletionHostedConfirmationParams{
-				CustomMessage: stripe.String("🎉 Danke für das Aufladen deines Kontos. Du kannst den Browser nun schließen. Jeden moment sollte deine aufladung verarbeitet sein 💸"),
+				CustomMessage: stripe.String(PaymentLinkCustomMessage),
 			},
 		},
 		LineItems: []*stripe.PaymentLinkCreateLineItemParams{
@@ -77,22 +88,22 @@ func (s *Service) CreatePaymentLink() (string, error) {
 				PriceData: &stripe.PaymentLinkCreateLineItemPriceDataParams{
 					Currency: stripe.String("EUR"),
 					ProductData: &stripe.PaymentLinkCreateLineItemPriceDataProductDataParams{
-						Name: stripe.String("Konto aufladung von 5 Euro"),
+						Name: stripe.String(fmt.Sprintf(PaymentLinkChargementIntentProductName, chargementIntent.Amount.GetAsEuro())),
 					},
-					UnitAmount: stripe.Int64(500),
+					UnitAmount: stripe.Int64(int64(chargementIntent.Amount.GetAsCents())),
 				},
 			},
 		},
 	}
 
-	result, err := s.StripeClient.V1PaymentLinks.Create(context.TODO(), params)
+	result, err := s.StripeClient.V1PaymentLinks.Create(ctx, params)
 	if err != nil {
-		log.Fatalf("error calling stripe: %v", err)
+		return chargements.ChargementIntent{}, fmt.Errorf("error calling create stripe payment link api: %v", err)
 	}
 
-	slog.Debug("stripe result", "url", result.URL, "result", result)
+	chargementIntent.PaymentLink = result.URL
 
-	return result.URL, nil
+	return chargementIntent, nil
 
 }
 

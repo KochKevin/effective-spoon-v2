@@ -12,8 +12,8 @@ import (
 
 // Chargement defines model for Chargement.
 type Chargement struct {
-	Amount      *float32 `json:"amount,omitempty"`
-	PaymentLink *string  `json:"paymentLink,omitempty"`
+	Amount      float32 `json:"amount"`
+	PaymentLink string  `json:"paymentLink"`
 }
 
 // CreateChargement defines model for CreateChargement.

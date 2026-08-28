@@ -22,6 +22,7 @@ type ChargementIntent struct {
 	Amount           money.Money
 	StripeCheckoutId string
 	TransactionId    uuid.UUID
+	PaymentLink      string
 }
 
 var ErrAlreadyCompleted = errors.New("this chargment intent is already completed")
@@ -53,5 +54,6 @@ func NewChargementIntent(amount money.Money, user uuid.UUID) (ChargementIntent, 
 		StripeCheckoutId: "",
 		TransactionId:    uuid.Nil,
 		User:             user,
+		PaymentLink:      "empty",
 	}, nil
 }

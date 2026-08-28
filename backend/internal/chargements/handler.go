@@ -1,7 +1,9 @@
 package chargements
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"log/slog"
@@ -9,10 +11,11 @@ import (
 
 	chargementsapi "github.com/KochKevin/effective-spoon-v2/internal/chargements/generated"
 	"github.com/go-chi/render"
+	"github.com/google/uuid"
 )
 
 type Service interface {
-	CreatePaymentLink() (string, error)
+	CreateChargementIntent(ctx context.Context, userId uuid.UUID, amount float32) (ChargementIntent, error)
 }
 
 type Api struct {
@@ -72,12 +75,20 @@ func (a *Api) PostChargementsCurrent(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("error unmarshaling json to struct: %v", err)
 	}
 
-	url, err := a.Service.CreatePaymentLink()
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		err := errors.New("cannot get user_id from context")
+		slog.Error(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	chargementIntent, err := a.Service.CreateChargementIntent(context.TODO(), userID, createChargement.AmountToAdd)
 	if err != nil {
 		slog.Error("error createing chargement intent: %v", err)
 	}
 
-	render.JSON(w, r, chargementsapi.Chargement{PaymentLink: &url, Amount: &createChargement.AmountToAdd})
+	render.JSON(w, r, chargementsapi.Chargement{PaymentLink: chargementIntent.PaymentLink, Amount: chargementIntent.Amount.GetAsEuro()})
 
 }
 
