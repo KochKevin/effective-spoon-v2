@@ -363,8 +363,8 @@ components:
     Chargement:
       type: object
       required:
-        - stripePaymentLink
-        - amountInCents
+        - paymentLink
+        - amount
       properties:
         paymentLink:
           type: string
