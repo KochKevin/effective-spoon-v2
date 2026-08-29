@@ -32,7 +32,46 @@ export type User = {
     balance: number;
 };
 
-export type SseEvent = 'user.login' | 'shoppingcart.update';
+export type SseEvent = 'user.login' | 'shoppingcart.update' | 'chargement_intent.completed';
+
+export type CreateChargement = {
+    amountToAdd: number;
+};
+
+export type Chargement = {
+    paymentLink: string;
+    amount: number;
+};
+
+export type PostChargementsCurrentData = {
+    body: CreateChargement;
+    path?: never;
+    query?: never;
+    url: '/chargements/current';
+};
+
+export type PostChargementsCurrentResponses = {
+    /**
+     * Payment link generated successfully
+     */
+    200: Chargement;
+};
+
+export type PostChargementsCurrentResponse = PostChargementsCurrentResponses[keyof PostChargementsCurrentResponses];
+
+export type PostChargementsCurrentCancelData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/chargements/current/cancel';
+};
+
+export type PostChargementsCurrentCancelResponses = {
+    /**
+     * Successfully canceled chargement
+     */
+    200: unknown;
+};
 
 export type GetPushesData = {
     body?: never;
@@ -218,6 +257,9 @@ export type PostInputBarcodeData = {
 };
 
 export type PostInputBarcodeResponses = {
+    /**
+     * Read
+     */
     200: unknown;
 };
 
@@ -234,5 +276,8 @@ export type PostInputRfidData = {
 };
 
 export type PostInputRfidResponses = {
+    /**
+     * Read
+     */
     200: unknown;
 };

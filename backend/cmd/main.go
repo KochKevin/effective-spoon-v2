@@ -11,6 +11,12 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/auth/authcache"
 	authapi "github.com/KochKevin/effective-spoon-v2/internal/auth/generated"
 	authservice "github.com/KochKevin/effective-spoon-v2/internal/auth/service"
+	"github.com/KochKevin/effective-spoon-v2/internal/chargements"
+	"github.com/KochKevin/effective-spoon-v2/internal/chargements/chargementcache"
+	chargementsapi "github.com/KochKevin/effective-spoon-v2/internal/chargements/generated"
+	chargementservice "github.com/KochKevin/effective-spoon-v2/internal/chargements/service"
+	chargementssqlite "github.com/KochKevin/effective-spoon-v2/internal/chargements/sqlite"
+	"github.com/KochKevin/effective-spoon-v2/internal/config"
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
 	"github.com/KochKevin/effective-spoon-v2/internal/input"
@@ -36,6 +42,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/google/uuid"
 	"github.com/pressly/goose/v3"
+	"github.com/stripe/stripe-go/v86"
 
 	_ "modernc.org/sqlite"
 )
@@ -54,6 +61,12 @@ func main() {
 	slog.SetDefault(logger)
 
 	slog.Info("Backend Api started")
+
+	cfg, err := config.ParseConfig()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 
 	//Do Database migrations. Open swlite with WAL mode for writing and reading
 
@@ -192,6 +205,26 @@ func main() {
 					},
 					Txm: *infrastructure.NewTxManager(db),
 				}, protectedRouter)
+
+			//Chargements
+			chargementService := chargementservice.Service{
+				Repo: &chargementssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				BalanceChargementIntentCache: chargementcache.New(),
+				UserRepo: &userssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				Txm:          *infrastructure.NewTxManager(db),
+				StripeClient: stripe.NewClient(cfg.StripeClientKey),
+				PushService:  pushService,
+			}
+
+			chargementService.Ticker(context.Background())
+
+			chargementsapi.HandlerFromMux(&chargements.Api{
+				Service: &chargementService,
+			}, protectedRouter)
 
 		})
 

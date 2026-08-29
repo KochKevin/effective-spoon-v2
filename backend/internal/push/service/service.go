@@ -24,6 +24,10 @@ func (p *PushService) PushShoppingCartUpdate() {
 	p.push(string(pushapi.ShoppingcartUpdate))
 }
 
+func (p *PushService) PushChargementIntentCompleted() {
+	p.push(string(pushapi.ChargementIntentCompleted))
+}
+
 func (p *PushService) push(event string) {
 	select {
 	case p.eventChannel <- event:

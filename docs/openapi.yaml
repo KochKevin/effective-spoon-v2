@@ -9,9 +9,37 @@ tags:
   - name: users
   - name: auth
   - name: pushes
+  - name: chargements
 
 paths:
 
+  /chargements/current:
+    post:
+      summary: Create a new chargement and set it as the current one
+      tags:
+        - chargements
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChargement'
+      responses:
+        '200':
+          description: Payment link generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chargement'
+
+  /chargements/current/cancel:
+    post:
+      summary: Cancel current Chargement
+      tags:
+        - chargements
+      responses:
+        '200':
+          description: Successfully canceled chargement
 
   /pushes:
     get:                                
@@ -119,7 +147,6 @@ paths:
       summary: Check out of the current shopping cart
       tags:
         - shopping-carts
-      parameters:
       responses:
         '200':
           description: Successfully checked out of the current shopping cart
@@ -193,7 +220,7 @@ paths:
           description: The input which should be inserted with an barcode scanner
       responses:
         '200':
-          description: 
+          description: Read
 
   /input/rfid:
     post:
@@ -209,7 +236,7 @@ paths:
           description: The input which should be inserted from an rfid sensor
       responses:
         '200':
-          description:
+          description: Read
           
 
 components:
@@ -318,4 +345,30 @@ components:
 
     SSEEvent:
       type: string
-      enum: [user.login, shoppingcart.update]
+      enum: [user.login, shoppingcart.update, chargement_intent.completed]
+
+
+
+    
+
+    CreateChargement:
+      type: object
+      required:
+        - amountToAdd
+      properties:
+        amountToAdd:
+          type: number
+          example: 50.0
+
+    Chargement:
+      type: object
+      required:
+        - paymentLink
+        - amount
+      properties:
+        paymentLink:
+          type: string
+          example: "https://checkout.stripe.com/..."
+        amount:
+          type: number
+          example: 50.0
