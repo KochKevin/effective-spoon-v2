@@ -150,12 +150,12 @@ func (s *Service) stripeEventCheckoutCompletedChecker(ctx context.Context) error
 		})
 
 		if errors.Is(err, sql.ErrNoRows) {
-			slog.Warn("Empty sql result, mainly bevause those events werent created in the db", err)
+			slog.Warn("Empty sql result, mainly bevause those events werent created in the db", "err", err)
 			continue
 		}
 
 		if err != nil {
-			slog.Error("error in transaction", err)
+			slog.Error("error in transaction", "err", err)
 			return err
 		}
 
