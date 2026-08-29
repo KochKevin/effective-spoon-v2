@@ -40,23 +40,25 @@ func (r *Repo) GetStripeLastEventId(ctx context.Context) (string, error) {
 
 func (r *Repo) GetBalanceChargementIntent(ctx context.Context, tx *sql.Tx, id uuid.UUID) (chargements.ChargementIntent, error) {
 	chargement, err := r.Queries.WithTx(tx).GetChargementIntent(ctx, id)
-	
+
 	if err != nil {
 		slog.Error("Error in get chargement query", err)
 		return chargements.ChargementIntent{}, err
 	}
 
-	return chargements.ChargementIntent{Id: chargement.ID, Status: chargements.Status(chargement.Status), User: chargement.UserID, Amount: money.MoneyFrom(int(chargement.Amount)), StripeCheckoutId: *chargement.StripeCheckoutID, TransactionId: chargement.TransactionID}, nil
+	return chargements.ChargementIntent{Id: chargement.ID, Status: chargements.Status(chargement.Status), User: chargement.UserID, Amount: money.MoneyFrom(int(chargement.Amount)), StripeCheckoutId: *chargement.StripeCheckoutID, TransactionId: chargement.TransactionID, PaymentLink: *chargement.StripePaymentLink, PaymentLinkId: *chargement.StripePaymentLinkID}, nil
 }
 
 func (r *Repo) SaveBalanceChargementIntent(ctx context.Context, tx *sql.Tx, chargementIntent chargements.ChargementIntent) error {
 	err := r.Queries.WithTx(tx).UpdateChargementIntent(ctx, sqlc.UpdateChargementIntentParams{
-		ID:               chargementIntent.Id,
-		Status:           string(chargementIntent.Status),
-		UserID:           chargementIntent.User,
-		Amount:           int64(chargementIntent.Amount.Cents),
-		StripeCheckoutID: &chargementIntent.StripeCheckoutId,
-		TransactionID:    chargementIntent.TransactionId,
+		ID:                  chargementIntent.Id,
+		Status:              string(chargementIntent.Status),
+		UserID:              chargementIntent.User,
+		Amount:              int64(chargementIntent.Amount.Cents),
+		StripeCheckoutID:    &chargementIntent.StripeCheckoutId,
+		TransactionID:       chargementIntent.TransactionId,
+		StripePaymentLink:   &chargementIntent.PaymentLink,
+		StripePaymentLinkID: &chargementIntent.PaymentLinkId,
 	})
 	if err != nil {
 		slog.Error("Error in save chargement query", err)
@@ -69,12 +71,14 @@ func (r *Repo) SaveBalanceChargementIntent(ctx context.Context, tx *sql.Tx, char
 func (r *Repo) CreateBalanceChargementIntent(ctx context.Context, tx *sql.Tx, chargementIntent chargements.ChargementIntent) error {
 
 	_, err := r.Queries.WithTx(tx).CreateChargementIntent(ctx, sqlc.CreateChargementIntentParams{
-		ID:               chargementIntent.Id,
-		Status:           string(chargementIntent.Status),
-		UserID:           chargementIntent.User,
-		Amount:           int64(chargementIntent.Amount.Cents),
-		StripeCheckoutID: &chargementIntent.StripeCheckoutId,
-		TransactionID:    chargementIntent.TransactionId,
+		ID:                  chargementIntent.Id,
+		Status:              string(chargementIntent.Status),
+		UserID:              chargementIntent.User,
+		Amount:              int64(chargementIntent.Amount.Cents),
+		StripeCheckoutID:    &chargementIntent.StripeCheckoutId,
+		TransactionID:       chargementIntent.TransactionId,
+		StripePaymentLink:   &chargementIntent.PaymentLink,
+		StripePaymentLinkID: &chargementIntent.PaymentLinkId,
 	})
 	if err != nil {
 		slog.Error("Error in create chargement query", err)

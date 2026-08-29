@@ -3,6 +3,7 @@ package chargementservice
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/KochKevin/effective-spoon-v2/internal/chargements"
@@ -54,6 +55,9 @@ func (s *Service) CreateChargementIntent(ctx context.Context, userId uuid.UUID, 
 			return fmt.Errorf("error creating chargement intent on persitent volume: %w", err)
 		}
 
+		//Set Current
+		s.BalanceChargementIntentCache.SetBalanceChargementIntentId(chargementIntent.Id)
+
 		return nil
 	})
 	if err != nil {
@@ -101,7 +105,7 @@ func (s *Service) createStripePaymentLink(ctx context.Context, chargementIntent 
 		return chargements.ChargementIntent{}, fmt.Errorf("error calling create stripe payment link api: %v", err)
 	}
 
-	chargementIntent.PaymentLink = result.URL
+	chargementIntent.AddStripePaymentLinkAndId(result.URL, result.ID)
 
 	return chargementIntent, nil
 
@@ -118,4 +122,44 @@ func (s *Service) deactivateStripePaymentLink(ctx context.Context, paymentLinkId
 
 	return nil
 
+}
+
+func (s *Service) CancelCurrentChargementIntent(ctx context.Context) error {
+
+	err := s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
+
+		chargementIntentId := s.BalanceChargementIntentCache.GetBalanceChargementIntentId()
+
+		if chargementIntentId == uuid.Nil {
+			return errors.New("no current chargement active")
+		}
+
+		chargementIntent, err := s.Repo.GetBalanceChargementIntent(ctx, tx, chargementIntentId)
+
+		if err != nil {
+			return fmt.Errorf("error getting chargement intent from persitent volume: %w", err)
+		}
+
+		err = s.deactivateStripePaymentLink(ctx, chargementIntent.PaymentLinkId)
+		if err != nil {
+			return fmt.Errorf("an error occured while deactivting an stripe payment link: %w", err)
+		}
+
+		chargementIntent.Status = chargements.StatusCanceld
+
+		err = s.Repo.SaveBalanceChargementIntent(ctx, tx, chargementIntent)
+		if err != nil {
+			return fmt.Errorf("error saving chargement intent to persitent volume: %w", err)
+		}
+
+		s.BalanceChargementIntentCache.ClearBalanceChargementIntentId()
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("error in cancel current chargement intent transaction: %w", err)
+	}
+
+	return nil
 }

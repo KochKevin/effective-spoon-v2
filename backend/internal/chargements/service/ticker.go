@@ -15,6 +15,7 @@ import (
 )
 
 type BalanceChargementIntentCache interface {
+	SetBalanceChargementIntentId(id uuid.UUID)
 	GetBalanceChargementIntentId() uuid.UUID
 	ClearBalanceChargementIntentId()
 }
@@ -138,7 +139,7 @@ func (s *Service) stripeEventCheckoutCompletedChecker(ctx context.Context) error
 			}
 
 			// Set Payment link Invalid
-			s.deactivateStripePaymentLink(ctx, session.PaymentLink.ID)
+			s.deactivateStripePaymentLink(ctx, chargementIntent.PaymentLinkId)
 
 			return nil
 

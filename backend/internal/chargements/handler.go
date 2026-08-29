@@ -16,6 +16,7 @@ import (
 
 type Service interface {
 	CreateChargementIntent(ctx context.Context, userId uuid.UUID, amount float32) (ChargementIntent, error)
+	CancelCurrentChargementIntent(ctx context.Context) error
 }
 
 type Api struct {
@@ -83,9 +84,10 @@ func (a *Api) PostChargementsCurrent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chargementIntent, err := a.Service.CreateChargementIntent(context.TODO(), userID, createChargement.AmountToAdd)
+	chargementIntent, err := a.Service.CreateChargementIntent(r.Context(), userID, createChargement.AmountToAdd)
 	if err != nil {
-		slog.Error("error createing chargement intent: %v", err)
+		slog.Error("error creating chargement intent", "err", err)
+		render.Status(r, http.StatusInternalServerError)
 	}
 
 	render.JSON(w, r, chargementsapi.Chargement{PaymentLink: chargementIntent.PaymentLink, Amount: chargementIntent.Amount.GetAsEuro()})
@@ -95,5 +97,13 @@ func (a *Api) PostChargementsCurrent(w http.ResponseWriter, r *http.Request) {
 // PostChargementsCurrentCancel Cancel current Chargement
 // (POST /chargements/current/cancel)
 func (a *Api) PostChargementsCurrentCancel(w http.ResponseWriter, r *http.Request) {
-	panic("not implemented") // TODO: Implement
+
+	err := a.Service.CancelCurrentChargementIntent(r.Context())
+	if err != nil {
+		slog.Error("error on cancelling current chargement intent", "err", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

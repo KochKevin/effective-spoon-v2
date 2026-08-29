@@ -1,64 +1,64 @@
 <script setup lang="ts">
-import { Label } from 'reka-ui';
-import { postChargementsCurrent } from '~/api';
-import Card from '~/components/ui/card/Card.vue';
-import NumberField from '~/components/ui/number-field/NumberField.vue';
-import NumberFieldContent from '~/components/ui/number-field/NumberFieldContent.vue';
-import NumberFieldDecrement from '~/components/ui/number-field/NumberFieldDecrement.vue';
-import NumberFieldIncrement from '~/components/ui/number-field/NumberFieldIncrement.vue';
-import NumberFieldInput from '~/components/ui/number-field/NumberFieldInput.vue';
+import { postChargementsCurrent, postChargementsCurrentCancel } from '~/api';
+import StartChargement from '~/components/chargment/StartChargement.vue';
+import ChargementCompleted from '~/components/chargment/ChargementCompleted.vue';
+import ChargementQRCode from '~/components/chargment/ChargementQRCode.vue';
 
-const userStore = useUserStore()
+const state = ref(0)
+const checkoutUrl = ref('')
 
-const balanceToAdd = ref(15)
+async function createChargement(amount: number) {
+    try {
+        const response = await postChargementsCurrent({
+            body: { amountToAdd: amount }
+        })
 
-async function createStripeCheckoutLink(amount: number): Promise<string | null> {
-  try {
-    const response = await postChargementsCurrent({
-      body: { amountToAdd: amount }
-    })
+        console.log("paymentLink: ", response.data?.paymentLink ?? null);
 
-    console.log("paymentLink: ", response.data?.paymentLink ?? null)
-    return response.data?.paymentLink ?? null
-  } catch (error) {
-    console.error('Error post add-balance:', error)
-    return null
-  }
+        checkoutUrl.value = response.data?.paymentLink ?? '';
+        state.value = 1;
+
+
+    } catch (error) {
+        console.error('Error on api creating an chargement', error)
+        return null
+    }
 }
 
 
+async function cancelChargement() {
+    
+    try {
+        const response = await postChargementsCurrentCancel()
+
+    } catch (error) {
+        console.error('Error on api canceling current chargement', error)
+        return null
+    }
+    
+    console.log("Aufladung abbrechen...")
+    await navigateTo('/')
+}
+
+
+const userStore = useUserStore()
+
+async function successfullCompleted() {
+    console.log("Aufladung erfolgreich...")
+    await userStore.getCurrentUser()
+    await navigateTo('/')
+}
 
 </script>
 
 <template>
 
-    <div>
 
-        <Card>
-            <CardHeader>
-                <CardTitle>Lade dein Profil auf {{ userStore.currentUser?.name }}! Du hast {{
-                    userStore.currentUser?.balance }}€</CardTitle>
-            </CardHeader>
+    <StartChargement v-if="state === 0" @create-chargement="createChargement"/>
 
+    <ChargementQRCode v-else-if="state === 1" :qr-value="checkoutUrl" @cancel="cancelChargement" />
 
-            <NumberField v-model="balanceToAdd" id="balance" :min="0" :format-options="{
-                style: 'currency',
-                currency: 'EUR',
-                currencyDisplay: 'code',
-                currencySign: 'accounting',
-            }">
-                <Label for="balance">Hinzufügen</Label>
-                <NumberFieldContent>
-                    <NumberFieldDecrement />
-                    <NumberFieldInput />
-                    <NumberFieldIncrement />
-                </NumberFieldContent>
-            </NumberField>
+    <ChargementCompleted v-else-if="state === 2" @completed="successfullCompleted"/>
 
-            <Button @click="createStripeCheckoutLink(balanceToAdd)">Jetzt {{ balanceToAdd }}€ mit STRIPE auf dein Profil buchen</Button>
-
-        </Card>
-
-    </div>
-
+    
 </template>

@@ -14,17 +14,19 @@ import (
 const createChargementIntent = `-- name: CreateChargementIntent :one
 INSERT INTO 
 chargements 
-(id, status, user_id, amount, stripe_checkout_id, transaction_id) 
-VALUES (?, ?, ?, ?, ?, ?) RETURNING id, status, user_id, amount, stripe_checkout_id, transaction_id
+(id, status, user_id, amount, stripe_checkout_id, transaction_id, stripe_payment_link, stripe_payment_link_id) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, status, user_id, amount, stripe_checkout_id, transaction_id, stripe_payment_link, stripe_payment_link_id
 `
 
 type CreateChargementIntentParams struct {
-	ID               uuid.UUID `json:"id"`
-	Status           string    `json:"status"`
-	UserID           uuid.UUID `json:"user_id"`
-	Amount           int64     `json:"amount"`
-	StripeCheckoutID *string   `json:"stripe_checkout_id"`
-	TransactionID    uuid.UUID `json:"transaction_id"`
+	ID                  uuid.UUID `json:"id"`
+	Status              string    `json:"status"`
+	UserID              uuid.UUID `json:"user_id"`
+	Amount              int64     `json:"amount"`
+	StripeCheckoutID    *string   `json:"stripe_checkout_id"`
+	TransactionID       uuid.UUID `json:"transaction_id"`
+	StripePaymentLink   *string   `json:"stripe_payment_link"`
+	StripePaymentLinkID *string   `json:"stripe_payment_link_id"`
 }
 
 func (q *Queries) CreateChargementIntent(ctx context.Context, arg CreateChargementIntentParams) (Chargement, error) {
@@ -35,6 +37,8 @@ func (q *Queries) CreateChargementIntent(ctx context.Context, arg CreateChargeme
 		arg.Amount,
 		arg.StripeCheckoutID,
 		arg.TransactionID,
+		arg.StripePaymentLink,
+		arg.StripePaymentLinkID,
 	)
 	var i Chargement
 	err := row.Scan(
@@ -44,6 +48,8 @@ func (q *Queries) CreateChargementIntent(ctx context.Context, arg CreateChargeme
 		&i.Amount,
 		&i.StripeCheckoutID,
 		&i.TransactionID,
+		&i.StripePaymentLink,
+		&i.StripePaymentLinkID,
 	)
 	return i, err
 }
@@ -55,7 +61,9 @@ status,
 user_id, 
 amount, 
 stripe_checkout_id, 
-transaction_id 
+transaction_id,
+stripe_payment_link,
+stripe_payment_link_id
 FROM chargements WHERE id = ?
 `
 
@@ -69,6 +77,8 @@ func (q *Queries) GetChargementIntent(ctx context.Context, id uuid.UUID) (Charge
 		&i.Amount,
 		&i.StripeCheckoutID,
 		&i.TransactionID,
+		&i.StripePaymentLink,
+		&i.StripePaymentLinkID,
 	)
 	return i, err
 }
@@ -103,17 +113,21 @@ status = ?,
 user_id = ?,
 amount = ?, 
 stripe_checkout_id = ?,
-transaction_id = ? 
+transaction_id = ?,
+stripe_payment_link = ?,
+stripe_payment_link_id = ?
 WHERE id = ?
 `
 
 type UpdateChargementIntentParams struct {
-	Status           string    `json:"status"`
-	UserID           uuid.UUID `json:"user_id"`
-	Amount           int64     `json:"amount"`
-	StripeCheckoutID *string   `json:"stripe_checkout_id"`
-	TransactionID    uuid.UUID `json:"transaction_id"`
-	ID               uuid.UUID `json:"id"`
+	Status              string    `json:"status"`
+	UserID              uuid.UUID `json:"user_id"`
+	Amount              int64     `json:"amount"`
+	StripeCheckoutID    *string   `json:"stripe_checkout_id"`
+	TransactionID       uuid.UUID `json:"transaction_id"`
+	StripePaymentLink   *string   `json:"stripe_payment_link"`
+	StripePaymentLinkID *string   `json:"stripe_payment_link_id"`
+	ID                  uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateChargementIntent(ctx context.Context, arg UpdateChargementIntentParams) error {
@@ -123,6 +137,8 @@ func (q *Queries) UpdateChargementIntent(ctx context.Context, arg UpdateChargeme
 		arg.Amount,
 		arg.StripeCheckoutID,
 		arg.TransactionID,
+		arg.StripePaymentLink,
+		arg.StripePaymentLinkID,
 		arg.ID,
 	)
 	return err

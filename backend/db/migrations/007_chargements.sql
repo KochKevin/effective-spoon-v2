@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS chargements(
     amount int NOT NULL,
     stripe_checkout_id TEXT,
     transaction_id UUID NOT NULL,
+    stripe_payment_link TEXT,
+    stripe_payment_link_id TEXT,
 
     FOREIGN KEY(user_id) REFERENCES users(id),
     FOREIGN KEY(transaction_id) REFERENCES transactions(id)

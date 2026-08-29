@@ -13,6 +13,7 @@ type Status string
 const (
 	StatusPending   = "pending"
 	StatusCompleted = "completed"
+	StatusCanceld   = "canceld"
 )
 
 type ChargementIntent struct {
@@ -23,6 +24,28 @@ type ChargementIntent struct {
 	StripeCheckoutId string
 	TransactionId    uuid.UUID
 	PaymentLink      string
+	PaymentLinkId    string
+}
+
+func NewChargementIntent(amount money.Money, user uuid.UUID) (ChargementIntent, error) {
+
+	id := uuid.New()
+
+	return ChargementIntent{
+		Id:               id,
+		Status:           StatusPending,
+		Amount:           amount,
+		StripeCheckoutId: "",
+		TransactionId:    uuid.Nil,
+		User:             user,
+		PaymentLink:      "empty",
+		PaymentLinkId:    "empty",
+	}, nil
+}
+
+func (c *ChargementIntent) AddStripePaymentLinkAndId(paymentLink string, paymentLinkId string) {
+	c.PaymentLink = paymentLink
+	c.PaymentLinkId = paymentLinkId
 }
 
 var ErrAlreadyCompleted = errors.New("this chargment intent is already completed")
@@ -41,19 +64,4 @@ func (c *ChargementIntent) Complete(stripeCheckoutId string) (users.Transaction,
 
 	c.TransactionId = transaction.Id
 	return transaction, nil
-}
-
-func NewChargementIntent(amount money.Money, user uuid.UUID) (ChargementIntent, error) {
-
-	id := uuid.New()
-
-	return ChargementIntent{
-		Id:               id,
-		Status:           StatusPending,
-		Amount:           amount,
-		StripeCheckoutId: "",
-		TransactionId:    uuid.Nil,
-		User:             user,
-		PaymentLink:      "empty",
-	}, nil
 }

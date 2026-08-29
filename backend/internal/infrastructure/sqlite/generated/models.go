@@ -9,12 +9,14 @@ import (
 )
 
 type Chargement struct {
-	ID               uuid.UUID `json:"id"`
-	Status           string    `json:"status"`
-	UserID           uuid.UUID `json:"user_id"`
-	Amount           int64     `json:"amount"`
-	StripeCheckoutID *string   `json:"stripe_checkout_id"`
-	TransactionID    uuid.UUID `json:"transaction_id"`
+	ID                  uuid.UUID `json:"id"`
+	Status              string    `json:"status"`
+	UserID              uuid.UUID `json:"user_id"`
+	Amount              int64     `json:"amount"`
+	StripeCheckoutID    *string   `json:"stripe_checkout_id"`
+	TransactionID       uuid.UUID `json:"transaction_id"`
+	StripePaymentLink   *string   `json:"stripe_payment_link"`
+	StripePaymentLinkID *string   `json:"stripe_payment_link_id"`
 }
 
 type Product struct {

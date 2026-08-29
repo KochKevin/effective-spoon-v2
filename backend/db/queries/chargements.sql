@@ -15,7 +15,9 @@ status,
 user_id, 
 amount, 
 stripe_checkout_id, 
-transaction_id 
+transaction_id,
+stripe_payment_link,
+stripe_payment_link_id
 FROM chargements WHERE id = ?;
 
 -- name: UpdateChargementIntent :exec
@@ -25,12 +27,14 @@ status = ?,
 user_id = ?,
 amount = ?, 
 stripe_checkout_id = ?,
-transaction_id = ? 
+transaction_id = ?,
+stripe_payment_link = ?,
+stripe_payment_link_id = ?
 WHERE id = ?;
 
 
 -- name: CreateChargementIntent :one
 INSERT INTO 
 chargements 
-(id, status, user_id, amount, stripe_checkout_id, transaction_id) 
-VALUES (?, ?, ?, ?, ?, ?) RETURNING *;
+(id, status, user_id, amount, stripe_checkout_id, transaction_id, stripe_payment_link, stripe_payment_link_id) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
