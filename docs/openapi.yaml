@@ -345,7 +345,7 @@ components:
 
     SSEEvent:
       type: string
-      enum: [user.login, shoppingcart.update]
+      enum: [user.login, shoppingcart.update, chargement_intent.completed]
 
 
 

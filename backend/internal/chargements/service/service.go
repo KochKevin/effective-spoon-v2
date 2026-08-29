@@ -33,6 +33,7 @@ type Service struct {
 	UserRepo                     UserRepo
 	Txm                          infrastructure.TxManager
 	StripeClient                 *stripe.Client
+	PushService                  PushService
 }
 
 func (s *Service) CreateChargementIntent(ctx context.Context, userId uuid.UUID, amount float32) (chargements.ChargementIntent, error) {
@@ -56,7 +57,7 @@ func (s *Service) CreateChargementIntent(ctx context.Context, userId uuid.UUID, 
 		}
 
 		//Set Current
-		s.BalanceChargementIntentCache.SetBalanceChargementIntentId(chargementIntent.Id)
+		go s.BalanceChargementIntentCache.SetBalanceChargementIntentId(chargementIntent.Id)
 
 		return nil
 	})
@@ -69,7 +70,7 @@ func (s *Service) CreateChargementIntent(ctx context.Context, userId uuid.UUID, 
 }
 
 const MetadataBalanceChargementIntentId = "balance_chargement_intent_id"
-const PaymentLinkCustomMessage = "🎉 Danke für das Aufladen deines Kontos. Du kannst den Browser nun schließen. Jeden moment sollte deine aufladung verarbeitet sein 💸"
+const PaymentLinkCustomMessage = "🎉 Danke für das Aufladen deines Kontos. Du kannst den Browser nun schließen. Die Verarbeitung deiner Aufladung kann bis zu 10 Sekunden dauern 💸"
 const PaymentLinkChargementIntentProductName = "%.2f€ Getränkekasse Guthabenaufladung"
 
 func (s *Service) createStripePaymentLink(ctx context.Context, chargementIntent chargements.ChargementIntent) (chargements.ChargementIntent, error) {

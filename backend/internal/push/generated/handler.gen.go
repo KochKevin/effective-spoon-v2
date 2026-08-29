@@ -12,13 +12,16 @@ import (
 
 // Defines values for SSEEvent.
 const (
-	ShoppingcartUpdate SSEEvent = "shoppingcart.update"
-	UserLogin          SSEEvent = "user.login"
+	ChargementIntentCompleted SSEEvent = "chargement_intent.completed"
+	ShoppingcartUpdate        SSEEvent = "shoppingcart.update"
+	UserLogin                 SSEEvent = "user.login"
 )
 
 // Valid indicates whether the value is a known member of the SSEEvent enum.
 func (e SSEEvent) Valid() bool {
 	switch e {
+	case ChargementIntentCompleted:
+		return true
 	case ShoppingcartUpdate:
 		return true
 	case UserLogin:

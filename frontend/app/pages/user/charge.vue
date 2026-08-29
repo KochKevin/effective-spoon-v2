@@ -3,6 +3,7 @@ import { postChargementsCurrent, postChargementsCurrentCancel } from '~/api';
 import StartChargement from '~/components/chargment/StartChargement.vue';
 import ChargementCompleted from '~/components/chargment/ChargementCompleted.vue';
 import ChargementQRCode from '~/components/chargment/ChargementQRCode.vue';
+import { sseBus } from '~/plugins/02.sse.client';
 
 const state = ref(0)
 const checkoutUrl = ref('')
@@ -41,6 +42,7 @@ async function cancelChargement() {
 }
 
 
+
 const userStore = useUserStore()
 
 async function successfullCompleted() {
@@ -48,6 +50,12 @@ async function successfullCompleted() {
     await userStore.getCurrentUser()
     await navigateTo('/')
 }
+
+sseBus.on((event) => {
+  if (event === "chargement_intent.completed") {
+    state.value = 2
+  }
+})
 
 </script>
 

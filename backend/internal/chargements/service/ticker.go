@@ -20,6 +20,10 @@ type BalanceChargementIntentCache interface {
 	ClearBalanceChargementIntentId()
 }
 
+type PushService interface {
+	PushChargementIntentCompleted()
+}
+
 const stripeEventCheckoutSessionCompleted = "checkout.session.completed"
 
 func (s *Service) Ticker(ctx context.Context) {
@@ -157,6 +161,10 @@ func (s *Service) stripeEventCheckoutCompletedChecker(ctx context.Context) error
 
 		if chargementIntent.Id == s.BalanceChargementIntentCache.GetBalanceChargementIntentId() {
 			//Notify that an chargment sucessfully happend and that the frontend can update
+
+			slog.Info("events chargment intent id is current one")
+			s.PushService.PushChargementIntentCompleted()
+			slog.Info("clearing current cargement id")
 			s.BalanceChargementIntentCache.ClearBalanceChargementIntentId()
 		}
 

@@ -217,6 +217,7 @@ func main() {
 				},
 				Txm:          *infrastructure.NewTxManager(db),
 				StripeClient: stripe.NewClient(cfg.StripeClientKey),
+				PushService:  pushService,
 			}
 
 			chargementService.Ticker(context.Background())

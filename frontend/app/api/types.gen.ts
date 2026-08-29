@@ -32,15 +32,15 @@ export type User = {
     balance: number;
 };
 
-export type SseEvent = 'user.login' | 'shoppingcart.update';
+export type SseEvent = 'user.login' | 'shoppingcart.update' | 'chargement_intent.completed';
 
 export type CreateChargement = {
     amountToAdd: number;
 };
 
 export type Chargement = {
-    paymentLink?: string;
-    amount?: number;
+    paymentLink: string;
+    amount: number;
 };
 
 export type PostChargementsCurrentData = {
@@ -257,6 +257,9 @@ export type PostInputBarcodeData = {
 };
 
 export type PostInputBarcodeResponses = {
+    /**
+     * Read
+     */
     200: unknown;
 };
 
@@ -273,5 +276,8 @@ export type PostInputRfidData = {
 };
 
 export type PostInputRfidResponses = {
+    /**
+     * Read
+     */
     200: unknown;
 };
