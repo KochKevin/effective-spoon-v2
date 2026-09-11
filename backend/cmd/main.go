@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"io/fs"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/KochKevin/effective-spoon-v2/internal/auth"
 	"github.com/KochKevin/effective-spoon-v2/internal/auth/authcache"
@@ -53,6 +55,8 @@ type AuthService interface {
 
 func main() {
 
+	ctx := context.Background()
+
 	//Setup Logger
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
@@ -68,19 +72,40 @@ func main() {
 		return
 	}
 
-	//Do Database migrations. Open swlite with WAL mode for writing and reading
+	//Create database folder
 
-	sqliteConnectionString := "file:./db/data/data.db?_pragma=journal_mode=WAL&_pragma=busy_timeout=5000"
+	dbFolderPath := filepath.Join(".", "db")
+	err = os.MkdirAll(dbFolderPath, os.ModePerm)
+	if err != nil {
+		slog.Error("can not create folder for data.db", "err", err)
+		return
+	}
+
+	//Do Database migrations. Open sqlite with WAL mode for writing and reading
+
+	sqliteConnectionString := "file:" + dbFolderPath +"/data.db?_pragma=journal_mode=WAL&_pragma=busy_timeout=5000"
 
 	db, err := goose.OpenDBWithDriver("sqlite", sqliteConnectionString)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("can not open data.db", "err", err)
 		return
 	}
 
 	defer db.Close()
 
-	err = goose.Up(db, "./db/migrations")
+	migrationsFS, err := fs.Sub(infrastructure.DBMigrations, "db/migrations")
+	if err != nil {
+		slog.Error("failed to create sub filesystem for migrations", "err", err)
+		return
+	}
+
+	gooseProvider, err := goose.NewProvider(goose.DialectSQLite3, db, migrationsFS, goose.WithSlog(logger))
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	_, err = gooseProvider.Up(ctx)
 
 	if err != nil {
 		slog.Error("Error migrating database", "error", err)
