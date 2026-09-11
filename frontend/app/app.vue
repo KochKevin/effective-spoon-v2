@@ -25,6 +25,7 @@ sseBus.on((event) => {
     userStore.getCurrentUser()
     shoppingCartStore.createCurrentShoppingCart()
     productStore.fetchProducts()
+    navigateTo("/dashboard")
   }
 
 

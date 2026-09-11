@@ -38,7 +38,7 @@ async function cancelChargement() {
     }
     
     console.log("Aufladung abbrechen...")
-    await navigateTo('/')
+    await navigateTo('/dashboard')
 }
 
 
@@ -48,7 +48,7 @@ const userStore = useUserStore()
 async function successfullCompleted() {
     console.log("Aufladung erfolgreich...")
     await userStore.getCurrentUser()
-    await navigateTo('/')
+    await navigateTo('/dashboard')
 }
 
 sseBus.on((event) => {
