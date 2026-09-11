@@ -96,6 +96,7 @@ func main() {
 	migrationsFS, err := fs.Sub(infrastructure.DBMigrations, "db/migrations")
 	if err != nil {
 		slog.Error("failed to create sub filesystem for migrations", "err", err)
+		return
 	}
 
 	gooseProvider, err := goose.NewProvider(goose.DialectSQLite3, db, migrationsFS, goose.WithSlog(logger))
