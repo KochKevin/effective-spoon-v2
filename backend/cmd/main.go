@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/KochKevin/effective-spoon-v2/internal/auth"
 	"github.com/KochKevin/effective-spoon-v2/internal/auth/authcache"
@@ -73,13 +74,20 @@ func main() {
 
 	//Create database folder
 
+	dbFolderPath := filepath.Join(".", "db")
+	err = os.MkdirAll(dbFolderPath, os.ModePerm)
+	if err != nil {
+		slog.Error("can not create folder for data.db", "err", err)
+		return
+	}
+
 	//Do Database migrations. Open sqlite with WAL mode for writing and reading
 
-	sqliteConnectionString := "file:./db/data/data.db?_pragma=journal_mode=WAL&_pragma=busy_timeout=5000"
+	sqliteConnectionString := "file:" + dbFolderPath +"/data.db?_pragma=journal_mode=WAL&_pragma=busy_timeout=5000"
 
 	db, err := goose.OpenDBWithDriver("sqlite", sqliteConnectionString)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("can not open data.db", "err", err)
 		return
 	}
 
