@@ -10,8 +10,41 @@ tags:
   - name: auth
   - name: pushes
   - name: chargements
+  - name: events
 
 paths:
+
+  /events/current:
+    post:
+      summary: Create a new event and set it as the current one
+      tags:
+        - events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEvent'
+      responses:
+        '200':
+          description: Event created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+    get:
+      summary: Get the current event and the event usage of the current user
+      tags:
+        - events
+      responses:
+        '200':
+          description: Event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+
+    
 
   /chargements/current:
     post:
@@ -358,7 +391,8 @@ components:
       properties:
         amountToAdd:
           type: number
-          example: 50.0
+          examples: 
+            - 50.0
 
     Chargement:
       type: object
@@ -368,7 +402,67 @@ components:
       properties:
         paymentLink:
           type: string
-          example: "https://checkout.stripe.com/..."
+          examples: 
+            - "https://checkout.stripe.com/..."
         amount:
           type: number
-          example: 50.0
+          examples: 
+            - 50.0
+
+
+    Event:
+      type: object
+      required:
+        - authorName
+        - eventEndDateTime
+        - eventUsage
+        - availableAmountPerPerson
+      properties:
+        authorName:
+          type: string
+          examples: 
+            - "Max Musterman"
+        eventEndDateTime:
+          type: string
+          format: date-time
+          examples: 
+            - "2026-09-13T14:32:28Z"
+        eventUsage:
+          $ref: '#/components/schemas/EventUsage'
+        availableAmountPerPerson:
+          type: integer
+          examples:
+          - 5
+            
+
+      
+    EventUsage:
+      type: object
+      required:
+        - userId
+        - amountUsed
+      properties:
+        userId:
+          type: string
+          examples: 
+            - "00000000-0000-0000-0000-000000000000"
+        amountUsed:
+          type: integer
+          examples:
+            - 2
+            
+    CreateEvent:
+      type: object
+      required:
+        - amountPerPerson
+        - endDateTime
+      properties:
+        amountPerPerson:
+          type: integer
+          examples: 
+            - 5
+        endDateTime:
+          type: string
+          format: date-time
+          examples: 
+            - "2026-09-13T14:32:28Z"

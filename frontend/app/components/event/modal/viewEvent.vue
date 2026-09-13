@@ -9,28 +9,34 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
+import { useEventStore } from '~/stores/events';
 
 
+const eventStore = useEventStore()
+
+
+function availableFreeProducts(): number {
+  if (!eventStore.currentEvent) return 0
+
+  return (eventStore.currentEvent.availableAmountPerPerson ?? 0) - (eventStore.currentEvent.eventUsage?.amountUsed ?? 0)
+}
+
+function formatEndTime(): string {
+  const endTime = eventStore.currentEvent?.eventEndDateTime
+  if (!endTime) return 'Kein Event aktiv'
+
+  return endTime
+}
 </script>
 
 
 <template>
 
+    <div>
 
-
-    <DialogContent>
-
-
-
-        <DialogHeader>
-            <DialogTitle>Aktives Event</DialogTitle>
-        </DialogHeader>
-
-
-
-        <p>Erstellt von Kevin Koch</p>
-        <p>Freiprodukte 2 von 5 verfügbar</p>
-        <p>Endet am 12.09.2026 18:00 Uhr</p>
+        <p>Erstellt von {{ eventStore.currentEvent?.authorName }}</p>
+        <p>Freiprodukte {{ availableFreeProducts() }} von {{ eventStore.currentEvent?.availableAmountPerPerson }} verfügbar</p>
+        <p>Endet am {{formatEndTime()}} Uhr</p>
 
         <DialogFooter>
             <DialogClose as-child>
@@ -40,8 +46,8 @@ import {
             </DialogClose>
         </DialogFooter>
 
+    </div>
 
-    </DialogContent>
 
 
 </template>

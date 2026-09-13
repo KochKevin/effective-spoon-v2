@@ -43,6 +43,55 @@ export type Chargement = {
     amount: number;
 };
 
+export type Event = {
+    authorName: string;
+    eventEndDateTime: string;
+    eventUsage: EventUsage;
+    availableAmountPerPerson: number;
+};
+
+export type EventUsage = {
+    userId: string;
+    amountUsed: number;
+};
+
+export type CreateEvent = {
+    amountPerPerson: number;
+    endDateTime: string;
+};
+
+export type GetEventsCurrentData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/events/current';
+};
+
+export type GetEventsCurrentResponses = {
+    /**
+     * Event
+     */
+    200: Event;
+};
+
+export type GetEventsCurrentResponse = GetEventsCurrentResponses[keyof GetEventsCurrentResponses];
+
+export type PostEventsCurrentData = {
+    body: CreateEvent;
+    path?: never;
+    query?: never;
+    url: '/events/current';
+};
+
+export type PostEventsCurrentResponses = {
+    /**
+     * Event created successfully
+     */
+    200: Event;
+};
+
+export type PostEventsCurrentResponse = PostEventsCurrentResponses[keyof PostEventsCurrentResponses];
+
 export type PostChargementsCurrentData = {
     body: CreateChargement;
     path?: never;
