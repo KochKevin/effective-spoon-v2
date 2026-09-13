@@ -73,6 +73,8 @@ async function buy(){
                 {{ userStore.currentUser?.balance }}
             </Card>
 
+            <EventModal class="flex-2" />
+
         </Card>
 
 
