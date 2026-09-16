@@ -46,7 +46,7 @@ export const useEventStore = defineStore('events', {
                 const response = await postEventsCurrent({
                     body: {
                         amountPerPerson: amountPerPerson,
-                        endDateTime: endDateTime.toString()
+                        endDateTime: endDateTime.toAbsoluteString()
                     }
                 });
 
