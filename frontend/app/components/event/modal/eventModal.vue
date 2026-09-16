@@ -23,7 +23,7 @@ const eventStore = useEventStore()
     <Dialog>
         <DialogTrigger as-child>
             <Button variant="outline" size="lg">
-                <GiftIcon class="text-purple-500 animate-bounce [animation-duration:_1s"v-if="eventStore.currentEvent === null"/>
+                <GiftIcon class=""v-if="eventStore.currentEvent === null"/>
                 <GiftIcon class="text-purple-500 animate-bounce duration-200" v-if="eventStore.currentEvent !== null"/>
                 Event
             </Button>
