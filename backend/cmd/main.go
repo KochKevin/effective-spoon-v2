@@ -38,6 +38,7 @@ import (
 	shoppingcartssqlite "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/sqlite"
 	"github.com/KochKevin/effective-spoon-v2/internal/users"
 	userssapi "github.com/KochKevin/effective-spoon-v2/internal/users/generated"
+	userservice "github.com/KochKevin/effective-spoon-v2/internal/users/service"
 	userssqlite "github.com/KochKevin/effective-spoon-v2/internal/users/sqlite"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -83,7 +84,7 @@ func main() {
 
 	//Do Database migrations. Open sqlite with WAL mode for writing and reading
 
-	sqliteConnectionString := "file:" + dbFolderPath +"/data.db?_pragma=journal_mode=WAL&_pragma=busy_timeout=5000"
+	sqliteConnectionString := "file:" + dbFolderPath + "/data.db?_pragma=journal_mode=WAL&_pragma=busy_timeout=5000"
 
 	db, err := goose.OpenDBWithDriver("sqlite", sqliteConnectionString)
 	if err != nil {
@@ -223,12 +224,18 @@ func main() {
 					Service: shoppingCartService,
 				}, protectedRouter)
 
-			userssapi.HandlerFromMux(
-				&users.Api{
+			//Users
+
+			userService := userservice.Service{
 					Repo: &userssqlite.Repo{
 						Queries: *sqlc.New(db),
 					},
 					Txm: *infrastructure.NewTxManager(db),
+			}
+
+			userssapi.HandlerFromMux(
+				&users.Api{
+					Service: &userService,
 				}, protectedRouter)
 
 			//Chargements
