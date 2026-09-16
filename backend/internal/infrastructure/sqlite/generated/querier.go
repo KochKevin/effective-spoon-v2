@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	CreateChargementIntent(ctx context.Context, arg CreateChargementIntentParams) (Chargement, error)
+	CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error)
 	CreateShoppingCart(ctx context.Context, arg CreateShoppingCartParams) (ShoppingCart, error)
 	CreateShoppingCartLineItem(ctx context.Context, arg CreateShoppingCartLineItemParams) error
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (UserTransaction, error)
@@ -19,6 +20,7 @@ type Querier interface {
 	DeleteAllLineItemsOfShoppingCart(ctx context.Context, shoppingCartID uuid.UUID) error
 	GetAllProducts(ctx context.Context) ([]Product, error)
 	GetChargementIntent(ctx context.Context, id uuid.UUID) (Chargement, error)
+	GetEventUsage(ctx context.Context, arg GetEventUsageParams) (EventUsage, error)
 	GetLastStripeEventId(ctx context.Context) (string, error)
 	// Line Items
 	GetLineItemsOfShoppingCart(ctx context.Context, shoppingCartID uuid.UUID) ([]GetLineItemsOfShoppingCartRow, error)
@@ -30,6 +32,7 @@ type Querier interface {
 	SetLastStripeEventId(ctx context.Context, eventID string) error
 	UpdateChargementIntent(ctx context.Context, arg UpdateChargementIntentParams) error
 	UpdateShoppingCart(ctx context.Context, arg UpdateShoppingCartParams) error
+	UpsertEventUsage(ctx context.Context, arg UpsertEventUsageParams) (EventUsage, error)
 }
 
 var _ Querier = (*Queries)(nil)

@@ -5,6 +5,8 @@
 package sqlc
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -17,6 +19,21 @@ type Chargement struct {
 	TransactionID       uuid.UUID `json:"transaction_id"`
 	StripePaymentLink   *string   `json:"stripe_payment_link"`
 	StripePaymentLinkID *string   `json:"stripe_payment_link_id"`
+}
+
+type Event struct {
+	ID                        uuid.UUID `json:"id"`
+	UserID                    uuid.UUID `json:"user_id"`
+	AmountFreeProductsPerUser int64     `json:"amount_free_products_per_user"`
+	StartTimestamp            time.Time `json:"start_timestamp"`
+	EndTimestamp              time.Time `json:"end_timestamp"`
+	Status                    string    `json:"status"`
+}
+
+type EventUsage struct {
+	UserID                 uuid.UUID `json:"user_id"`
+	EventID                uuid.UUID `json:"event_id"`
+	UsedAmountFreeProducts int64     `json:"used_amount_free_products"`
 }
 
 type Product struct {

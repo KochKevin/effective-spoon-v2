@@ -19,6 +19,11 @@ import (
 	chargementservice "github.com/KochKevin/effective-spoon-v2/internal/chargements/service"
 	chargementssqlite "github.com/KochKevin/effective-spoon-v2/internal/chargements/sqlite"
 	"github.com/KochKevin/effective-spoon-v2/internal/config"
+	"github.com/KochKevin/effective-spoon-v2/internal/events"
+	"github.com/KochKevin/effective-spoon-v2/internal/events/eventscache"
+	eventsapi "github.com/KochKevin/effective-spoon-v2/internal/events/generated"
+	eventsservice "github.com/KochKevin/effective-spoon-v2/internal/events/service"
+	eventssqlite "github.com/KochKevin/effective-spoon-v2/internal/events/sqlite"
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
 	"github.com/KochKevin/effective-spoon-v2/internal/input"
@@ -227,10 +232,10 @@ func main() {
 			//Users
 
 			userService := userservice.Service{
-					Repo: &userssqlite.Repo{
-						Queries: *sqlc.New(db),
-					},
-					Txm: *infrastructure.NewTxManager(db),
+				Repo: &userssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				Txm: *infrastructure.NewTxManager(db),
 			}
 
 			userssapi.HandlerFromMux(
@@ -256,6 +261,24 @@ func main() {
 
 			chargementsapi.HandlerFromMux(&chargements.Api{
 				Service: &chargementService,
+			}, protectedRouter)
+
+			//Events
+
+			eventsService, err := eventsservice.NewService(
+				*infrastructure.NewTxManager(db),
+				&eventssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				eventscache.New())
+
+			if err != nil {
+				slog.Error("error while wiring event service", "err", err)
+			}
+
+			eventsapi.HandlerFromMux(&events.Api{
+				Service:     &eventsService,
+				UserService: &userService,
 			}, protectedRouter)
 
 		})
