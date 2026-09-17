@@ -22,6 +22,17 @@ status
 FROM events
 WHERE id = ?;
 
+-- name: GetEventByStatus :one
+SELECT
+id,
+user_id,
+amount_free_products_per_user,
+start_timestamp,
+end_timestamp,
+status
+FROM events
+WHERE status = ?
+LIMIT 1;
 
 -- name: UpsertEventUsage :one
 INSERT INTO event_usage(

@@ -80,6 +80,33 @@ func (q *Queries) GetEvent(ctx context.Context, id uuid.UUID) (Event, error) {
 	return i, err
 }
 
+const getEventByStatus = `-- name: GetEventByStatus :one
+SELECT
+id,
+user_id,
+amount_free_products_per_user,
+start_timestamp,
+end_timestamp,
+status
+FROM events
+WHERE status = ?
+LIMIT 1
+`
+
+func (q *Queries) GetEventByStatus(ctx context.Context, status string) (Event, error) {
+	row := q.db.QueryRowContext(ctx, getEventByStatus, status)
+	var i Event
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.AmountFreeProductsPerUser,
+		&i.StartTimestamp,
+		&i.EndTimestamp,
+		&i.Status,
+	)
+	return i, err
+}
+
 const getEventUsage = `-- name: GetEventUsage :one
 SELECT 
 user_id,

@@ -91,6 +91,23 @@ func (r *Repo) GetEvent(ctx context.Context, tx *sql.Tx, id uuid.UUID) (events.E
 	}, nil
 }
 
+func (r *Repo) GetActiveEvent(ctx context.Context, tx *sql.Tx) (events.Event, error) {
+	event, err := r.Queries.WithTx(tx).GetEventByStatus(ctx, string(events.Active))
+
+	if err != nil {
+		return events.Event{}, fmt.Errorf("in getting event query: %w", err)
+	}
+
+	return events.Event{
+		Id:                        event.ID,
+		UserId:                    event.UserID,
+		AmountFreeProductsPerUser: int(event.AmountFreeProductsPerUser),
+		StartTimestamp:            event.StartTimestamp,
+		EndTimestamp:              event.EndTimestamp,
+		Status:                    events.State(event.Status),
+	}, nil
+}
+
 /*
 func (r *Repo) SetStripeLastEventId(ctx context.Context, tx *sql.Tx, lastEventId string) error {
 
