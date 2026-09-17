@@ -14,6 +14,7 @@ import (
 
 type Repo interface {
 	CreateEvent(ctx context.Context, tx *sql.Tx, event events.Event) error
+	GetEvent(ctx context.Context, tx *sql.Tx, id uuid.UUID) (events.Event, error)
 	GetEventUsage(ctx context.Context, tx *sql.Tx, eventId uuid.UUID, userId uuid.UUID) (events.EventUsage, error)
 }
 
@@ -92,6 +93,31 @@ func (s *Service) GetEventUsage(ctx context.Context, userId uuid.UUID, eventId u
 	}
 
 	return eventUsage, nil
+}
+
+func (s *Service) GetCurrentEvent(ctx context.Context) (event events.Event, err error) {
+
+	//Only proceed if an event is currently loaded
+	if uuid.Nil == s.CacheRepo.GetCurrentEventId() {
+		return events.Event{}, events.NoCurrentEventErr
+	}
+
+	err = s.Txm.WithTx(context.Background(), func(tx *sql.Tx) error {
+
+		event, err = s.Repo.GetEvent(ctx, tx, s.CacheRepo.GetCurrentEventId())
+
+		if err != nil {
+			return fmt.Errorf("error getting event from persitent volume: %w", err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return events.Event{}, fmt.Errorf("in transaction: %w", err)
+	}
+
+	return event, nil
+
 }
 
 func (s *Service) endEvent() {}

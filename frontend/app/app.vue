@@ -17,6 +17,8 @@ import { sseBus } from './plugins/02.sse.client';
 const shoppingCartStore = useShoppingCartStore()
 const userStore = useUserStore()
 const productStore = useProductsStore()
+const eventStore = useEventStore()
+
 
 sseBus.on((event) => {
   console.log(event)

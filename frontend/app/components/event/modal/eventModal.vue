@@ -12,7 +12,7 @@ import CreateEvent from './createEvent.vue'
 import DialogContent from '~/components/ui/dialog/DialogContent.vue'
 
 const eventStore = useEventStore()
-
+eventStore.getCurrentEvent()
 
 
 

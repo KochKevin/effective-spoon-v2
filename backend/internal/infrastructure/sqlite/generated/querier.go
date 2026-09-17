@@ -20,6 +20,7 @@ type Querier interface {
 	DeleteAllLineItemsOfShoppingCart(ctx context.Context, shoppingCartID uuid.UUID) error
 	GetAllProducts(ctx context.Context) ([]Product, error)
 	GetChargementIntent(ctx context.Context, id uuid.UUID) (Chargement, error)
+	GetEvent(ctx context.Context, id uuid.UUID) (Event, error)
 	GetEventUsage(ctx context.Context, arg GetEventUsageParams) (EventUsage, error)
 	GetLastStripeEventId(ctx context.Context) (string, error)
 	// Line Items

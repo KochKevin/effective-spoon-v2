@@ -27,7 +27,14 @@ export const useEventStore = defineStore('events', {
             try {
                 const response = await getEventsCurrent();
 
-                this.currentEvent = response.data
+                if (response.response?.status == 404){
+                    
+                }
+                
+                if (response.response?.status == 200){
+                    this.currentEvent = response.data
+                }
+
             }
             catch(error) {
                 console.error("Error on get on curent event api: ", error);
