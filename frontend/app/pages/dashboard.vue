@@ -96,7 +96,7 @@ async function buy(){
                      <div class="text-2xl font-bold tracking-tight">
                     TOTAL: {{ formatCurrency(shoppingCartStore.currentShoppingCart?.fullPrice) }}
                 </div>
-                 <div class="text-2xl font-bold tracking-tight">
+                 <div v-if="shoppingCartStore.currentShoppingCart?.useEvent" class="text-2xl font-bold tracking-tight">
                     Used Free Products: {{ shoppingCartStore.currentShoppingCart?.freeAmountUsed }} of {{ shoppingCartStore.currentShoppingCart?.totalFreeAmount }}
                 </div>
                 </div>
