@@ -92,6 +92,16 @@ func (q *Queries) DeleteAllLineItemsOfShoppingCart(ctx context.Context, shopping
 	return err
 }
 
+const deleteShoppingCart = `-- name: DeleteShoppingCart :exec
+DELETE FROM shopping_carts
+WHERE id = ?
+`
+
+func (q *Queries) DeleteShoppingCart(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteShoppingCart, id)
+	return err
+}
+
 const getLineItemsOfShoppingCart = `-- name: GetLineItemsOfShoppingCart :many
 
 

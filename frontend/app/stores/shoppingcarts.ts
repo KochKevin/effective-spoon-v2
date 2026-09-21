@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { getShoppingCartsCurrent, postShoppingCartsCurrent, postShoppingCartsCurrentCheckout, postShoppingCartsCurrentDecrease, postShoppingCartsCurrentIncrease, type ShoppingCart } from "~/api";
+import { getShoppingCartsCurrent, postShoppingCartsCurrent, postShoppingCartsCurrentCancel, postShoppingCartsCurrentCheckout, postShoppingCartsCurrentDecrease, postShoppingCartsCurrentIncrease, type ShoppingCart } from "~/api";
 
 export const useShoppingCartStore = defineStore('shopping-carts', {
 
@@ -111,6 +111,22 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
 
             } finally {
                // this.isLoading = false;
+            }
+
+        },
+
+        //Cancel current shopping cart
+        async cancelCurrentCart() {
+
+            try {
+
+                const response = await postShoppingCartsCurrentCancel();
+            }
+            catch(error) {
+                console.error("Error on cancel on current shopping cart api: ", error);
+
+            } finally {
+                this.currentShoppingCart = null
             }
 
         }

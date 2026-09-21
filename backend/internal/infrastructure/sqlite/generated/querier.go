@@ -18,6 +18,7 @@ type Querier interface {
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (UserTransaction, error)
 	//order by to keep the order in which they are inserted
 	DeleteAllLineItemsOfShoppingCart(ctx context.Context, shoppingCartID uuid.UUID) error
+	DeleteShoppingCart(ctx context.Context, id uuid.UUID) error
 	GetAllProducts(ctx context.Context) ([]Product, error)
 	GetChargementIntent(ctx context.Context, id uuid.UUID) (Chargement, error)
 	GetEvent(ctx context.Context, id uuid.UUID) (Event, error)

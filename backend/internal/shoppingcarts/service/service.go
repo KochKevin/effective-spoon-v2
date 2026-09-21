@@ -19,6 +19,7 @@ type Repo interface {
 	CreateShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) (shoppingcarts.ShoppingCart, error)
 	GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (shoppingcarts.ShoppingCart, error)
 	SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) error
+	DeleteShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) error
 }
 
 type ProductRepo interface {
@@ -342,5 +343,45 @@ func (s *ShoppingCartService) GetCurrentShoppingCart(ctx context.Context, userId
 	}
 
 	return cart, err
+
+}
+
+func (s *ShoppingCartService) CancelCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (err error) {
+
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
+
+		//Get Current Cart id
+		cartId, err := s.GetCurrentShoppingCartId()
+		if err != nil {
+
+			return fmt.Errorf("can not get current shopping cart id: %w", err)
+		}
+
+		cart, err := s.Repo.GetShoppingCart(ctx, tx, cartId)
+		if err != nil {
+			return fmt.Errorf("getting shopping cart: %w", err)
+		}
+
+		err = s.checkIfShoppingCartCanBeUsed(cart, userId)
+		if err != nil {
+			return fmt.Errorf("cart can not be used: %w", err)
+		}
+
+		err = s.Repo.DeleteShoppingCart(ctx, tx, cartId)
+		if err != nil {
+			return fmt.Errorf("in deleting: %w", err)
+		}
+
+		s.ShoppingCartCache.ClearCurrentCartId()
+
+		return nil
+
+	})
+
+	if err != nil {
+		return fmt.Errorf("in transaction: %w", err)
+	}
+
+	return nil
 
 }

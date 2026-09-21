@@ -75,6 +75,9 @@ type ServerInterface interface {
 	// PostShoppingCartsCurrent Create a new shopping cart and set it as the current cart
 	// (POST /shopping-carts/current)
 	PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request)
+	// PostShoppingCartsCurrentCancel Cancel and delete the current shopping cart
+	// (POST /shopping-carts/current/cancel)
+	PostShoppingCartsCurrentCancel(w http.ResponseWriter, r *http.Request)
 	// PostShoppingCartsCurrentCheckout Check out of the current shopping cart
 	// (POST /shopping-carts/current/checkout)
 	PostShoppingCartsCurrentCheckout(w http.ResponseWriter, r *http.Request)
@@ -99,6 +102,12 @@ func (_ Unimplemented) GetShoppingCartsCurrent(w http.ResponseWriter, r *http.Re
 // PostShoppingCartsCurrent Create a new shopping cart and set it as the current cart
 // (POST /shopping-carts/current)
 func (_ Unimplemented) PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// PostShoppingCartsCurrentCancel Cancel and delete the current shopping cart
+// (POST /shopping-carts/current/cancel)
+func (_ Unimplemented) PostShoppingCartsCurrentCancel(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -148,6 +157,20 @@ func (siw *ServerInterfaceWrapper) PostShoppingCartsCurrent(w http.ResponseWrite
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostShoppingCartsCurrent(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PostShoppingCartsCurrentCancel operation middleware
+func (siw *ServerInterfaceWrapper) PostShoppingCartsCurrentCancel(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostShoppingCartsCurrentCancel(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -364,6 +387,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/shopping-carts/current/checkout", wrapper.PostShoppingCartsCurrentCheckout)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/shopping-carts/current/cancel", wrapper.PostShoppingCartsCurrentCancel)
 	})
 
 	return r

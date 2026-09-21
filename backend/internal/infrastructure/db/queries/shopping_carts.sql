@@ -32,6 +32,10 @@ event_id = ?
 WHERE id = ?;
 
 
+-- name: DeleteShoppingCart :exec
+DELETE FROM shopping_carts
+WHERE id = ?;
+
 
 -- Line Items
 
@@ -60,3 +64,5 @@ INSERT INTO rel_shopping_carts_products (
     amount,
     amount_free_products
 ) VALUES (?,?,?,?)
+
+

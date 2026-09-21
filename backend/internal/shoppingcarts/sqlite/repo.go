@@ -30,7 +30,7 @@ func (r *Repo) CreateShoppingCart(ctx context.Context, tx *sql.Tx, cart shopping
 		EventID:       cart.EventId,
 	})
 	if err != nil {
-		
+
 		return shoppingcarts.ShoppingCart{}, fmt.Errorf("in create shopping cart query for creating on persitent value: %w", err)
 	}
 
@@ -108,4 +108,22 @@ func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingca
 	})
 
 	return nil
+}
+
+func (r *Repo) DeleteShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) error {
+
+	//Delete all line items first
+	err := r.Queries.WithTx(tx).DeleteAllLineItemsOfShoppingCart(ctx, id)
+	if err != nil {
+		return fmt.Errorf("in deleting all line items of an shopping cart: %q", err)
+	}
+
+	//Delete the shopping cart itself
+	err = r.Queries.WithTx(tx).DeleteShoppingCart(ctx, id)
+	if err != nil {
+		return fmt.Errorf("in deleting an shopping cart: %q", err)
+	}
+
+	return nil
+
 }

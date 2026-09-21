@@ -188,6 +188,14 @@ paths:
                 schema:
                   $ref: '#/components/schemas/Shopping-Cart'
 
+  /shopping-carts/current/cancel:
+    post:
+      summary: Cancel and delete the current shopping cart
+      tags:
+        - shopping-carts
+      responses:
+        '200':
+          description: Successfully canceled the current shopping cart
 
 
 

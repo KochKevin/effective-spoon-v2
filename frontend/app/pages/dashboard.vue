@@ -22,6 +22,9 @@ const userStore = useUserStore()
 
 
 async function cancel(){
+     
+    shoppingCartStore.cancelCurrentCart()
+
     try {
         const response = await postAuthLogout()
 

@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, ServerSentEventsResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetEventsCurrentData, GetEventsCurrentResponses, GetProductsData, GetProductsResponses, GetPushesData, GetPushesResponse, GetPushesResponses, GetShoppingCartsCurrentData, GetShoppingCartsCurrentResponses, GetUsersCurrentData, GetUsersCurrentResponses, PostAuthLogoutData, PostAuthLogoutResponses, PostAuthUsercodeData, PostAuthUsercodeResponses, PostChargementsCurrentCancelData, PostChargementsCurrentCancelResponses, PostChargementsCurrentData, PostChargementsCurrentResponses, PostEventsCurrentData, PostEventsCurrentResponses, PostInputBarcodeData, PostInputBarcodeResponses, PostInputRfidData, PostInputRfidResponses, PostShoppingCartsCurrentCheckoutData, PostShoppingCartsCurrentCheckoutResponses, PostShoppingCartsCurrentData, PostShoppingCartsCurrentDecreaseData, PostShoppingCartsCurrentDecreaseResponses, PostShoppingCartsCurrentIncreaseData, PostShoppingCartsCurrentIncreaseResponses, PostShoppingCartsCurrentResponses } from './types.gen';
+import type { GetEventsCurrentData, GetEventsCurrentResponses, GetProductsData, GetProductsResponses, GetPushesData, GetPushesResponse, GetPushesResponses, GetShoppingCartsCurrentData, GetShoppingCartsCurrentResponses, GetUsersCurrentData, GetUsersCurrentResponses, PostAuthLogoutData, PostAuthLogoutResponses, PostAuthUsercodeData, PostAuthUsercodeResponses, PostChargementsCurrentCancelData, PostChargementsCurrentCancelResponses, PostChargementsCurrentData, PostChargementsCurrentResponses, PostEventsCurrentData, PostEventsCurrentResponses, PostInputBarcodeData, PostInputBarcodeResponses, PostInputRfidData, PostInputRfidResponses, PostShoppingCartsCurrentCancelData, PostShoppingCartsCurrentCancelResponses, PostShoppingCartsCurrentCheckoutData, PostShoppingCartsCurrentCheckoutResponses, PostShoppingCartsCurrentData, PostShoppingCartsCurrentDecreaseData, PostShoppingCartsCurrentDecreaseResponses, PostShoppingCartsCurrentIncreaseData, PostShoppingCartsCurrentIncreaseResponses, PostShoppingCartsCurrentResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -86,6 +86,11 @@ export const postShoppingCartsCurrentDecrease = <ThrowOnError extends boolean = 
  * Check out of the current shopping cart
  */
 export const postShoppingCartsCurrentCheckout = <ThrowOnError extends boolean = false>(options?: Options<PostShoppingCartsCurrentCheckoutData, ThrowOnError>): RequestResult<PostShoppingCartsCurrentCheckoutResponses, unknown, ThrowOnError> => (options?.client ?? client).post<PostShoppingCartsCurrentCheckoutResponses, unknown, ThrowOnError>({ url: '/shopping-carts/current/checkout', ...options });
+
+/**
+ * Cancel and delete the current shopping cart
+ */
+export const postShoppingCartsCurrentCancel = <ThrowOnError extends boolean = false>(options?: Options<PostShoppingCartsCurrentCancelData, ThrowOnError>): RequestResult<PostShoppingCartsCurrentCancelResponses, unknown, ThrowOnError> => (options?.client ?? client).post<PostShoppingCartsCurrentCancelResponses, unknown, ThrowOnError>({ url: '/shopping-carts/current/cancel', ...options });
 
 /**
  * Get the currently logged in user

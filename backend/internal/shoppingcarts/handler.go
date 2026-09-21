@@ -17,6 +17,7 @@ type ShoppingCartService interface {
 	GetCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (cart ShoppingCart, err error)
 	CreateCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (cart ShoppingCart, err error)
 	CheckoutCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (cart ShoppingCart, err error)
+	CancelCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (err error)
 	DecreaseProductOfCurrentShoppingCart(ctx context.Context, userId uuid.UUID, productId uuid.UUID) (cart ShoppingCart, err error)
 	IncreaseProductOfCurrentShoppingCart(ctx context.Context, userId uuid.UUID, productId uuid.UUID) (cart ShoppingCart, err error)
 }
@@ -289,4 +290,27 @@ func (a *Api) GetShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.JSON(w, r, dto)
+}
+
+// PostShoppingCartsCurrentCancel Cancel and delete the current shopping cart
+// (POST /shopping-carts/current/cancel)
+func (a *Api) PostShoppingCartsCurrentCancel(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		err := errors.New("cannot get user_id from context")
+		slog.Error(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	err := a.Service.CancelCurrentShoppingCart(r.Context(), userID)
+	if err != nil {
+		slog.Error("cancel cart", "error", err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, nil)
+
 }

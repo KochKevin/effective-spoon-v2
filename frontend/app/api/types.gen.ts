@@ -247,6 +247,20 @@ export type PostShoppingCartsCurrentCheckoutResponses = {
 
 export type PostShoppingCartsCurrentCheckoutResponse = PostShoppingCartsCurrentCheckoutResponses[keyof PostShoppingCartsCurrentCheckoutResponses];
 
+export type PostShoppingCartsCurrentCancelData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/shopping-carts/current/cancel';
+};
+
+export type PostShoppingCartsCurrentCancelResponses = {
+    /**
+     * Successfully canceled the current shopping cart
+     */
+    200: unknown;
+};
+
 export type GetUsersCurrentData = {
     body?: never;
     path?: never;
