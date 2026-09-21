@@ -53,22 +53,6 @@ func (r *Repo) GetEventUsage(ctx context.Context, tx *sql.Tx, eventId uuid.UUID,
 		AmountUsed: int(eventUsage)}, nil
 }
 
-func (r *Repo) CreateEventUsage(ctx context.Context, tx *sql.Tx, eventId uuid.UUID, userId uuid.UUID) (events.EventUsage, error) {
-	eventUsage, err := r.Queries.WithTx(tx).UpsertEventUsage(ctx, sqlc.UpsertEventUsageParams{
-		UserID:                 userId,
-		EventID:                eventId,
-		UsedAmountFreeProducts: 0,
-	})
-
-	if err != nil {
-		return events.EventUsage{}, fmt.Errorf("in creating event usage query: %w", err)
-	}
-
-	return events.EventUsage{
-		UserId:     eventUsage.UserID,
-		EventId:    eventUsage.EventID,
-		AmountUsed: int(eventUsage.UsedAmountFreeProducts)}, nil
-}
 
 func (r *Repo) GetEvent(ctx context.Context, tx *sql.Tx, id uuid.UUID) (events.Event, error) {
 	event, err := r.Queries.WithTx(tx).GetEvent(ctx, id)

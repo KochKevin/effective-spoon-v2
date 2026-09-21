@@ -130,30 +130,3 @@ func (q *Queries) GetEventUsage(ctx context.Context, arg GetEventUsageParams) (i
 	err := row.Scan(&event_usage)
 	return event_usage, err
 }
-
-const upsertEventUsage = `-- name: UpsertEventUsage :one
-INSERT INTO event_usage(
-    user_id,
-    event_id,
-    used_amount_free_products
-)
-VALUES(?,?,?)
-ON CONFLICT(user_id, event_id) 
-DO 
-   UPDATE SET used_amount_free_products = excluded.used_amount_free_products
-
-RETURNING user_id, event_id, used_amount_free_products
-`
-
-type UpsertEventUsageParams struct {
-	UserID                 uuid.UUID `json:"user_id"`
-	EventID                uuid.UUID `json:"event_id"`
-	UsedAmountFreeProducts int64     `json:"used_amount_free_products"`
-}
-
-func (q *Queries) UpsertEventUsage(ctx context.Context, arg UpsertEventUsageParams) (EventUsage, error) {
-	row := q.db.QueryRowContext(ctx, upsertEventUsage, arg.UserID, arg.EventID, arg.UsedAmountFreeProducts)
-	var i EventUsage
-	err := row.Scan(&i.UserID, &i.EventID, &i.UsedAmountFreeProducts)
-	return i, err
-}

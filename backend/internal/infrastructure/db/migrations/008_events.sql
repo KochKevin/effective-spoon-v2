@@ -19,16 +19,6 @@ CREATE UNIQUE INDEX idx_unique_active_event
 ON events(status) 
 WHERE status = "active";
 
-CREATE TABLE IF NOT EXISTS event_usage(
-    user_id UUID NOT NULL,
-    event_id UUID NOT NULL,
-    used_amount_free_products INT NOT NULL,
-
-    PRIMARY KEY(user_id, event_id),
-    FOREIGN KEY(user_id) REFERENCES users(id),
-    FOREIGN KEY(event_id) REFERENCES events(id)
-);
-
 
 ALTER TABLE shopping_carts ADD COLUMN use_event BOOL NOT NULL;
 ALTER TABLE shopping_carts ADD COLUMN event_id UUID NOT NULL REFERENCES events(id);

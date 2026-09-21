@@ -34,18 +34,6 @@ FROM events
 WHERE status = ?
 LIMIT 1;
 
--- name: UpsertEventUsage :one
-INSERT INTO event_usage(
-    user_id,
-    event_id,
-    used_amount_free_products
-)
-VALUES(?,?,?)
-ON CONFLICT(user_id, event_id) 
-DO 
-   UPDATE SET used_amount_free_products = excluded.used_amount_free_products
-
-RETURNING *;
 
 -- name: GetEventUsage :one
 SELECT 

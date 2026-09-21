@@ -30,12 +30,6 @@ type Event struct {
 	Status                    string    `json:"status"`
 }
 
-type EventUsage struct {
-	UserID                 uuid.UUID `json:"user_id"`
-	EventID                uuid.UUID `json:"event_id"`
-	UsedAmountFreeProducts int64     `json:"used_amount_free_products"`
-}
-
 type Product struct {
 	ID    uuid.UUID `json:"id"`
 	Name  string    `json:"name"`

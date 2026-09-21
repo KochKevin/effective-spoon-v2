@@ -35,7 +35,6 @@ type Querier interface {
 	SetLastStripeEventId(ctx context.Context, eventID string) error
 	UpdateChargementIntent(ctx context.Context, arg UpdateChargementIntentParams) error
 	UpdateShoppingCart(ctx context.Context, arg UpdateShoppingCartParams) error
-	UpsertEventUsage(ctx context.Context, arg UpsertEventUsageParams) (EventUsage, error)
 }
 
 var _ Querier = (*Queries)(nil)
