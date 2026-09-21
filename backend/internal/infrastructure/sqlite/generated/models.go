@@ -44,9 +44,10 @@ type Product struct {
 }
 
 type RelShoppingCartsProduct struct {
-	ShoppingCartID uuid.UUID `json:"shopping_cart_id"`
-	ProductID      uuid.UUID `json:"product_id"`
-	Amount         int64     `json:"amount"`
+	ShoppingCartID     uuid.UUID `json:"shopping_cart_id"`
+	ProductID          uuid.UUID `json:"product_id"`
+	Amount             int64     `json:"amount"`
+	AmountFreeProducts int64     `json:"amount_free_products"`
 }
 
 type ShoppingCart struct {
@@ -54,6 +55,8 @@ type ShoppingCart struct {
 	UserID        uuid.UUID     `json:"user_id"`
 	TransactionID uuid.NullUUID `json:"transaction_id"`
 	Status        string        `json:"status"`
+	UseEvent      bool          `json:"use_event"`
+	EventID       uuid.UUID     `json:"event_id"`
 }
 
 type StripeLastEventID struct {

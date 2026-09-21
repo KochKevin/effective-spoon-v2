@@ -22,7 +22,7 @@ type Querier interface {
 	GetChargementIntent(ctx context.Context, id uuid.UUID) (Chargement, error)
 	GetEvent(ctx context.Context, id uuid.UUID) (Event, error)
 	GetEventByStatus(ctx context.Context, status string) (Event, error)
-	GetEventUsage(ctx context.Context, arg GetEventUsageParams) (EventUsage, error)
+	GetEventUsage(ctx context.Context, arg GetEventUsageParams) (int64, error)
 	GetLastStripeEventId(ctx context.Context) (string, error)
 	// Line Items
 	GetLineItemsOfShoppingCart(ctx context.Context, shoppingCartID uuid.UUID) ([]GetLineItemsOfShoppingCartRow, error)

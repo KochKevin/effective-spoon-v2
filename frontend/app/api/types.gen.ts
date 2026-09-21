@@ -17,6 +17,9 @@ export type ShoppingCart = {
     userId: string;
     status: string;
     transactionId: string;
+    freeAmountUsed: number;
+    totalFreeAmount: number;
+    useEvent: boolean;
 };
 
 export type LineItem = {

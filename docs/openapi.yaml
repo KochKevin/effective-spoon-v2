@@ -303,6 +303,9 @@ components:
         - userId
         - status
         - transactionId
+        - freeAmountUsed
+        - totalFreeAmount
+        - useEvent
       properties:
         id:
           type: string
@@ -329,6 +332,18 @@ components:
           type: string
           examples: 
             - "00000000-0000-0000-0000-000000000000"
+        freeAmountUsed:
+          type: integer
+          examples:
+            - 2
+        totalFreeAmount:
+          type: integer
+          examples:
+            - 5
+        useEvent:
+          type: boolean
+          examples:
+            - true
 
     LineItem:
       type: object

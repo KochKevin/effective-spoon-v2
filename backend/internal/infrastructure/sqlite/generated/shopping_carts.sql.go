@@ -12,7 +12,16 @@ import (
 )
 
 const createShoppingCart = `-- name: CreateShoppingCart :one
-INSERT INTO shopping_carts (id, user_id, transaction_id, status) VALUES (?, ?, ?, ?) RETURNING id, user_id, transaction_id, status
+INSERT INTO shopping_carts 
+(
+    id, 
+    user_id, 
+    transaction_id, 
+    status, 
+    use_event,
+    event_id
+) 
+VALUES (?, ?, ?, ?, ?, ?) RETURNING id, user_id, transaction_id, status, use_event, event_id
 `
 
 type CreateShoppingCartParams struct {
@@ -20,6 +29,8 @@ type CreateShoppingCartParams struct {
 	UserID        uuid.UUID     `json:"user_id"`
 	TransactionID uuid.NullUUID `json:"transaction_id"`
 	Status        string        `json:"status"`
+	UseEvent      bool          `json:"use_event"`
+	EventID       uuid.UUID     `json:"event_id"`
 }
 
 func (q *Queries) CreateShoppingCart(ctx context.Context, arg CreateShoppingCartParams) (ShoppingCart, error) {
@@ -28,6 +39,8 @@ func (q *Queries) CreateShoppingCart(ctx context.Context, arg CreateShoppingCart
 		arg.UserID,
 		arg.TransactionID,
 		arg.Status,
+		arg.UseEvent,
+		arg.EventID,
 	)
 	var i ShoppingCart
 	err := row.Scan(
@@ -35,6 +48,8 @@ func (q *Queries) CreateShoppingCart(ctx context.Context, arg CreateShoppingCart
 		&i.UserID,
 		&i.TransactionID,
 		&i.Status,
+		&i.UseEvent,
+		&i.EventID,
 	)
 	return i, err
 }
@@ -43,18 +58,25 @@ const createShoppingCartLineItem = `-- name: CreateShoppingCartLineItem :exec
 INSERT INTO rel_shopping_carts_products (
     shopping_cart_id,
     product_id,
-    amount
-) VALUES (?,?,?)
+    amount,
+    amount_free_products
+) VALUES (?,?,?,?)
 `
 
 type CreateShoppingCartLineItemParams struct {
-	ShoppingCartID uuid.UUID `json:"shopping_cart_id"`
-	ProductID      uuid.UUID `json:"product_id"`
-	Amount         int64     `json:"amount"`
+	ShoppingCartID     uuid.UUID `json:"shopping_cart_id"`
+	ProductID          uuid.UUID `json:"product_id"`
+	Amount             int64     `json:"amount"`
+	AmountFreeProducts int64     `json:"amount_free_products"`
 }
 
 func (q *Queries) CreateShoppingCartLineItem(ctx context.Context, arg CreateShoppingCartLineItemParams) error {
-	_, err := q.db.ExecContext(ctx, createShoppingCartLineItem, arg.ShoppingCartID, arg.ProductID, arg.Amount)
+	_, err := q.db.ExecContext(ctx, createShoppingCartLineItem,
+		arg.ShoppingCartID,
+		arg.ProductID,
+		arg.Amount,
+		arg.AmountFreeProducts,
+	)
 	return err
 }
 
@@ -78,7 +100,8 @@ rel_shopping_carts_products.shopping_cart_id AS 'shoppingCartId',
 products.id AS 'productId',
 products.name AS 'productName',
 products.price AS 'productPrice', 
-rel_shopping_carts_products.amount AS 'amount'
+rel_shopping_carts_products.amount AS 'amount',
+amount_free_products AS 'amount_free_products'
 FROM rel_shopping_carts_products JOIN 
 products ON products.id = rel_shopping_carts_products.product_id 
 WHERE rel_shopping_carts_products.shopping_cart_id = ?
@@ -86,11 +109,12 @@ ORDER BY rel_shopping_carts_products.rowid ASC
 `
 
 type GetLineItemsOfShoppingCartRow struct {
-	Shoppingcartid uuid.UUID `json:"'shoppingcartid'"`
-	Productid      uuid.UUID `json:"'productid'"`
-	Productname    string    `json:"'productname'"`
-	Productprice   int64     `json:"'productprice'"`
-	Amount         int64     `json:"'amount'"`
+	Shoppingcartid     uuid.UUID `json:"'shoppingcartid'"`
+	Productid          uuid.UUID `json:"'productid'"`
+	Productname        string    `json:"'productname'"`
+	Productprice       int64     `json:"'productprice'"`
+	Amount             int64     `json:"'amount'"`
+	AmountFreeProducts int64     `json:"'amount_free_products'"`
 }
 
 // Line Items
@@ -109,6 +133,7 @@ func (q *Queries) GetLineItemsOfShoppingCart(ctx context.Context, shoppingCartID
 			&i.Productname,
 			&i.Productprice,
 			&i.Amount,
+			&i.AmountFreeProducts,
 		); err != nil {
 			return nil, err
 		}
@@ -128,7 +153,9 @@ SELECT
 id,
 user_id,
 transaction_id,
-status
+status,
+use_event,
+event_id
 FROM shopping_carts
 WHERE id = ?
 `
@@ -141,6 +168,8 @@ func (q *Queries) GetShoppingCart(ctx context.Context, id uuid.UUID) (ShoppingCa
 		&i.UserID,
 		&i.TransactionID,
 		&i.Status,
+		&i.UseEvent,
+		&i.EventID,
 	)
 	return i, err
 }
@@ -150,7 +179,9 @@ UPDATE shopping_carts
 SET 
 user_id = ?,
 transaction_id = ?,
-status = ?
+status = ?,
+use_event = ?,
+event_id = ?
 WHERE id = ?
 `
 
@@ -158,6 +189,8 @@ type UpdateShoppingCartParams struct {
 	UserID        uuid.UUID     `json:"user_id"`
 	TransactionID uuid.NullUUID `json:"transaction_id"`
 	Status        string        `json:"status"`
+	UseEvent      bool          `json:"use_event"`
+	EventID       uuid.UUID     `json:"event_id"`
 	ID            uuid.UUID     `json:"id"`
 }
 
@@ -166,6 +199,8 @@ func (q *Queries) UpdateShoppingCart(ctx context.Context, arg UpdateShoppingCart
 		arg.UserID,
 		arg.TransactionID,
 		arg.Status,
+		arg.UseEvent,
+		arg.EventID,
 		arg.ID,
 	)
 	return err

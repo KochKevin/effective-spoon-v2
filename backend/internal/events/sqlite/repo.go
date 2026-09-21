@@ -38,23 +38,19 @@ func (r *Repo) CreateEvent(ctx context.Context, tx *sql.Tx, event events.Event) 
 func (r *Repo) GetEventUsage(ctx context.Context, tx *sql.Tx, eventId uuid.UUID, userId uuid.UUID) (events.EventUsage, error) {
 
 	eventUsage, err := r.Queries.WithTx(tx).GetEventUsage(ctx, sqlc.GetEventUsageParams{
-		UserID:  userId,
-		EventID: eventId,
+		UserID:   userId,
+		EventID:  eventId,
+		UseEvent: true,
 	})
-
-	// No event usage was created for the user, create it now
-	if err == sql.ErrNoRows {
-		return r.CreateEventUsage(ctx, tx, eventId, userId)
-	}
 
 	if err != nil {
 		return events.EventUsage{}, fmt.Errorf("in getting event usage query: %w", err)
 	}
 
 	return events.EventUsage{
-		UserId:     eventUsage.UserID,
-		EventId:    eventUsage.EventID,
-		AmountUsed: int(eventUsage.UsedAmountFreeProducts)}, nil
+		UserId:     userId,
+		EventId:    eventId,
+		AmountUsed: int(eventUsage)}, nil
 }
 
 func (r *Repo) CreateEventUsage(ctx context.Context, tx *sql.Tx, eventId uuid.UUID, userId uuid.UUID) (events.EventUsage, error) {

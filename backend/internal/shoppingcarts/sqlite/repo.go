@@ -3,6 +3,7 @@ package shoppingcartssqlite
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"log/slog"
 
@@ -25,10 +26,12 @@ func (r *Repo) CreateShoppingCart(ctx context.Context, tx *sql.Tx, cart shopping
 		UserID:        cart.UserId,
 		TransactionID: cart.TransactionId,
 		Status:        string(cart.Status),
+		UseEvent:      cart.UseEvent,
+		EventID:       cart.EventId,
 	})
 	if err != nil {
-		slog.Error("Error in products query", err)
-		return shoppingcarts.ShoppingCart{}, err
+		
+		return shoppingcarts.ShoppingCart{}, fmt.Errorf("in create shopping cart query for creating on persitent value: %w", err)
 	}
 
 	return shoppingcarts.ShoppingCartFrom(obj.ID, nil, obj.UserID, obj.TransactionID, shoppingcarts.ShoppingCartStatus(obj.Status)), nil
@@ -37,8 +40,9 @@ func (r *Repo) CreateShoppingCart(ctx context.Context, tx *sql.Tx, cart shopping
 func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (shoppingcarts.ShoppingCart, error) {
 	shoppingCart, err := r.Queries.WithTx(tx).GetShoppingCart(ctx, id)
 	if err != nil {
-		slog.Error("Error in get shopping cart query", err)
-		return shoppingcarts.ShoppingCart{}, err
+
+		//slog.Error("Error in get shopping cart query", err)
+		return shoppingcarts.ShoppingCart{}, fmt.Errorf("in get shoppung cart query, tying to access it with %v uuid : %w", id, err)
 	}
 
 	lineItems, err := r.Queries.WithTx(tx).GetLineItemsOfShoppingCart(ctx, id)
@@ -47,15 +51,18 @@ func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (s
 		return shoppingcarts.ShoppingCart{}, err
 	}
 
-	var cart shoppingcarts.ShoppingCart
-	cart.Id = shoppingCart.ID
-	cart.UserId = shoppingCart.UserID
-	cart.TransactionId = shoppingCart.TransactionID
-	cart.Status = shoppingcarts.ShoppingCartStatus(shoppingCart.Status)
+	cart := shoppingcarts.ShoppingCart{
+		Id:            shoppingCart.ID,
+		UserId:        shoppingCart.UserID,
+		TransactionId: shoppingCart.TransactionID,
+		Status:        shoppingcarts.ShoppingCartStatus(shoppingCart.Status),
+		EventId:       shoppingCart.EventID,
+		UseEvent:      shoppingCart.UseEvent,
+	}
 
 	for _, item := range lineItems {
 		cart.LineItems = append(cart.LineItems, shoppingcarts.LineItem{
-			Amount: int(item.Amount),
+			Amount: shoppingcarts.AmountFrom(int(item.Amount), int(item.AmountFreeProducts)),
 			Product: products.Product{
 				Id:    item.Productid,
 				Name:  item.Productname,
@@ -79,9 +86,10 @@ func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingca
 	for _, item := range cart.LineItems {
 
 		err := r.Queries.WithTx(tx).CreateShoppingCartLineItem(ctx, sqlc.CreateShoppingCartLineItemParams{
-			ShoppingCartID: cart.Id,
-			ProductID:      item.Product.Id,
-			Amount:         int64(item.Amount),
+			ShoppingCartID:     cart.Id,
+			ProductID:          item.Product.Id,
+			Amount:             int64(item.Amount.GetPayedAmount()),
+			AmountFreeProducts: int64(item.Amount.GetFreeAmount()),
 		})
 		if err != nil {
 			slog.Error("Error in creating line item query", err)
@@ -95,6 +103,8 @@ func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingca
 		TransactionID: cart.TransactionId,
 		ID:            cart.Id,
 		Status:        string(cart.Status),
+		UseEvent:      cart.UseEvent,
+		EventID:       cart.EventId,
 	})
 
 	return nil

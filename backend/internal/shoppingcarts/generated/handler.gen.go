@@ -29,6 +29,9 @@ type LineItem struct {
 
 // ShoppingCart defines model for Shopping-Cart.
 type ShoppingCart struct {
+	// FreeAmountUsed Examples: 2
+	FreeAmountUsed int `json:"freeAmountUsed"`
+
 	// FullPrice Examples: 10
 	FullPrice float32 `json:"fullPrice"`
 
@@ -39,8 +42,14 @@ type ShoppingCart struct {
 	// Status Examples: active, checked-out
 	Status string `json:"status"`
 
+	// TotalFreeAmount Examples: 5
+	TotalFreeAmount int `json:"totalFreeAmount"`
+
 	// TransactionId Examples: 00000000-0000-0000-0000-000000000000
 	TransactionId string `json:"transactionId"`
+
+	// UseEvent Examples: true
+	UseEvent bool `json:"useEvent"`
 
 	// UserId Examples: 00000000-0000-0000-0000-000000000000
 	UserId string `json:"userId"`

@@ -145,4 +145,23 @@ func (s *Service) GetCurrentEvent(ctx context.Context) (event events.Event, err 
 
 }
 
+func (s *Service) GetEvent(ctx context.Context, eventId uuid.UUID) (event events.Event, err error) {
+
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
+
+		event, err = s.Repo.GetEvent(ctx, tx, eventId)
+
+		if err != nil {
+			return fmt.Errorf("error getting event from persitent volume: %w", err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return events.Event{}, fmt.Errorf("in transaction: %w", err)
+	}
+
+	return event, nil
+}
+
 func (s *Service) endEvent() {}

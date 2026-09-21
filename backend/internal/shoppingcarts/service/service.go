@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log/slog"
 
+	"github.com/KochKevin/effective-spoon-v2/internal/events"
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
 	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
@@ -27,6 +29,12 @@ type UserRepo interface {
 	CreateTransaction(ctx context.Context, tx *sql.Tx, transaction users.Transaction) (users.Transaction, error)
 }
 
+type EventService interface {
+	GetEventUsage(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (eventUsage events.EventUsage, err error)
+	GetEvent(ctx context.Context, eventId uuid.UUID) (event events.Event, err error)
+	GetCurrentEvent(ctx context.Context) (event events.Event, err error)
+}
+
 type ShoppingCartCache interface {
 	SetCurrentCartId(cartId uuid.UUID)
 	GetCurrentCartId() (cartId uuid.UUID)
@@ -37,16 +45,18 @@ type ShoppingCartService struct {
 	Repo              Repo
 	ProductRepo       ProductRepo
 	UserRepo          UserRepo
+	EventService      EventService
 	ShoppingCartCache ShoppingCartCache
 	Txm               infrastructure.TxManager
 }
 
-func New(repo Repo, productRepo ProductRepo, userRepo UserRepo, shoppingCartCache ShoppingCartCache, txm infrastructure.TxManager) *ShoppingCartService {
+func New(repo Repo, productRepo ProductRepo, userRepo UserRepo, shoppingCartCache ShoppingCartCache, eventSerice EventService, txm infrastructure.TxManager) *ShoppingCartService {
 	return &ShoppingCartService{
 		Repo:              repo,
 		ProductRepo:       productRepo,
 		UserRepo:          userRepo,
 		ShoppingCartCache: shoppingCartCache,
+		EventService:      eventSerice,
 		Txm:               txm,
 	}
 }
@@ -69,14 +79,31 @@ func (s *ShoppingCartService) checkIfShoppingCartCanBeUsed(cart shoppingcarts.Sh
 // Crate the current Shopping cart
 func (s *ShoppingCartService) CreateCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
 
+	// Connect an shopping cart to an event only when an event is active to the creation time of the shopping cart
+	currentEvent, err := s.EventService.GetCurrentEvent(ctx)
+
+	slog.Debug("Create Current Shopping Cart - Get Current Event error: ", "error", err)
+
+	if errors.Is(err, events.NoCurrentEventErr) {
+
+		cart = shoppingcarts.NewShoppingCart(userId, uuid.Nil, false)
+	} else {
+		cart = shoppingcarts.NewShoppingCart(userId, currentEvent.Id, true)
+	}
+
+	//Only break if an real error appears
+	if err != nil && !errors.Is(err, events.NoCurrentEventErr) {
+
+		slog.Error("getting current event", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	slog.Debug("Create Current Shopping Cart", "cart", cart)
+
 	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
-
-		cart, err = s.Repo.CreateShoppingCart(ctx, tx, shoppingcarts.NewShoppingCart(userId))
-
+		_, err = s.Repo.CreateShoppingCart(ctx, tx, cart)
 		if err != nil {
-			//TODO: give client more inforamtion instead of an timeout
-			slog.Error("Error creating shopping cart", "error:", err)
-			return err
+			return fmt.Errorf("in creating shopping cart: %w", err)
 		}
 
 		//Ignore if an current cart is already set, replace it!
@@ -87,8 +114,8 @@ func (s *ShoppingCartService) CreateCurrentShoppingCart(ctx context.Context, use
 	})
 
 	if err != nil {
-		slog.Error("Error in /products transaction", "error:", err)
-		return shoppingcarts.ShoppingCart{}, err
+
+		return shoppingcarts.ShoppingCart{}, fmt.Errorf("in transaction: %w")
 	}
 
 	return cart, nil
@@ -221,8 +248,9 @@ func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCartTx(ctx context
 
 	cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
 	if err != nil {
-		slog.Error("error getting shopping cart", "error:", err)
-		return shoppingcarts.ShoppingCart{}, err
+		//fmt.Errorf("error getting shopping cart: %w", err)
+		//slog.Error("error getting shopping cart", "error:", err)
+		return shoppingcarts.ShoppingCart{}, fmt.Errorf("error getting shopping cart: %w", err)
 	}
 
 	err = s.checkIfShoppingCartCanBeUsed(cart, userId)
@@ -239,7 +267,32 @@ func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCartTx(ctx context
 		return shoppingcarts.ShoppingCart{}, err
 	}
 
-	cart.IncreaseProductAmount(product)
+	if cart.UseEvent {
+
+		//Get the amount of free products the user already used
+		eventUsage, err := s.EventService.GetEventUsage(ctx, userId, cart.EventId)
+		if err != nil {
+			slog.Error("getting event usage", "error:", err)
+			return shoppingcarts.ShoppingCart{}, err
+		}
+
+		//Get the event which is connected with the shopping cart
+		event, err := s.EventService.GetEvent(ctx, cart.EventId)
+		if err != nil {
+			slog.Error("getting event", "error:", err)
+			return shoppingcarts.ShoppingCart{}, err
+		}
+
+		//Use free products first before adding products which the user needs to pay for
+		if eventUsage.AmountUsed >= event.AmountFreeProductsPerUser {
+			cart.IncreaseProductAmount(product, false)
+		} else {
+			cart.IncreaseProductAmount(product, true)
+		}
+
+	} else {
+		cart.IncreaseProductAmount(product, false)
+	}
 
 	err = s.Repo.SaveShoppingCart(ctx, tx, cart)
 	if err != nil {

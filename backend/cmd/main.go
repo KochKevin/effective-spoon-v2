@@ -152,6 +152,18 @@ func main() {
 			Txm:         *infrastructure.NewTxManager(db),
 		}, apiRouter)
 
+		//Events
+		eventsService, err := eventsservice.NewService(
+			*infrastructure.NewTxManager(db),
+			&eventssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+			eventscache.New())
+
+		if err != nil {
+			slog.Error("error while wiring event service", "err", err)
+		}
+
 		shoppingCartService := shoppingcartservice.New(
 			&shoppingcartssqlite.Repo{
 				Queries: *sqlc.New(db),
@@ -163,6 +175,7 @@ func main() {
 				Queries: *sqlc.New(db),
 			},
 			shoppingcartcache.New(),
+			&eventsService,
 			*infrastructure.NewTxManager(db),
 		)
 
@@ -226,7 +239,8 @@ func main() {
 
 			shoppingcartssapi.HandlerFromMux(
 				&shoppingcarts.Api{
-					Service: shoppingCartService,
+					Service:      shoppingCartService,
+					EventService: &eventsService,
 				}, protectedRouter)
 
 			//Users
@@ -263,19 +277,7 @@ func main() {
 				Service: &chargementService,
 			}, protectedRouter)
 
-			//Events
-
-			eventsService, err := eventsservice.NewService(
-				*infrastructure.NewTxManager(db),
-				&eventssqlite.Repo{
-					Queries: *sqlc.New(db),
-				},
-				eventscache.New())
-
-			if err != nil {
-				slog.Error("error while wiring event service", "err", err)
-			}
-
+			//Events handler
 			eventsapi.HandlerFromMux(&events.Api{
 				Service:     &eventsService,
 				UserService: &userService,

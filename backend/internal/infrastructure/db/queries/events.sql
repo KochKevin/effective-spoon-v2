@@ -49,8 +49,10 @@ RETURNING *;
 
 -- name: GetEventUsage :one
 SELECT 
-user_id,
-event_id,
-used_amount_free_products
-FROM event_usage 
-WHERE user_id = ? AND event_id = ?;
+CAST( COALESCE(SUM(rel_shopping_carts_products.amount_free_products), 0) AS INTEGER) AS event_usage
+FROM
+rel_shopping_carts_products
+JOIN shopping_carts ON shopping_carts.id = rel_shopping_carts_products.shopping_cart_id
+WHERE shopping_carts.event_id = ? 
+AND shopping_carts.user_id = ?
+AND shopping_carts.use_event = ?;

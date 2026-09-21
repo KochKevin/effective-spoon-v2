@@ -89,9 +89,16 @@ async function buy(){
                     Abbrechen
                 </Button>
 
-                <div class="text-2xl font-bold tracking-tight">
+                <div>
+                     <div class="text-2xl font-bold tracking-tight">
                     TOTAL: {{ formatCurrency(shoppingCartStore.currentShoppingCart?.fullPrice) }}
                 </div>
+                 <div class="text-2xl font-bold tracking-tight">
+                    Used Free Products: {{ shoppingCartStore.currentShoppingCart?.freeAmountUsed }} of {{ shoppingCartStore.currentShoppingCart?.totalFreeAmount }}
+                </div>
+                </div>
+
+            
 
                 <Button size="lg" class="w-32" @click="buy">
                     Kaufen
