@@ -62,6 +62,7 @@ func New(repo Repo, productRepo ProductRepo, userRepo UserRepo, shoppingCartCach
 	}
 }
 
+// Rename to: is User Authorized to use
 func (s *ShoppingCartService) checkIfShoppingCartCanBeUsed(cart shoppingcarts.ShoppingCart, userId uuid.UUID) error {
 
 	//Check if cart owner and current user are the same
@@ -384,4 +385,48 @@ func (s *ShoppingCartService) CancelCurrentShoppingCart(ctx context.Context, use
 
 	return nil
 
+}
+
+func (s *ShoppingCartService) ToggleEventUsageOfCurrentCart(ctx context.Context, userId uuid.UUID, useEvent bool) (cart shoppingcarts.ShoppingCart, err error) {
+
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
+
+		//Get Current Cart id
+		cartId, err := s.GetCurrentShoppingCartId()
+		if err != nil {
+
+			return fmt.Errorf("can not get current shopping cart id: %w", err)
+		}
+
+		cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
+		if err != nil {
+			return fmt.Errorf("getting shopping cart: %w", err)
+		}
+
+		err = s.checkIfShoppingCartCanBeUsed(cart, userId)
+		if err != nil {
+			return fmt.Errorf("cart can not be used: %w", err)
+		}
+
+		if cart.EventId == uuid.Nil {
+			// No evnt set with cart. An Event needs to be assigned be first
+			return errors.New("There is no event assigned to the cart. Assigne an Event first, before toggeling its usage")
+		}
+
+		cart.UseEvent = useEvent
+
+		err = s.Repo.SaveShoppingCart(ctx, tx, cart)
+		if err != nil {
+			return fmt.Errorf("in saving: %w", err)
+		}
+
+		return nil
+
+	})
+
+	if err != nil {
+		return shoppingcarts.ShoppingCart{}, fmt.Errorf("in transaction: %w", err)
+	}
+
+	return cart, nil
 }

@@ -2,7 +2,9 @@ package shoppingcarts
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 
 	"log/slog"
@@ -20,6 +22,7 @@ type ShoppingCartService interface {
 	CancelCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (err error)
 	DecreaseProductOfCurrentShoppingCart(ctx context.Context, userId uuid.UUID, productId uuid.UUID) (cart ShoppingCart, err error)
 	IncreaseProductOfCurrentShoppingCart(ctx context.Context, userId uuid.UUID, productId uuid.UUID) (cart ShoppingCart, err error)
+	ToggleEventUsageOfCurrentCart(ctx context.Context, userId uuid.UUID, useEvent bool) (cart ShoppingCart, err error)
 }
 
 type EventService interface {
@@ -312,5 +315,68 @@ func (a *Api) PostShoppingCartsCurrentCancel(w http.ResponseWriter, r *http.Requ
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, nil)
+
+}
+
+// PutShoppingCartsCurrentUseEvent Set if the shopping cart should use the current event
+// (PUT /shopping-carts/current/use-event)
+func (a *Api) PutShoppingCartsCurrentUseEvent(w http.ResponseWriter, r *http.Request) {
+
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		slog.Error("reading request body", "err", err)
+	}
+	defer r.Body.Close()
+
+	toggelUseEvent := shoppingcartsapi.PutShoppingCartsCurrentUseEventJSONRequestBody{}
+	err = json.Unmarshal(bodyBytes, &toggelUseEvent)
+	if err != nil {
+		slog.Error("unmarshaling create event request body", "err", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	if !ok {
+		err := errors.New("cannot get user_id from context")
+		slog.Error(err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	cart, err := a.Service.ToggleEventUsageOfCurrentCart(r.Context(), userID, toggelUseEvent.UseEvent)
+	if err != nil {
+		slog.Error("shoppingcart use event toggle", "error", err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	
+
+	var dto shoppingcartsapi.ShoppingCart
+
+	if cart.UseEvent {
+
+		event, err := a.EventService.GetEvent(r.Context(), cart.EventId)
+		if err != nil {
+			slog.Error("getting event", "error", err.Error())
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		eventUsage, err := a.EventService.GetEventUsage(r.Context(), userID, cart.EventId)
+		if err != nil {
+			slog.Error("getting event usage", "error", err.Error())
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		dto = a.ToDto(cart, eventUsage.AmountUsed, event.AmountFreeProductsPerUser)
+
+	} else {
+		dto = a.ToDto(cart, 0, 0)
+	}
+
+	render.JSON(w, r, dto)
 
 }
