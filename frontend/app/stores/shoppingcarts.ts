@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { getShoppingCartsCurrent, postShoppingCartsCurrent, postShoppingCartsCurrentCancel, postShoppingCartsCurrentCheckout, postShoppingCartsCurrentDecrease, postShoppingCartsCurrentIncrease, type ShoppingCart } from "~/api";
+import { getShoppingCartsCurrent, postShoppingCartsCurrent, postShoppingCartsCurrentCancel, postShoppingCartsCurrentCheckout, postShoppingCartsCurrentDecrease, postShoppingCartsCurrentIncrease, putShoppingCartsCurrentUseEvent, type ShoppingCart } from "~/api";
 
 export const useShoppingCartStore = defineStore('shopping-carts', {
 
@@ -128,6 +128,25 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
             } finally {
                 this.currentShoppingCart = null
             }
+
+        },
+
+        //Set if event should be used
+        async setEventUsage(useEvent : boolean) {
+
+            try {
+
+                const response = await putShoppingCartsCurrentUseEvent({
+                    body: {
+                      useEvent: useEvent  
+                    }
+                });
+
+                this.currentShoppingCart = response.data
+            }
+            catch(error) {
+                console.error("Error on setting if the current event should be used for shopping cart: ", error);
+            } finally {}
 
         }
     }

@@ -196,6 +196,26 @@ paths:
       responses:
         '200':
           description: Successfully canceled the current shopping cart
+  
+  /shopping-carts/current/use-event:
+      put:
+        summary: Set if the shopping cart should use the current event
+        tags:
+          - shopping-carts
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetShoppingCartEventUsage'
+        responses:
+          '200':
+            description: Successfully changed the useEvent state
+            content:
+              application/json:
+                  schema:
+                    $ref: '#/components/schemas/Shopping-Cart'
+
 
 
 
@@ -377,6 +397,18 @@ components:
           type: number
           examples: 
             - 10.0
+
+    SetShoppingCartEventUsage:
+      type: object
+      required:
+        - useEvent
+      properties:
+        useEvent:
+          type: boolean
+          description: When its set to true, the current event will be set as the event to use
+          examples:
+            - true
+
 
     User:
       type: object

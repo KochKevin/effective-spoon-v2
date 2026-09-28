@@ -29,6 +29,13 @@ export type LineItem = {
     price: number;
 };
 
+export type SetShoppingCartEventUsage = {
+    /**
+     * When its set to true, the current event will be set as the event to use
+     */
+    useEvent: boolean;
+};
+
 export type User = {
     userId: string;
     name: string;
@@ -260,6 +267,22 @@ export type PostShoppingCartsCurrentCancelResponses = {
      */
     200: unknown;
 };
+
+export type PutShoppingCartsCurrentUseEventData = {
+    body: SetShoppingCartEventUsage;
+    path?: never;
+    query?: never;
+    url: '/shopping-carts/current/use-event';
+};
+
+export type PutShoppingCartsCurrentUseEventResponses = {
+    /**
+     * Successfully changed the useEvent state
+     */
+    200: ShoppingCart;
+};
+
+export type PutShoppingCartsCurrentUseEventResponse = PutShoppingCartsCurrentUseEventResponses[keyof PutShoppingCartsCurrentUseEventResponses];
 
 export type GetUsersCurrentData = {
     body?: never;
