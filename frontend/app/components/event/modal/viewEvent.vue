@@ -48,7 +48,8 @@ function handleUseEventSwitched(checked: boolean) {
 
         <div class="flex items-center space-x-2">
             <Switch id="use-event" v-model:model-value="useEventSwitch" @update:model-value="handleUseEventSwitched"/>
-            <Label for="use-event">Warenkorb nutzt Event</Label>
+            <Label v-if="useEventSwitch" for="use-event">Warenkorb nutzt das aktuelle Event</Label>
+             <Label v-if="!useEventSwitch" for="use-event">Warenkorb nutzt nicht das aktuelle Event</Label>
         </div>
 
         <p>Erstellt von {{ eventStore.currentEvent?.authorName }}</p>
