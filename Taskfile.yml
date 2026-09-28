@@ -55,7 +55,7 @@ tasks:
     dir: ./backend
     cmds:
       - task: _setup:backend
-      - air
+      - go tool air
     
   frontend:
     desc: Start frontend dev server
