@@ -44,6 +44,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/Event'
 
+  /events/usage:
+    get:
+      summary: Get the event usage of the current logged in user and current event
+      tags:
+        - events
+      responses:
+        '200':
+          description: Event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventUsage'
+
+
     
 
   /chargements/current:
@@ -331,9 +345,8 @@ components:
         - userId
         - status
         - transactionId
-        - freeAmountUsed
-        - totalFreeAmount
         - useEvent
+        - eventUsage
       properties:
         id:
           type: string
@@ -360,18 +373,13 @@ components:
           type: string
           examples: 
             - "00000000-0000-0000-0000-000000000000"
-        freeAmountUsed:
-          type: integer
-          examples:
-            - 2
-        totalFreeAmount:
-          type: integer
-          examples:
-            - 5
         useEvent:
           type: boolean
           examples:
             - true
+        eventUsage:
+          $ref: '#/components/schemas/EventUsage'
+        
 
     LineItem:
       type: object
@@ -471,7 +479,7 @@ components:
         - authorName
         - eventEndDateTime
         - eventUsage
-        - availableAmountPerPerson
+        - availableFreeAmountPerPerson
       properties:
         authorName:
           type: string
@@ -482,29 +490,27 @@ components:
           format: date-time
           examples: 
             - "2026-09-13T14:32:28Z"
-        eventUsage:
-          $ref: '#/components/schemas/EventUsage'
-        availableAmountPerPerson:
+        availableFreeAmountPerPerson:
           type: integer
           examples:
-          - 5
+          - 4
             
 
-      
+
     EventUsage:
       type: object
       required:
-        - userId
-        - amountUsed
+        - usedFreeAmount
+        - availableFreeAmountPerPerson
       properties:
-        userId:
-          type: string
-          examples: 
-            - "00000000-0000-0000-0000-000000000000"
-        amountUsed:
+        usedFreeAmount:
           type: integer
           examples:
             - 2
+        availableFreeAmountPerPerson:
+          type: integer
+          examples:
+            - 4
             
     CreateEvent:
       type: object
@@ -515,7 +521,7 @@ components:
         amountPerPerson:
           type: integer
           examples: 
-            - 5
+            - 4
         endDateTime:
           type: string
           format: date-time
