@@ -43,12 +43,26 @@ func (a *Api) ToDto(cart ShoppingCart, freeAmountUsed int, totalFreeAmount int) 
 
 	for _, item := range cart.LineItems {
 
-		lineItems = append(lineItems, shoppingcartsapi.LineItem{
-			Amount:      item.Amount.GetTotalAmount(),
-			Price:       float32(item.GetPrice().GetAsEuro()),
-			ProductId:   item.Product.Id.String(),
-			ProductName: item.Product.Name,
-		})
+		if cart.UseEvent {
+			lineItems = append(lineItems, shoppingcartsapi.LineItem{
+				Amount:      item.Amount.GetTotalAmount(),
+				Price:       float32(item.GetPrice().GetAsEuro()),
+				ProductId:   item.Product.Id.String(),
+				ProductName: item.Product.Name,
+			})
+		} else {
+
+			if item.Amount.GetPayedAmount() == 0 {
+				continue
+			}
+
+			lineItems = append(lineItems, shoppingcartsapi.LineItem{
+				Amount:      item.Amount.GetPayedAmount(),
+				Price:       float32(item.GetPrice().GetAsEuro()),
+				ProductId:   item.Product.Id.String(),
+				ProductName: item.Product.Name,
+			})
+		}
 	}
 
 	return shoppingcartsapi.ShoppingCart{
@@ -350,8 +364,6 @@ func (a *Api) PutShoppingCartsCurrentUseEvent(w http.ResponseWriter, r *http.Req
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-
-	
 
 	var dto shoppingcartsapi.ShoppingCart
 
