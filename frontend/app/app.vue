@@ -16,21 +16,12 @@ import { useEventUsageStore } from './stores/eventStore';
 
 
 const shoppingCartStore = useShoppingCartStore()
-const userStore = useUserStore()
-const productStore = useProductsStore()
-const eventStore = useEventStore()
-const eventUsageStore = useEventUsageStore()
-
 
 
 sseBus.on((event) => {
   console.log(event)
 
   if (event === "user.login") {
-    userStore.getCurrentUser()
-    shoppingCartStore.createCurrentShoppingCart()
-    productStore.fetchProducts()
-    eventUsageStore.getEventUsageOfCurrentEventAndCurrentUser()
     navigateTo("/dashboard")
   }
 

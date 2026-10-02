@@ -20,6 +20,16 @@ import { useEventUsageStore } from '~/stores/eventStore'
 const shoppingCartStore = useShoppingCartStore()
 const userStore = useUserStore()
 const eventUsageStore = useEventUsageStore()
+const productStore = useProductsStore()
+
+
+
+
+
+userStore.getCurrentUser()
+shoppingCartStore.createCurrentShoppingCart()
+productStore.fetchProducts()
+eventUsageStore.getEventUsageOfCurrentEventAndCurrentUser()
 
 
 
