@@ -33,7 +33,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Event'
     get:
-      summary: Get the current event and the event usage of the current user
+      summary: Get current event
       tags:
         - events
       responses:
