@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { getShoppingCartsCurrent, postShoppingCartsCurrent, postShoppingCartsCurrentCancel, postShoppingCartsCurrentCheckout, postShoppingCartsCurrentDecrease, postShoppingCartsCurrentIncrease, putShoppingCartsCurrentUseEvent, type ShoppingCart } from "~/api";
+import { useEventUsageStore } from "./eventStore";
 
 export const useShoppingCartStore = defineStore('shopping-carts', {
 
@@ -21,8 +22,13 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
                 const response = await postShoppingCartsCurrent()
 
                 this.currentShoppingCart = response.data
+
+                if (this.currentShoppingCart?.eventUsage) {
+                    useEventUsageStore().applyEvent(this.currentShoppingCart.eventUsage)
+                }
+
             }
-            catch(error) {
+            catch (error) {
                 console.error("Error on post on current shopping cart api: ", error);
 
             } finally {
@@ -32,7 +38,7 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
         },
 
         async getCurrentShoppingCart() {
-            
+
             //Dont go into loading state to keep an clean update look
             //this.isLoading = true;
 
@@ -40,8 +46,12 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
                 const response = await getShoppingCartsCurrent()
 
                 this.currentShoppingCart = response.data
+
+                if (this.currentShoppingCart?.eventUsage) {
+                    useEventUsageStore().applyEvent(this.currentShoppingCart.eventUsage)
+                }
             }
-            catch(error) {
+            catch (error) {
                 console.error("Error on post on current shopping cart api: ", error);
 
             } finally {
@@ -50,7 +60,7 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
         },
 
         //Increase Product of current shopping cart
-        async increaseProduct(productId : string) {
+        async increaseProduct(productId: string) {
 
             //this.isLoading = true;
 
@@ -62,18 +72,22 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
                 });
 
                 this.currentShoppingCart = response.data
+
+                if (this.currentShoppingCart?.eventUsage) {
+                    useEventUsageStore().applyEvent(this.currentShoppingCart.eventUsage)
+                }
             }
-            catch(error) {
+            catch (error) {
                 console.error("Error on getting the current shopping cart on its api: ", error);
 
             } finally {
-               // this.isLoading = false;
+                // this.isLoading = false;
             }
 
         },
 
         //Decrease Product of current shopping cart
-        async decreaseProduct(productId : string) {
+        async decreaseProduct(productId: string) {
 
             //this.isLoading = true;
 
@@ -85,12 +99,16 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
                 });
 
                 this.currentShoppingCart = response.data
+
+                if (this.currentShoppingCart?.eventUsage) {
+                    useEventUsageStore().applyEvent(this.currentShoppingCart.eventUsage)
+                }
             }
-            catch(error) {
+            catch (error) {
                 console.error("Error on decrease on current shopping cart api: ", error);
 
             } finally {
-               // this.isLoading = false;
+                // this.isLoading = false;
             }
 
         },
@@ -105,12 +123,16 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
                 const response = await postShoppingCartsCurrentCheckout();
 
                 this.currentShoppingCart = response.data
+
+                if (this.currentShoppingCart?.eventUsage) {
+                    useEventUsageStore().applyEvent(this.currentShoppingCart.eventUsage)
+                }
             }
-            catch(error) {
+            catch (error) {
                 console.error("Error on checkout on current shopping cart api: ", error);
 
             } finally {
-               // this.isLoading = false;
+                // this.isLoading = false;
             }
 
         },
@@ -122,7 +144,7 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
 
                 const response = await postShoppingCartsCurrentCancel();
             }
-            catch(error) {
+            catch (error) {
                 console.error("Error on cancel on current shopping cart api: ", error);
 
             } finally {
@@ -132,21 +154,25 @@ export const useShoppingCartStore = defineStore('shopping-carts', {
         },
 
         //Set if event should be used
-        async setEventUsage(useEvent : boolean) {
+        async setEventUsage(useEvent: boolean) {
 
             try {
 
                 const response = await putShoppingCartsCurrentUseEvent({
                     body: {
-                      useEvent: useEvent  
+                        useEvent: useEvent
                     }
                 });
 
                 this.currentShoppingCart = response.data
+
+                if (this.currentShoppingCart?.eventUsage) {
+                    useEventUsageStore().applyEvent(this.currentShoppingCart.eventUsage)
+                }
             }
-            catch(error) {
+            catch (error) {
                 console.error("Error on setting if the current event should be used for shopping cart: ", error);
-            } finally {}
+            } finally { }
 
         }
     }
