@@ -12,17 +12,19 @@ import {
 } from '@/components/ui/alert-dialog'
 import { postAuthLogout } from '~/api'
 import { sseBus } from '~/plugins/02.sse.client'
+import { useEventUsageStore } from '~/stores/eventStore'
 
 
 
 
 const shoppingCartStore = useShoppingCartStore()
 const userStore = useUserStore()
+const eventUsageStore = useEventUsageStore()
 
 
 
-async function cancel(){
-     
+async function cancel() {
+
     shoppingCartStore.cancelCurrentCart()
 
     try {
@@ -33,12 +35,12 @@ async function cancel(){
         return null
     }
 
-    
+
     await navigateTo('/')
 }
 
-async function buy(){
-    
+async function buy() {
+
     await shoppingCartStore.checkoutCurrentCart()
 
     try {
@@ -49,9 +51,9 @@ async function buy(){
         return null
     }
 
-    
+
     await navigateTo('/')
-   
+
 }
 
 </script>
@@ -93,15 +95,17 @@ async function buy(){
                 </Button>
 
                 <div>
-                     <div class="text-2xl font-bold tracking-tight">
-                    TOTAL: {{ formatCurrency(shoppingCartStore.currentShoppingCart?.fullPrice) }}
-                </div>
-                 <div v-if="shoppingCartStore.currentShoppingCart?.useEvent" class="text-2xl font-bold tracking-tight">
-                    Used Free Products: {{ shoppingCartStore.currentShoppingCart?.freeAmountUsed }} of {{ shoppingCartStore.currentShoppingCart?.totalFreeAmount }}
-                </div>
+                    <div class="text-2xl font-bold tracking-tight">
+                        TOTAL: {{ formatCurrency(shoppingCartStore.currentShoppingCart?.fullPrice) }}
+                    </div>
+                    <div v-if="shoppingCartStore.currentShoppingCart?.useEvent"
+                        class="text-2xl font-bold tracking-tight">
+                        Used Free Products: {{ eventUsageStore.eventUsage?.usedFreeAmount }} of
+                        {{ eventUsageStore.eventUsage?.availableFreeAmountPerPerson }}
+                    </div>
                 </div>
 
-            
+
 
                 <Button size="lg" class="w-32" @click="buy">
                     Kaufen

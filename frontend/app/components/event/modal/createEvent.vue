@@ -24,6 +24,7 @@ import FieldContent from '~/components/ui/field/FieldContent.vue'
 import FieldLabel from '~/components/ui/field/FieldLabel.vue'
 import FieldSet from '~/components/ui/field/FieldSet.vue'
 import { useEventStore } from '~/stores/events'
+import { useEventUsageStore } from '~/stores/eventStore'
 
 
 
@@ -41,10 +42,12 @@ const formattedTime = computed((): ZonedDateTime => {
 })
 
 const eventStore = useEventStore()
+const eventUsageStore = useEventUsageStore()
 
-function handleSubmit() {
+async function handleSubmit() {
 
-    eventStore.createCurrentEvent(amountFreeProducts.value, formattedTime.value)
+    await eventStore.createCurrentEvent(amountFreeProducts.value, formattedTime.value)
+    eventUsageStore.getEventUsageOfCurrentEventAndCurrentUser()
 
 }
 

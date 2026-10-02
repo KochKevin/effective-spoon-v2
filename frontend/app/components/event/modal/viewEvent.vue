@@ -14,13 +14,13 @@ import { useEventStore } from '~/stores/events';
 
 
 const eventStore = useEventStore()
+const eventUsageStore = useEventUsageStore()
 const cartStore = useShoppingCartStore()
 
 
 function availableFreeProducts(): number {
     if (!eventStore.currentEvent) return 0
-
-    return (eventStore.currentEvent.availableAmountPerPerson ?? 0) - (eventStore.currentEvent.eventUsage?.amountUsed ?? 0)
+    return ((eventStore.currentEvent.availableFreeAmountPerPerson ?? 0) - (eventUsageStore.eventUsage?.usedFreeAmount ?? 0))
 }
 
 function formatEndTime(): string {
@@ -53,7 +53,7 @@ function handleUseEventSwitched(checked: boolean) {
         </div>
 
         <p>Erstellt von {{ eventStore.currentEvent?.authorName }}</p>
-        <p>Freiprodukte {{ availableFreeProducts() }} von {{ eventStore.currentEvent?.availableAmountPerPerson }}
+        <p>Freiprodukte {{ availableFreeProducts() }} von {{ eventStore.currentEvent?.availableFreeAmountPerPerson }}
             verfügbar</p>
         <p>Endet am {{ formatEndTime() }} Uhr</p>
 

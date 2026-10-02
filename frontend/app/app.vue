@@ -12,12 +12,15 @@ import {
 } from '@/components/ui/alert-dialog'
 import { useUserStore } from './stores/users';
 import { sseBus } from './plugins/02.sse.client';
+import { useEventUsageStore } from './stores/eventStore';
 
 
 const shoppingCartStore = useShoppingCartStore()
 const userStore = useUserStore()
 const productStore = useProductsStore()
 const eventStore = useEventStore()
+const eventUsageStore = useEventUsageStore()
+
 
 
 sseBus.on((event) => {
@@ -27,6 +30,7 @@ sseBus.on((event) => {
     userStore.getCurrentUser()
     shoppingCartStore.createCurrentShoppingCart()
     productStore.fetchProducts()
+    eventUsageStore.getEventUsageOfCurrentEventAndCurrentUser()
     navigateTo("/dashboard")
   }
 

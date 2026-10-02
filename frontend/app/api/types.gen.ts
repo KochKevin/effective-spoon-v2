@@ -17,9 +17,8 @@ export type ShoppingCart = {
     userId: string;
     status: string;
     transactionId: string;
-    freeAmountUsed: number;
-    totalFreeAmount: number;
     useEvent: boolean;
+    eventUsage: EventUsage;
 };
 
 export type LineItem = {
@@ -56,13 +55,12 @@ export type Chargement = {
 export type Event = {
     authorName: string;
     eventEndDateTime: string;
-    eventUsage: EventUsage;
-    availableAmountPerPerson: number;
+    availableFreeAmountPerPerson: number;
 };
 
 export type EventUsage = {
-    userId: string;
-    amountUsed: number;
+    usedFreeAmount: number;
+    availableFreeAmountPerPerson: number;
 };
 
 export type CreateEvent = {
@@ -101,6 +99,22 @@ export type PostEventsCurrentResponses = {
 };
 
 export type PostEventsCurrentResponse = PostEventsCurrentResponses[keyof PostEventsCurrentResponses];
+
+export type GetEventsCurrentUsageCurrentData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/events/current/usage/current';
+};
+
+export type GetEventsCurrentUsageCurrentResponses = {
+    /**
+     * Event
+     */
+    200: EventUsage;
+};
+
+export type GetEventsCurrentUsageCurrentResponse = GetEventsCurrentUsageCurrentResponses[keyof GetEventsCurrentUsageCurrentResponses];
 
 export type PostChargementsCurrentData = {
     body: CreateChargement;
