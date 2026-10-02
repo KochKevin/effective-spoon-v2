@@ -430,3 +430,32 @@ func (s *ShoppingCartService) ToggleEventUsageOfCurrentCart(ctx context.Context,
 
 	return cart, nil
 }
+
+// Enriches the Shopping Cart with information about its connected event and its event usage
+func (s *ShoppingCartService) GetShoppingCartView(ctx context.Context, cart shoppingcarts.ShoppingCart) (shoppingcarts.ShoppingCartView, error) {
+
+	event, err := s.EventService.GetEvent(ctx, cart.EventId)
+	if err != nil {
+
+		return shoppingcarts.ShoppingCartView{}, fmt.Errorf("getting event: %w", err)
+	}
+
+	eventUsage, err := s.EventService.GetEventUsage(ctx, cart.UserId, cart.EventId)
+	if err != nil {
+		return shoppingcarts.ShoppingCartView{}, fmt.Errorf("getting event usage: %w", err)
+	}
+
+	if !cart.UseEvent {
+
+		//Only show paid items in cart view, when no event is active
+		cart.LineItems = cart.GetOnlyPaidLineItems()
+
+	}
+
+	return shoppingcarts.ShoppingCartView{
+		Cart:                 cart,
+		EventUsage:           eventUsage,
+		FreeProductPerPerson: event.AmountFreeProductsPerUser,
+	}, nil
+
+}

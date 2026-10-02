@@ -126,6 +126,28 @@ func (s *ShoppingCart) Checkout(transactionId uuid.UUID) {
 	s.Status = ShoppingCartCheckedOut
 }
 
+func (s *ShoppingCart) GetOnlyPaidLineItems() []LineItem {
+
+	var lineItems []LineItem
+
+	for _, item := range s.LineItems {
+
+		//Skip Line items which do not have any payed products in them
+		if item.Amount.GetPayedAmount() == 0 {
+			continue
+		}
+
+		lineItems = append(lineItems, LineItem{
+			Product: item.Product,
+			Amount:  AmountFrom(item.Amount.payedAmount, 0),
+		})
+
+	}
+
+	return lineItems
+
+}
+
 func ShoppingCartFrom(id uuid.UUID, lineItems []LineItem, userID uuid.UUID, transactionId uuid.NullUUID, status ShoppingCartStatus) ShoppingCart {
 	return ShoppingCart{
 		Id:            id,

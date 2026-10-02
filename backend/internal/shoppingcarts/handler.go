@@ -23,6 +23,8 @@ type ShoppingCartService interface {
 	DecreaseProductOfCurrentShoppingCart(ctx context.Context, userId uuid.UUID, productId uuid.UUID) (cart ShoppingCart, err error)
 	IncreaseProductOfCurrentShoppingCart(ctx context.Context, userId uuid.UUID, productId uuid.UUID) (cart ShoppingCart, err error)
 	ToggleEventUsageOfCurrentCart(ctx context.Context, userId uuid.UUID, useEvent bool) (cart ShoppingCart, err error)
+
+	GetShoppingCartView(ctx context.Context, cart ShoppingCart) (ShoppingCartView, error)
 }
 
 type EventService interface {
@@ -37,44 +39,35 @@ type Api struct {
 
 //a *Api github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated.ServerInterface
 
-func (a *Api) ToDto(cart ShoppingCart, freeAmountUsed int, totalFreeAmount int) (dto shoppingcartsapi.ShoppingCart) {
+func (a *Api) ToDto(cartView ShoppingCartView) (dto shoppingcartsapi.ShoppingCart) {
 
 	var lineItems []shoppingcartsapi.LineItem
 
-	for _, item := range cart.LineItems {
+	for _, item := range cartView.Cart.LineItems {
 
-		if cart.UseEvent {
-			lineItems = append(lineItems, shoppingcartsapi.LineItem{
-				Amount:      item.Amount.GetTotalAmount(),
-				Price:       float32(item.GetPrice().GetAsEuro()),
-				ProductId:   item.Product.Id.String(),
-				ProductName: item.Product.Name,
-			})
-		} else {
+		lineItems = append(lineItems, shoppingcartsapi.LineItem{
+			Amount:      item.Amount.GetTotalAmount(),
+			Price:       float32(item.GetPrice().GetAsEuro()),
+			ProductId:   item.Product.Id.String(),
+			ProductName: item.Product.Name,
+		})
 
-			if item.Amount.GetPayedAmount() == 0 {
-				continue
-			}
+	}
 
-			lineItems = append(lineItems, shoppingcartsapi.LineItem{
-				Amount:      item.Amount.GetPayedAmount(),
-				Price:       float32(item.GetPrice().GetAsEuro()),
-				ProductId:   item.Product.Id.String(),
-				ProductName: item.Product.Name,
-			})
-		}
+	eventUsageDto := shoppingcartsapi.EventUsage{
+		UsedFreeAmount:               cartView.EventUsage.AmountUsed,
+		AvailableFreeAmountPerPerson: cartView.FreeProductPerPerson,
 	}
 
 	return shoppingcartsapi.ShoppingCart{
-		Id:              cart.Id.String(),
-		FullPrice:       float32(cart.GetFullPrice().GetAsEuro()),
-		LineItems:       lineItems,
-		UserId:          cart.UserId.String(),
-		TransactionId:   cart.TransactionId.UUID.String(),
-		Status:          string(cart.Status),
-		FreeAmountUsed:  freeAmountUsed,
-		TotalFreeAmount: totalFreeAmount,
-		UseEvent:        cart.UseEvent,
+		Id:            cartView.Cart.Id.String(),
+		FullPrice:     float32(cartView.Cart.GetFullPrice().GetAsEuro()),
+		LineItems:     lineItems,
+		UserId:        cartView.Cart.UserId.String(),
+		TransactionId: cartView.Cart.TransactionId.UUID.String(),
+		Status:        string(cartView.Cart.Status),
+		UseEvent:      cartView.Cart.UseEvent,
+		EventUsage:    eventUsageDto,
 	}
 
 }
@@ -98,31 +91,14 @@ func (a *Api) PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var dto shoppingcartsapi.ShoppingCart
-
-	if cart.UseEvent {
-
-		event, err := a.EventService.GetEvent(r.Context(), cart.EventId)
-		if err != nil {
-			slog.Error("getting event", "error", err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		eventUsage, err := a.EventService.GetEventUsage(r.Context(), userID, cart.EventId)
-		if err != nil {
-			slog.Error("getting event usage", "error", err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		dto = a.ToDto(cart, eventUsage.AmountUsed, event.AmountFreeProductsPerUser)
-
-	} else {
-		dto = a.ToDto(cart, 0, 0)
+	cartView, err := a.Service.GetShoppingCartView(r.Context(), cart)
+	if err != nil {
+		slog.Error("error while getting the shopping cart view", "error", err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
-	render.JSON(w, r, dto)
+	render.JSON(w, r, a.ToDto(cartView))
 }
 
 // Check out of the current shopping cart
@@ -144,31 +120,14 @@ func (a *Api) PostShoppingCartsCurrentCheckout(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var dto shoppingcartsapi.ShoppingCart
-
-	if cart.UseEvent {
-
-		event, err := a.EventService.GetEvent(r.Context(), cart.EventId)
-		if err != nil {
-			slog.Error("getting event", "error", err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		eventUsage, err := a.EventService.GetEventUsage(r.Context(), userID, cart.EventId)
-		if err != nil {
-			slog.Error("getting event usage", "error", err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		dto = a.ToDto(cart, eventUsage.AmountUsed, event.AmountFreeProductsPerUser)
-
-	} else {
-		dto = a.ToDto(cart, 0, 0)
+	cartView, err := a.Service.GetShoppingCartView(r.Context(), cart)
+	if err != nil {
+		slog.Error("error while getting the shopping cart view", "error", err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
-	render.JSON(w, r, dto)
+	render.JSON(w, r, a.ToDto(cartView))
 }
 
 // Remove product from the current shopping cart
@@ -190,31 +149,14 @@ func (a *Api) PostShoppingCartsCurrentDecrease(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var dto shoppingcartsapi.ShoppingCart
-
-	if cart.UseEvent {
-
-		event, err := a.EventService.GetEvent(r.Context(), cart.EventId)
-		if err != nil {
-			slog.Error("getting event", "error", err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		eventUsage, err := a.EventService.GetEventUsage(r.Context(), userID, cart.EventId)
-		if err != nil {
-			slog.Error("getting event usage", "error", err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		dto = a.ToDto(cart, eventUsage.AmountUsed, event.AmountFreeProductsPerUser)
-
-	} else {
-		dto = a.ToDto(cart, 0, 0)
+	cartView, err := a.Service.GetShoppingCartView(r.Context(), cart)
+	if err != nil {
+		slog.Error("error while getting the shopping cart view", "error", err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
-	render.JSON(w, r, dto)
+	render.JSON(w, r, a.ToDto(cartView))
 
 }
 
@@ -237,31 +179,14 @@ func (a *Api) PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var dto shoppingcartsapi.ShoppingCart
-
-	if cart.UseEvent {
-
-		event, err := a.EventService.GetEvent(r.Context(), cart.EventId)
-		if err != nil {
-			slog.Error("getting event", "error", err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		eventUsage, err := a.EventService.GetEventUsage(r.Context(), userID, cart.EventId)
-		if err != nil {
-			slog.Error("getting event usage", "error", err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		dto = a.ToDto(cart, eventUsage.AmountUsed, event.AmountFreeProductsPerUser)
-
-	} else {
-		dto = a.ToDto(cart, 0, 0)
+	cartView, err := a.Service.GetShoppingCartView(r.Context(), cart)
+	if err != nil {
+		slog.Error("error while getting the shopping cart view", "error", err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
-	render.JSON(w, r, dto)
+	render.JSON(w, r, a.ToDto(cartView))
 }
 
 // GetShoppingCartsCurrent Get the current shopping cart
@@ -282,31 +207,15 @@ func (a *Api) GetShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	var dto shoppingcartsapi.ShoppingCart
-
-	if cart.UseEvent {
-
-		event, err := a.EventService.GetEvent(r.Context(), cart.EventId)
-		if err != nil {
-			slog.Error("getting event", "error", err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		eventUsage, err := a.EventService.GetEventUsage(r.Context(), userID, cart.EventId)
-		if err != nil {
-			slog.Error("getting event usage", "error", err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		dto = a.ToDto(cart, eventUsage.AmountUsed, event.AmountFreeProductsPerUser)
-
-	} else {
-		dto = a.ToDto(cart, 0, 0)
+	
+	cartView, err := a.Service.GetShoppingCartView(r.Context(), cart)
+	if err != nil {
+		slog.Error("error while getting the shopping cart view", "error", err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
-	render.JSON(w, r, dto)
+	render.JSON(w, r, a.ToDto(cartView))
 }
 
 // PostShoppingCartsCurrentCancel Cancel and delete the current shopping cart
@@ -365,30 +274,13 @@ func (a *Api) PutShoppingCartsCurrentUseEvent(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	var dto shoppingcartsapi.ShoppingCart
-
-	if cart.UseEvent {
-
-		event, err := a.EventService.GetEvent(r.Context(), cart.EventId)
-		if err != nil {
-			slog.Error("getting event", "error", err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		eventUsage, err := a.EventService.GetEventUsage(r.Context(), userID, cart.EventId)
-		if err != nil {
-			slog.Error("getting event usage", "error", err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-
-		dto = a.ToDto(cart, eventUsage.AmountUsed, event.AmountFreeProductsPerUser)
-
-	} else {
-		dto = a.ToDto(cart, 0, 0)
+	cartView, err := a.Service.GetShoppingCartView(r.Context(), cart)
+	if err != nil {
+		slog.Error("error while getting the shopping cart view", "error", err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
-	render.JSON(w, r, dto)
+	render.JSON(w, r, a.ToDto(cartView))
 
 }

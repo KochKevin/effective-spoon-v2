@@ -12,6 +12,15 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// EventUsage defines model for EventUsage.
+type EventUsage struct {
+	// AvailableFreeAmountPerPerson Examples: 4
+	AvailableFreeAmountPerPerson int `json:"availableFreeAmountPerPerson"`
+
+	// UsedFreeAmount Examples: 2
+	UsedFreeAmount int `json:"usedFreeAmount"`
+}
+
 // LineItem defines model for LineItem.
 type LineItem struct {
 	// Amount Examples: 5
@@ -37,8 +46,7 @@ type SetShoppingCartEventUsage struct {
 
 // ShoppingCart defines model for Shopping-Cart.
 type ShoppingCart struct {
-	// FreeAmountUsed Examples: 2
-	FreeAmountUsed int `json:"freeAmountUsed"`
+	EventUsage EventUsage `json:"eventUsage"`
 
 	// FullPrice Examples: 10
 	FullPrice float32 `json:"fullPrice"`
@@ -49,9 +57,6 @@ type ShoppingCart struct {
 
 	// Status Examples: active, checked-out
 	Status string `json:"status"`
-
-	// TotalFreeAmount Examples: 5
-	TotalFreeAmount int `json:"totalFreeAmount"`
 
 	// TransactionId Examples: 00000000-0000-0000-0000-000000000000
 	TransactionId string `json:"transactionId"`
