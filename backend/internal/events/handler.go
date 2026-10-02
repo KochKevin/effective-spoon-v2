@@ -31,11 +31,11 @@ type Api struct {
 	UserService UserService
 }
 
-//a *Api github.com/KochKevin/effective-spoon-v2/internal/events/generated.ServerInterface
+// a *Api github.com/KochKevin/effective-spoon-v2/internal/events/generated.ServerInterface
 
-// // GetEventsCurrent Get the current event and the event usage of the current user
-// (GET /events/current)
-func (a *Api) GetEventsCurrent(w http.ResponseWriter, r *http.Request) {
+// GetEventsCurrentUsageCurrent Get the event usage of the current logged in user and the current event
+// (GET /events/current/usage/current)
+func (a *Api) GetEventsCurrentUsageCurrent(w http.ResponseWriter, r *http.Request) {
 
 	userID, ok := r.Context().Value("user_id").(uuid.UUID)
 	if !ok {
@@ -60,31 +60,18 @@ func (a *Api) GetEventsCurrent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	author, err := a.UserService.GetUser(r.Context(), event.UserId)
-	if err != nil {
-		slog.Error("getting user:", "err", err)
-		render.Status(r, http.StatusInternalServerError)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
 	eventUsage, err := a.Service.GetEventUsage(r.Context(), userID, event.Id)
 	if err != nil {
-		slog.Error("getting event usage:", "err", err)
+		slog.Error("getting event usage", "err", err)
+
 		render.Status(r, http.StatusInternalServerError)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
+		http.Error(w, "Not Found", http.StatusNotFound)
 	}
 
-	render.JSON(w, r, eventsapi.Event{
-		AuthorName:               author.Name,
-		AvailableAmountPerPerson: event.AmountFreeProductsPerUser,
-		EventEndDateTime:         event.EndTimestamp,
-		EventUsage: eventsapi.EventUsage{
-			AmountUsed: eventUsage.AmountUsed,
-			UserId:     eventUsage.UserId.String(),
-		}})
-
+	render.JSON(w, r, eventsapi.EventUsage{
+		UsedFreeAmount:               eventUsage.AmountUsed,
+		AvailableFreeAmountPerPerson: event.AmountFreeProductsPerUser,
+	})
 }
 
 // PostEventsCurrent Create a new event and set it as the current one
@@ -129,23 +116,45 @@ func (a *Api) PostEventsCurrent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	eventUsage, err := a.Service.GetEventUsage(r.Context(), userID, event.Id)
+	render.JSON(w, r, eventsapi.Event{
+		AuthorName:                   author.Name,
+		AvailableFreeAmountPerPerson: event.AmountFreeProductsPerUser,
+		EventEndDateTime:             event.EndTimestamp,
+	})
+
+}
+
+// GetEventsCurrent Get current event
+// (GET /events/current)
+func (a *Api) GetEventsCurrent(w http.ResponseWriter, r *http.Request) {
+	event, err := a.Service.GetCurrentEvent(r.Context())
+
 	if err != nil {
-		slog.Error("getting event usage:", "err", err)
+		slog.Error("getting event", "err", err)
+
+		if errors.Is(err, NoCurrentEventErr) {
+			render.Status(r, http.StatusInternalServerError)
+			http.Error(w, "Not Found", http.StatusNotFound)
+		} else {
+			render.Status(r, http.StatusInternalServerError)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	author, err := a.UserService.GetUser(r.Context(), event.UserId)
+	if err != nil {
+		slog.Error("getting user:", "err", err)
 		render.Status(r, http.StatusInternalServerError)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
 	render.JSON(w, r, eventsapi.Event{
-		AuthorName:               author.Name,
-		AvailableAmountPerPerson: event.AmountFreeProductsPerUser,
-		EventEndDateTime:         event.EndTimestamp,
-		EventUsage: eventsapi.EventUsage{
-			AmountUsed: eventUsage.AmountUsed,
-			UserId:     eventUsage.UserId.String(),
-		}})
-
+		AuthorName:                   author.Name,
+		AvailableFreeAmountPerPerson: event.AmountFreeProductsPerUser,
+		EventEndDateTime:             event.EndTimestamp,
+	})
 }
 
 // PostAddBalance Add new balance to the currently logged in user, using stripe

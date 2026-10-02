@@ -13,7 +13,7 @@ import (
 
 // CreateEvent defines model for CreateEvent.
 type CreateEvent struct {
-	// AmountPerPerson Examples: 5
+	// AmountPerPerson Examples: 4
 	AmountPerPerson int `json:"amountPerPerson"`
 
 	// EndDateTime Examples: 2026-09-13T14:32:28Z
@@ -25,21 +25,20 @@ type Event struct {
 	// AuthorName Examples: Max Musterman
 	AuthorName string `json:"authorName"`
 
-	// AvailableAmountPerPerson Examples: 5
-	AvailableAmountPerPerson int `json:"availableAmountPerPerson"`
+	// AvailableFreeAmountPerPerson Examples: 4
+	AvailableFreeAmountPerPerson int `json:"availableFreeAmountPerPerson"`
 
 	// EventEndDateTime Examples: 2026-09-13T14:32:28Z
-	EventEndDateTime time.Time  `json:"eventEndDateTime"`
-	EventUsage       EventUsage `json:"eventUsage"`
+	EventEndDateTime time.Time `json:"eventEndDateTime"`
 }
 
 // EventUsage defines model for EventUsage.
 type EventUsage struct {
-	// AmountUsed Examples: 2
-	AmountUsed int `json:"amountUsed"`
+	// AvailableFreeAmountPerPerson Examples: 4
+	AvailableFreeAmountPerPerson int `json:"availableFreeAmountPerPerson"`
 
-	// UserId Examples: 00000000-0000-0000-0000-000000000000
-	UserId string `json:"userId"`
+	// UsedFreeAmount Examples: 2
+	UsedFreeAmount int `json:"usedFreeAmount"`
 }
 
 // PostEventsCurrentJSONRequestBody defines body for PostEventsCurrent for application/json ContentType.
@@ -47,19 +46,22 @@ type PostEventsCurrentJSONRequestBody = CreateEvent
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// GetEventsCurrent Get the current event and the event usage of the current user
+	// GetEventsCurrent Get current event
 	// (GET /events/current)
 	GetEventsCurrent(w http.ResponseWriter, r *http.Request)
 	// PostEventsCurrent Create a new event and set it as the current one
 	// (POST /events/current)
 	PostEventsCurrent(w http.ResponseWriter, r *http.Request)
+	// GetEventsCurrentUsageCurrent Get the event usage of the current logged in user and the current event
+	// (GET /events/current/usage/current)
+	GetEventsCurrentUsageCurrent(w http.ResponseWriter, r *http.Request)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
 
-// GetEventsCurrent Get the current event and the event usage of the current user
+// GetEventsCurrent Get current event
 // (GET /events/current)
 func (_ Unimplemented) GetEventsCurrent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -68,6 +70,12 @@ func (_ Unimplemented) GetEventsCurrent(w http.ResponseWriter, r *http.Request) 
 // PostEventsCurrent Create a new event and set it as the current one
 // (POST /events/current)
 func (_ Unimplemented) PostEventsCurrent(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetEventsCurrentUsageCurrent Get the event usage of the current logged in user and the current event
+// (GET /events/current/usage/current)
+func (_ Unimplemented) GetEventsCurrentUsageCurrent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -99,6 +107,20 @@ func (siw *ServerInterfaceWrapper) PostEventsCurrent(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostEventsCurrent(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetEventsCurrentUsageCurrent operation middleware
+func (siw *ServerInterfaceWrapper) GetEventsCurrentUsageCurrent(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetEventsCurrentUsageCurrent(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -226,6 +248,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/events/current", wrapper.PostEventsCurrent)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/events/current/usage/current", wrapper.GetEventsCurrentUsageCurrent)
 	})
 
 	return r
