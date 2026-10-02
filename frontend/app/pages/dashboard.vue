@@ -1,17 +1,6 @@
 <script setup lang="ts">
 
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
 import { postAuthLogout } from '~/api'
-import { sseBus } from '~/plugins/02.sse.client'
 import { useEventUsageStore } from '~/stores/eventStore'
 
 
