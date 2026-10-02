@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: KIOSK API
-  version: 0.0.3
+  version: 0.0.3.b
 
 tags:
   - name: products
@@ -44,9 +44,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Event'
 
-  /events/usage:
+  /events/current/usage/current:
     get:
-      summary: Get the event usage of the current logged in user and current event
+      summary: Get the event usage of the current logged in user and the current event
       tags:
         - events
       responses:
