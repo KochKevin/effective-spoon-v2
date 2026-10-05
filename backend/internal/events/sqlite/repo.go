@@ -3,6 +3,7 @@ package eventssqlite
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -53,11 +54,15 @@ func (r *Repo) GetEventUsage(ctx context.Context, tx *sql.Tx, eventId uuid.UUID,
 		AmountUsed: int(eventUsage)}, nil
 }
 
-
 func (r *Repo) GetEvent(ctx context.Context, tx *sql.Tx, id uuid.UUID) (events.Event, error) {
 	event, err := r.Queries.WithTx(tx).GetEvent(ctx, id)
 
 	if err != nil {
+
+		if errors.Is(err, sql.ErrNoRows) {
+			return events.Event{}, events.ErrNoEventFound
+		}
+
 		return events.Event{}, fmt.Errorf("in getting event query: %w", err)
 	}
 

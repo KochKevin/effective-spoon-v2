@@ -440,9 +440,14 @@ func (s *ShoppingCartService) ToggleEventUsageOfCurrentCart(ctx context.Context,
 func (s *ShoppingCartService) GetShoppingCartView(ctx context.Context, cart shoppingcarts.ShoppingCart) (shoppingcarts.ShoppingCartView, error) {
 
 	event, err := s.EventService.GetEvent(ctx, cart.EventId)
+
 	if err != nil {
 
-		return shoppingcarts.ShoppingCartView{}, fmt.Errorf("getting event: %w", err)
+		if errors.Is(err, events.ErrNoEventFound) {
+			event = events.Event{}
+		} else {
+			return shoppingcarts.ShoppingCartView{}, fmt.Errorf("getting event: %w", err)
+		}
 	}
 
 	eventUsage, err := s.EventUsage.GetEventUsage(ctx, cart.UserId, cart.EventId)
