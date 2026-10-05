@@ -25,6 +25,10 @@ type Usage interface {
 	GetEventUsage(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (EventUsage, error)
 }
 
+type Lifecycle interface {
+	StartCurrentEvent(ctx context.Context, authorId uuid.UUID, amountPerPerson int, endDateTime time.Time) (event Event, err error)
+}
+
 type UserService interface {
 	GetUser(ctx context.Context, userId uuid.UUID) (users.User, error)
 }
@@ -33,6 +37,7 @@ type Api struct {
 	Service     Service
 	Usage       Usage
 	UserService UserService
+	Lifecycle   Lifecycle
 }
 
 // a *Api github.com/KochKevin/effective-spoon-v2/internal/events/generated.ServerInterface
@@ -104,9 +109,9 @@ func (a *Api) PostEventsCurrent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event, err := a.Service.CreateCurrentEvent(r.Context(), userID, createEvent.AmountPerPerson, createEvent.EndDateTime)
+	event, err := a.Lifecycle.StartCurrentEvent(r.Context(), userID, createEvent.AmountPerPerson, createEvent.EndDateTime)
 	if err != nil {
-		slog.Error("creating event", "err", err)
+		slog.Error("creating current event", "err", err)
 		render.Status(r, http.StatusInternalServerError)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

@@ -436,6 +436,34 @@ func (s *ShoppingCartService) ToggleEventUsageOfCurrentCart(ctx context.Context,
 	return cart, nil
 }
 
+func (s *ShoppingCartService) AssignEventToCurrentShoppingCartTx(ctx context.Context, tx *sql.Tx, userId uuid.UUID, eventId uuid.UUID) error {
+	//Get Current Cart id
+	cartId, err := s.GetCurrentShoppingCartId()
+	if err != nil {
+
+		return fmt.Errorf("can not get current shopping cart id: %w", err)
+	}
+
+	cart, err := s.Repo.GetShoppingCart(ctx, tx, cartId)
+	if err != nil {
+		return fmt.Errorf("getting shopping cart: %w", err)
+	}
+
+	err = s.checkIfShoppingCartCanBeUsed(cart, userId)
+	if err != nil {
+		return fmt.Errorf("cart can not be used: %w", err)
+	}
+
+	cart.EventId = eventId
+
+	err = s.Repo.SaveShoppingCart(ctx, tx, cart)
+	if err != nil {
+		return fmt.Errorf("in saving: %w", err)
+	}
+
+	return nil
+}
+
 // Enriches the Shopping Cart with information about its connected event and its event usage
 func (s *ShoppingCartService) GetShoppingCartView(ctx context.Context, cart shoppingcarts.ShoppingCart) (shoppingcarts.ShoppingCartView, error) {
 

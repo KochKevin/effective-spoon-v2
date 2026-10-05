@@ -67,28 +67,14 @@ func (s *Service) loadCurrentlyActiveEventIntoCache(ctx context.Context) (err er
 }
 
 // Only one event at the time is allowed to exist
-func (s *Service) CreateCurrentEvent(ctx context.Context, authorId uuid.UUID, amountPerPerson int, endDateTime time.Time) (events.Event, error) {
-
-	//Only proceed if no other event is currently loaded
-	if uuid.Nil != s.CacheRepo.GetCurrentEventId() {
-		return events.Event{}, fmt.Errorf("there is already an event set in cache. Only one event can exist at one time: %w")
-	}
-
-	event, err := events.NewEvent(authorId, amountPerPerson, time.Now(), endDateTime, events.Active)
-	if err != nil {
-		return events.Event{}, err
-	}
+func (s *Service) CreateCurrentEvent(ctx context.Context, authorId uuid.UUID, amountPerPerson int, endDateTime time.Time) (event events.Event, err error) {
 
 	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
-		err := s.Repo.CreateEvent(ctx, tx, event)
-
+		event, err = s.CreateCurrentEventTx(ctx, tx, authorId, amountPerPerson, endDateTime)
 		if err != nil {
-			return fmt.Errorf("error creating event on persitent volume: %w", err)
+			return fmt.Errorf("in CreateCurrentEventTx: %w", err)
 		}
-
-		//Set Current
-		go s.CacheRepo.SetCurrentEventId(event.Id)
 
 		return nil
 	})
@@ -100,6 +86,31 @@ func (s *Service) CreateCurrentEvent(ctx context.Context, authorId uuid.UUID, am
 
 }
 
+// Only one event at the time is allowed to exist
+func (s *Service) CreateCurrentEventTx(ctx context.Context, tx *sql.Tx, authorId uuid.UUID, amountPerPerson int, endDateTime time.Time) (events.Event, error) {
+
+	//Only proceed if no other event is currently loaded
+	if uuid.Nil != s.CacheRepo.GetCurrentEventId() {
+		return events.Event{}, fmt.Errorf("there is already an event set in cache. Only one event can exist at one time")
+	}
+
+	event, err := events.NewEvent(authorId, amountPerPerson, time.Now(), endDateTime, events.Active)
+	if err != nil {
+		return events.Event{}, fmt.Errorf("in creating event: %w", err)
+	}
+
+	err = s.Repo.CreateEvent(ctx, tx, event)
+
+	if err != nil {
+		return events.Event{}, fmt.Errorf("error creating event on persitent volume: %w", err)
+	}
+
+	//Set as Current
+	s.CacheRepo.SetCurrentEventId(event.Id)
+
+	return event, nil
+
+}
 
 func (s *Service) GetCurrentEvent(ctx context.Context) (event events.Event, err error) {
 

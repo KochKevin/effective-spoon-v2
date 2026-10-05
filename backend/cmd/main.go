@@ -22,6 +22,7 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/events"
 	"github.com/KochKevin/effective-spoon-v2/internal/events/eventscache"
 	eventsapi "github.com/KochKevin/effective-spoon-v2/internal/events/generated"
+	eventslifecycle "github.com/KochKevin/effective-spoon-v2/internal/events/lifecycle"
 	eventsservice "github.com/KochKevin/effective-spoon-v2/internal/events/service"
 	eventssqlite "github.com/KochKevin/effective-spoon-v2/internal/events/sqlite"
 	eventsusage "github.com/KochKevin/effective-spoon-v2/internal/events/usage"
@@ -290,6 +291,11 @@ func main() {
 				Service:     &eventsService,
 				UserService: &userService,
 				Usage:       &eventsUsageService,
+				Lifecycle: eventslifecycle.NewService(
+					*infrastructure.NewTxManager(db),
+					&eventsService,
+					shoppingCartService,
+				),
 			}, protectedRouter)
 
 		})
