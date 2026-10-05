@@ -184,6 +184,7 @@ func main() {
 			},
 			shoppingcartcache.New(),
 			&eventsService,
+			&eventsUsageService,
 			*infrastructure.NewTxManager(db),
 		)
 
@@ -247,8 +248,7 @@ func main() {
 
 			shoppingcartssapi.HandlerFromMux(
 				&shoppingcarts.Api{
-					Service:      shoppingCartService,
-					EventService: &eventsService,
+					Service: shoppingCartService,
 				}, protectedRouter)
 
 			//Users

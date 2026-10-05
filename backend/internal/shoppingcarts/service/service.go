@@ -31,9 +31,12 @@ type UserRepo interface {
 }
 
 type EventService interface {
-	GetEventUsage(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (eventUsage events.EventUsage, err error)
 	GetEvent(ctx context.Context, eventId uuid.UUID) (event events.Event, err error)
 	GetCurrentEvent(ctx context.Context) (event events.Event, err error)
+}
+
+type EventUsage interface {
+	GetEventUsage(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (eventUsage events.EventUsage, err error)
 }
 
 type ShoppingCartCache interface {
@@ -48,16 +51,18 @@ type ShoppingCartService struct {
 	UserRepo          UserRepo
 	EventService      EventService
 	ShoppingCartCache ShoppingCartCache
+	EventUsage        EventUsage
 	Txm               infrastructure.TxManager
 }
 
-func New(repo Repo, productRepo ProductRepo, userRepo UserRepo, shoppingCartCache ShoppingCartCache, eventSerice EventService, txm infrastructure.TxManager) *ShoppingCartService {
+func New(repo Repo, productRepo ProductRepo, userRepo UserRepo, shoppingCartCache ShoppingCartCache, eventSerice EventService, eventUsage EventUsage, txm infrastructure.TxManager) *ShoppingCartService {
 	return &ShoppingCartService{
 		Repo:              repo,
 		ProductRepo:       productRepo,
 		UserRepo:          userRepo,
 		ShoppingCartCache: shoppingCartCache,
 		EventService:      eventSerice,
+		EventUsage:        eventUsage,
 		Txm:               txm,
 	}
 }
@@ -272,7 +277,7 @@ func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCartTx(ctx context
 	if cart.UseEvent {
 
 		//Get the amount of free products the user already used
-		eventUsage, err := s.EventService.GetEventUsage(ctx, userId, cart.EventId)
+		eventUsage, err := s.EventUsage.GetEventUsage(ctx, userId, cart.EventId)
 		if err != nil {
 			slog.Error("getting event usage", "error:", err)
 			return shoppingcarts.ShoppingCart{}, err
@@ -440,7 +445,7 @@ func (s *ShoppingCartService) GetShoppingCartView(ctx context.Context, cart shop
 		return shoppingcarts.ShoppingCartView{}, fmt.Errorf("getting event: %w", err)
 	}
 
-	eventUsage, err := s.EventService.GetEventUsage(ctx, cart.UserId, cart.EventId)
+	eventUsage, err := s.EventUsage.GetEventUsage(ctx, cart.UserId, cart.EventId)
 	if err != nil {
 		return shoppingcarts.ShoppingCartView{}, fmt.Errorf("getting event usage: %w", err)
 	}
