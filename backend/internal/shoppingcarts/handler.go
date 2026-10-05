@@ -9,7 +9,6 @@ import (
 
 	"log/slog"
 
-	"github.com/KochKevin/effective-spoon-v2/internal/events"
 	shoppingcartsapi "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
@@ -27,14 +26,8 @@ type ShoppingCartService interface {
 	GetShoppingCartView(ctx context.Context, cart ShoppingCart) (ShoppingCartView, error)
 }
 
-type EventService interface {
-	GetEventUsage(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (eventUsage events.EventUsage, err error)
-	GetEvent(ctx context.Context, eventId uuid.UUID) (event events.Event, err error)
-}
-
 type Api struct {
-	Service      ShoppingCartService
-	EventService EventService
+	Service ShoppingCartService
 }
 
 //a *Api github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated.ServerInterface
@@ -207,7 +200,7 @@ func (a *Api) GetShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	
+
 	cartView, err := a.Service.GetShoppingCartView(r.Context(), cart)
 	if err != nil {
 		slog.Error("error while getting the shopping cart view", "error", err.Error())
