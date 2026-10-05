@@ -24,6 +24,7 @@ import (
 	eventsapi "github.com/KochKevin/effective-spoon-v2/internal/events/generated"
 	eventsservice "github.com/KochKevin/effective-spoon-v2/internal/events/service"
 	eventssqlite "github.com/KochKevin/effective-spoon-v2/internal/events/sqlite"
+	eventsusage "github.com/KochKevin/effective-spoon-v2/internal/events/usage"
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
 	"github.com/KochKevin/effective-spoon-v2/internal/input"
@@ -164,6 +165,13 @@ func main() {
 			slog.Error("error while wiring event service", "err", err)
 		}
 
+		eventsUsageService := eventsusage.NewService(
+			*infrastructure.NewTxManager(db),
+			&eventssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+		)
+
 		shoppingCartService := shoppingcartservice.New(
 			&shoppingcartssqlite.Repo{
 				Queries: *sqlc.New(db),
@@ -281,6 +289,7 @@ func main() {
 			eventsapi.HandlerFromMux(&events.Api{
 				Service:     &eventsService,
 				UserService: &userService,
+				Usage:       &eventsUsageService,
 			}, protectedRouter)
 
 		})

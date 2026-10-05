@@ -18,8 +18,11 @@ import (
 
 type Service interface {
 	CreateCurrentEvent(ctx context.Context, authorId uuid.UUID, amountPerPerson int, endDateTime time.Time) (Event, error)
-	GetEventUsage(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (EventUsage, error)
 	GetCurrentEvent(ctx context.Context) (Event, error)
+}
+
+type Usage interface {
+	GetEventUsage(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (EventUsage, error)
 }
 
 type UserService interface {
@@ -28,6 +31,7 @@ type UserService interface {
 
 type Api struct {
 	Service     Service
+	Usage       Usage
 	UserService UserService
 }
 
@@ -60,7 +64,7 @@ func (a *Api) GetEventsCurrentUsageCurrent(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	eventUsage, err := a.Service.GetEventUsage(r.Context(), userID, event.Id)
+	eventUsage, err := a.Usage.GetEventUsage(r.Context(), userID, event.Id)
 	if err != nil {
 		slog.Error("getting event usage", "err", err)
 

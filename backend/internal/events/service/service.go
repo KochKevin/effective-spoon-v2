@@ -16,7 +16,6 @@ type Repo interface {
 	CreateEvent(ctx context.Context, tx *sql.Tx, event events.Event) error
 	GetEvent(ctx context.Context, tx *sql.Tx, id uuid.UUID) (events.Event, error)
 	GetActiveEvent(ctx context.Context, tx *sql.Tx) (events.Event, error)
-	GetEventUsage(ctx context.Context, tx *sql.Tx, eventId uuid.UUID, userId uuid.UUID) (events.EventUsage, error)
 }
 
 type CacheRepo interface {
@@ -101,24 +100,6 @@ func (s *Service) CreateCurrentEvent(ctx context.Context, authorId uuid.UUID, am
 
 }
 
-func (s *Service) GetEventUsage(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (eventUsage events.EventUsage, err error) {
-
-	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
-
-		eventUsage, err = s.Repo.GetEventUsage(ctx, tx, eventId, userId)
-
-		if err != nil {
-			return fmt.Errorf("getting event usage: %w", err)
-		}
-
-		return nil
-	})
-	if err != nil {
-		return events.EventUsage{}, fmt.Errorf("in transaction: %w", err)
-	}
-
-	return eventUsage, nil
-}
 
 func (s *Service) GetCurrentEvent(ctx context.Context) (event events.Event, err error) {
 
