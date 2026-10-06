@@ -18,6 +18,7 @@ import (
 
 type EventService interface {
 	CreateCurrentEventTx(ctx context.Context, tx *sql.Tx, authorId uuid.UUID, amountPerPerson int, endDateTime time.Time) (events.Event, error)
+	LoadCurrentlyActiveEventIntoCache(ctx context.Context) (err error)
 }
 
 type ShoppingCartService interface {
@@ -30,9 +31,9 @@ type Service struct {
 	ShoppingCartService ShoppingCartService
 }
 
-func NewService(txm infrastructure.TxManager, eventService EventService, shoppingCartService ShoppingCartService) *Service {
+func NewService(txm infrastructure.TxManager, eventService EventService, shoppingCartService ShoppingCartService) Service {
 
-	return &Service{
+	return Service{
 		Txm:                 txm,
 		EventService:        eventService,
 		ShoppingCartService: shoppingCartService,
@@ -40,11 +41,10 @@ func NewService(txm infrastructure.TxManager, eventService EventService, shoppin
 }
 
 // Check if an event us current active and load it into cache
-/*
-func (s *Service) Initalize() {
 
+func (s *Service) Initalize(ctx context.Context) error {
+	return s.EventService.LoadCurrentlyActiveEventIntoCache(ctx)
 }
-*/
 
 // Create new Event, set it as the current active Event and schedule it ending
 func (s *Service) StartCurrentEvent(ctx context.Context, authorId uuid.UUID, amountPerPerson int, endDateTime time.Time) (event events.Event, err error) {

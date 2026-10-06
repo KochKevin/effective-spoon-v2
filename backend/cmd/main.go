@@ -155,16 +155,12 @@ func main() {
 		}, apiRouter)
 
 		//Events
-		eventsService, err := eventsservice.NewService(
+		eventsService := eventsservice.NewService(
 			*infrastructure.NewTxManager(db),
 			&eventssqlite.Repo{
 				Queries: *sqlc.New(db),
 			},
 			eventscache.New())
-
-		if err != nil {
-			slog.Error("error while wiring event service", "err", err)
-		}
 
 		eventsUsageService := eventsusage.NewService(
 			*infrastructure.NewTxManager(db),
@@ -286,16 +282,20 @@ func main() {
 				Service: &chargementService,
 			}, protectedRouter)
 
+			lifecycle := eventslifecycle.NewService(
+				*infrastructure.NewTxManager(db),
+				&eventsService,
+				shoppingCartService,
+			)
+
+			lifecycle.Initalize(context.Background())
+
 			//Events handler
 			eventsapi.HandlerFromMux(&events.Api{
 				Service:     &eventsService,
 				UserService: &userService,
 				Usage:       &eventsUsageService,
-				Lifecycle: eventslifecycle.NewService(
-					*infrastructure.NewTxManager(db),
-					&eventsService,
-					shoppingCartService,
-				),
+				Lifecycle:   &lifecycle,
 			}, protectedRouter)
 
 		})
