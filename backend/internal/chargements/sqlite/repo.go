@@ -3,6 +3,7 @@ package chargementssqlite
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log/slog"
 
 	"github.com/KochKevin/effective-spoon-v2/internal/chargements"
@@ -21,8 +22,7 @@ func (r *Repo) SetStripeLastEventId(ctx context.Context, tx *sql.Tx, lastEventId
 
 	err := r.Queries.WithTx(tx).SetLastStripeEventId(ctx, lastEventId)
 	if err != nil {
-		slog.Error("Error in set stripe last event id query", err)
-		return err
+		return fmt.Errorf("in set stripe last event id query: %w", err)
 	}
 
 	return nil
@@ -31,8 +31,7 @@ func (r *Repo) SetStripeLastEventId(ctx context.Context, tx *sql.Tx, lastEventId
 func (r *Repo) GetStripeLastEventId(ctx context.Context) (string, error) {
 	lastEventId, err := r.Queries.GetLastStripeEventId(ctx)
 	if err != nil {
-		slog.Error("Error in get stripe last event id query", err)
-		return "", err
+		return "", fmt.Errorf("in get stripe last event id query: %w", err)
 	}
 
 	return lastEventId, nil
@@ -42,8 +41,7 @@ func (r *Repo) GetBalanceChargementIntent(ctx context.Context, tx *sql.Tx, id uu
 	chargement, err := r.Queries.WithTx(tx).GetChargementIntent(ctx, id)
 
 	if err != nil {
-		slog.Error("Error in get chargement query", err)
-		return chargements.ChargementIntent{}, err
+		return chargements.ChargementIntent{}, fmt.Errorf("in chargement query: %w", err)
 	}
 
 	return chargements.ChargementIntent{Id: chargement.ID, Status: chargements.Status(chargement.Status), User: chargement.UserID, Amount: money.MoneyFrom(int(chargement.Amount)), StripeCheckoutId: *chargement.StripeCheckoutID, TransactionId: chargement.TransactionID, PaymentLink: *chargement.StripePaymentLink, PaymentLinkId: *chargement.StripePaymentLinkID}, nil
