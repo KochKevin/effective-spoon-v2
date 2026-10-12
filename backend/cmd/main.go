@@ -19,6 +19,13 @@ import (
 	chargementservice "github.com/KochKevin/effective-spoon-v2/internal/chargements/service"
 	chargementssqlite "github.com/KochKevin/effective-spoon-v2/internal/chargements/sqlite"
 	"github.com/KochKevin/effective-spoon-v2/internal/config"
+	"github.com/KochKevin/effective-spoon-v2/internal/events"
+	"github.com/KochKevin/effective-spoon-v2/internal/events/eventscache"
+	eventsapi "github.com/KochKevin/effective-spoon-v2/internal/events/generated"
+	eventslifecycle "github.com/KochKevin/effective-spoon-v2/internal/events/lifecycle"
+	eventsservice "github.com/KochKevin/effective-spoon-v2/internal/events/service"
+	eventssqlite "github.com/KochKevin/effective-spoon-v2/internal/events/sqlite"
+	eventsusage "github.com/KochKevin/effective-spoon-v2/internal/events/usage"
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
 	"github.com/KochKevin/effective-spoon-v2/internal/input"
@@ -38,6 +45,7 @@ import (
 	shoppingcartssqlite "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/sqlite"
 	"github.com/KochKevin/effective-spoon-v2/internal/users"
 	userssapi "github.com/KochKevin/effective-spoon-v2/internal/users/generated"
+	userservice "github.com/KochKevin/effective-spoon-v2/internal/users/service"
 	userssqlite "github.com/KochKevin/effective-spoon-v2/internal/users/sqlite"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -83,7 +91,7 @@ func main() {
 
 	//Do Database migrations. Open sqlite with WAL mode for writing and reading
 
-	sqliteConnectionString := "file:" + dbFolderPath +"/data.db?_pragma=journal_mode=WAL&_pragma=busy_timeout=5000"
+	sqliteConnectionString := "file:" + dbFolderPath + "/data.db?_pragma=journal_mode=WAL&_pragma=busy_timeout=5000"
 
 	db, err := goose.OpenDBWithDriver("sqlite", sqliteConnectionString)
 	if err != nil {
@@ -146,6 +154,34 @@ func main() {
 			Txm:         *infrastructure.NewTxManager(db),
 		}, apiRouter)
 
+		//User Service
+
+		userService := userservice.Service{
+			Repo: &userssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+			Txm: *infrastructure.NewTxManager(db),
+		}
+
+		//Events
+		eventsService := eventsservice.NewService(
+			*infrastructure.NewTxManager(db),
+			&eventssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+			eventscache.New(),
+			new(userService),
+		)
+
+		//Event Usage
+		eventsUsageService := eventsusage.NewService(
+			*infrastructure.NewTxManager(db),
+			&eventssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+		)
+
+		//Shoppingcart
 		shoppingCartService := shoppingcartservice.New(
 			&shoppingcartssqlite.Repo{
 				Queries: *sqlc.New(db),
@@ -157,8 +193,24 @@ func main() {
 				Queries: *sqlc.New(db),
 			},
 			shoppingcartcache.New(),
+			&eventsService,
+			&eventsUsageService,
 			*infrastructure.NewTxManager(db),
 		)
+
+		//Event Lifecycle
+
+		eventLifecycle := eventslifecycle.NewService(
+			*infrastructure.NewTxManager(db),
+			&eventsService,
+			shoppingCartService,
+			pushService,
+		)
+
+		err := eventLifecycle.Initalize(context.Background())
+		if err != nil {
+			slog.Error("error while Initlizing Event Lifecycle Service", "err", err)
+		}
 
 		inputapi.HandlerFromMux(
 			&input.Api{
@@ -223,12 +275,10 @@ func main() {
 					Service: shoppingCartService,
 				}, protectedRouter)
 
+			//Users
 			userssapi.HandlerFromMux(
 				&users.Api{
-					Repo: &userssqlite.Repo{
-						Queries: *sqlc.New(db),
-					},
-					Txm: *infrastructure.NewTxManager(db),
+					Service: &userService,
 				}, protectedRouter)
 
 			//Chargements
@@ -249,6 +299,14 @@ func main() {
 
 			chargementsapi.HandlerFromMux(&chargements.Api{
 				Service: &chargementService,
+			}, protectedRouter)
+
+			//Events handler
+			eventsapi.HandlerFromMux(&events.Api{
+				Service:     &eventsService,
+				UserService: &userService,
+				Usage:       &eventsUsageService,
+				Lifecycle:   new(eventLifecycle),
 			}, protectedRouter)
 
 		})

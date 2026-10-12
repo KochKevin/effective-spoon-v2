@@ -13,6 +13,7 @@ type ShoppingCartStatus string
 
 var (
 	ShoppingCartActive     ShoppingCartStatus = "active"
+	ShoppingCartCanceled   ShoppingCartStatus = "canceled"
 	ShoppingCartCheckedOut ShoppingCartStatus = "checked-out"
 )
 
@@ -22,6 +23,10 @@ type ShoppingCart struct {
 	UserId        uuid.UUID
 	TransactionId uuid.NullUUID
 	Status        ShoppingCartStatus
+
+	//Shopping Carts can be connected to an ongoing event to use an contigent of free products
+	UseEvent bool
+	EventId  uuid.UUID
 }
 
 func (s *ShoppingCart) GetFullPrice() money.Money {
@@ -38,7 +43,7 @@ func (s *ShoppingCart) GetFullPrice() money.Money {
 }
 
 // Increase the amount of an line item, if no product is found. It will be added
-func (s *ShoppingCart) IncreaseProductAmount(product products.Product) {
+func (s *ShoppingCart) IncreaseProductAmount(product products.Product, addAsFreeProduct bool) {
 
 	slog.Debug("Searching for product to increase: ", product.Id)
 
@@ -46,21 +51,31 @@ func (s *ShoppingCart) IncreaseProductAmount(product products.Product) {
 
 		if s.LineItems[i].Product.Id == product.Id {
 			slog.Debug("Increase amount on product", product.Id.String())
-			s.LineItems[i].IncreaseAmount()
+
+			if addAsFreeProduct {
+				s.LineItems[i].Amount.IncreaseFreeAmount()
+			} else {
+				s.LineItems[i].Amount.IncreasePayedAmount()
+			}
 			return
 		}
 
 	}
 
 	//slog.Error("Did not found product ", productId.String(), " in shopping cart ", s.Id.String(), " to increase it")
-	s.AddProduct(product)
+	//Fallback if the product to increase is not found in the shopping cart
+	if addAsFreeProduct {
+		s.LineItems = append(s.LineItems, LineItem{
+			Product: product,
+			Amount:  AmountFrom(0, 1),
+		})
+	} else {
+		s.LineItems = append(s.LineItems, LineItem{
+			Product: product,
+			Amount:  AmountFrom(1, 0),
+		})
+	}
 }
-
-// Add completly new product to line items
-func (s *ShoppingCart) AddProduct(product products.Product) {
-	s.LineItems = append(s.LineItems, NewLinteItem(product, 1))
-}
-
 func (s *ShoppingCart) DecreaseProductAmount(productId uuid.UUID) {
 
 	slog.Debug("Searching for product to decrease: ", productId)
@@ -69,13 +84,13 @@ func (s *ShoppingCart) DecreaseProductAmount(productId uuid.UUID) {
 
 		if s.LineItems[i].Product.Id == productId {
 
-			//Remove LineItems when there is only one left
-			if s.LineItems[i].Amount <= 1 {
+			// Remove LineItems when there is only one left
+			if s.LineItems[i].Amount.GetTotalAmount() <= 1 {
 				slog.Debug("Found product to decrese, but it needs to be removed")
 				s.LineItems = append(s.LineItems[:i], s.LineItems[i+1:]...)
 			} else {
 				slog.Debug("Found product to decrese, decresing it")
-				s.LineItems[i].DecreaseAmount()
+				s.LineItems[i].Amount.DecreaseAmount()
 			}
 			return
 
@@ -111,6 +126,33 @@ func (s *ShoppingCart) Checkout(transactionId uuid.UUID) {
 	s.Status = ShoppingCartCheckedOut
 }
 
+func (s *ShoppingCart) SetEvent(id uuid.UUID) {
+	s.EventId = id
+	s.UseEvent = true
+}
+
+func (s *ShoppingCart) GetOnlyPaidLineItems() []LineItem {
+
+	var lineItems []LineItem
+
+	for _, item := range s.LineItems {
+
+		//Skip Line items which do not have any payed products in them
+		if item.Amount.GetPayedAmount() == 0 {
+			continue
+		}
+
+		lineItems = append(lineItems, LineItem{
+			Product: item.Product,
+			Amount:  AmountFrom(item.Amount.payedAmount, 0),
+		})
+
+	}
+
+	return lineItems
+
+}
+
 func ShoppingCartFrom(id uuid.UUID, lineItems []LineItem, userID uuid.UUID, transactionId uuid.NullUUID, status ShoppingCartStatus) ShoppingCart {
 	return ShoppingCart{
 		Id:            id,
@@ -121,37 +163,27 @@ func ShoppingCartFrom(id uuid.UUID, lineItems []LineItem, userID uuid.UUID, tran
 	}
 }
 
-func NewShoppingCart(userId uuid.UUID) ShoppingCart {
+/*
+// Calculate the amount of free products used in this shopping cart
+func (s *ShoppingCart) GetAmountFreeProductsUsed() int {
+	count := 0
+
+	for _, item := range s.LineItems {
+		count += item.Amount.GetFreeAmount()
+	}
+
+	return count
+}
+*/
+
+func NewShoppingCart(userId uuid.UUID, eventId uuid.UUID, useEvent bool) ShoppingCart {
 	return ShoppingCart{
 		Id:            uuid.New(),
 		LineItems:     nil,
 		UserId:        userId,
 		TransactionId: uuid.NullUUID{Valid: false},
 		Status:        ShoppingCartActive,
-	}
-}
-
-type LineItem struct {
-	Product products.Product
-	Amount  int
-}
-
-func (l *LineItem) GetPrice() money.Money {
-	//slog.Debug("GetPrice of lineItem", "price", money.MoneyFrom(l.Product.Price * l.Amount))
-	return l.Product.Price.Multi(l.Amount)
-}
-
-func (l *LineItem) IncreaseAmount() {
-	l.Amount++
-}
-
-func (l *LineItem) DecreaseAmount() {
-	l.Amount--
-}
-
-func NewLinteItem(product products.Product, amount int) LineItem {
-	return LineItem{
-		Product: product,
-		Amount:  amount,
+		EventId:       eventId,
+		UseEvent:      useEvent,
 	}
 }

@@ -17,6 +17,8 @@ export type ShoppingCart = {
     userId: string;
     status: string;
     transactionId: string;
+    useEvent: boolean;
+    eventUsage: EventUsage;
 };
 
 export type LineItem = {
@@ -24,6 +26,13 @@ export type LineItem = {
     productName: string;
     amount: number;
     price: number;
+};
+
+export type SetShoppingCartEventUsage = {
+    /**
+     * When its set to true, the current event will be set as the event to use
+     */
+    useEvent: boolean;
 };
 
 export type User = {
@@ -42,6 +51,70 @@ export type Chargement = {
     paymentLink: string;
     amount: number;
 };
+
+export type Event = {
+    authorName: string;
+    eventEndDateTime: string;
+    availableFreeAmountPerPerson: number;
+};
+
+export type EventUsage = {
+    usedFreeAmount: number;
+    availableFreeAmountPerPerson: number;
+};
+
+export type CreateEvent = {
+    amountPerPerson: number;
+    endDateTime: string;
+};
+
+export type GetEventsCurrentData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/events/current';
+};
+
+export type GetEventsCurrentResponses = {
+    /**
+     * Event
+     */
+    200: Event;
+};
+
+export type GetEventsCurrentResponse = GetEventsCurrentResponses[keyof GetEventsCurrentResponses];
+
+export type PostEventsCurrentData = {
+    body: CreateEvent;
+    path?: never;
+    query?: never;
+    url: '/events/current';
+};
+
+export type PostEventsCurrentResponses = {
+    /**
+     * Event created successfully
+     */
+    200: Event;
+};
+
+export type PostEventsCurrentResponse = PostEventsCurrentResponses[keyof PostEventsCurrentResponses];
+
+export type GetEventsCurrentUsageCurrentData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/events/current/usage/current';
+};
+
+export type GetEventsCurrentUsageCurrentResponses = {
+    /**
+     * Event
+     */
+    200: EventUsage;
+};
+
+export type GetEventsCurrentUsageCurrentResponse = GetEventsCurrentUsageCurrentResponses[keyof GetEventsCurrentUsageCurrentResponses];
 
 export type PostChargementsCurrentData = {
     body: CreateChargement;
@@ -194,6 +267,36 @@ export type PostShoppingCartsCurrentCheckoutResponses = {
 };
 
 export type PostShoppingCartsCurrentCheckoutResponse = PostShoppingCartsCurrentCheckoutResponses[keyof PostShoppingCartsCurrentCheckoutResponses];
+
+export type PostShoppingCartsCurrentCancelData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/shopping-carts/current/cancel';
+};
+
+export type PostShoppingCartsCurrentCancelResponses = {
+    /**
+     * Successfully canceled the current shopping cart
+     */
+    200: unknown;
+};
+
+export type PutShoppingCartsCurrentUseEventData = {
+    body: SetShoppingCartEventUsage;
+    path?: never;
+    query?: never;
+    url: '/shopping-carts/current/use-event';
+};
+
+export type PutShoppingCartsCurrentUseEventResponses = {
+    /**
+     * Successfully changed the useEvent state
+     */
+    200: ShoppingCart;
+};
+
+export type PutShoppingCartsCurrentUseEventResponse = PutShoppingCartsCurrentUseEventResponses[keyof PutShoppingCartsCurrentUseEventResponses];
 
 export type GetUsersCurrentData = {
     body?: never;

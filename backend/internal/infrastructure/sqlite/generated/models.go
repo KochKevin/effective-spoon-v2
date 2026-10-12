@@ -5,6 +5,8 @@
 package sqlc
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -19,6 +21,15 @@ type Chargement struct {
 	StripePaymentLinkID *string   `json:"stripe_payment_link_id"`
 }
 
+type Event struct {
+	ID                        uuid.UUID `json:"id"`
+	UserID                    uuid.UUID `json:"user_id"`
+	AmountFreeProductsPerUser int64     `json:"amount_free_products_per_user"`
+	StartTimestamp            time.Time `json:"start_timestamp"`
+	EndTimestamp              time.Time `json:"end_timestamp"`
+	Status                    string    `json:"status"`
+}
+
 type Product struct {
 	ID    uuid.UUID `json:"id"`
 	Name  string    `json:"name"`
@@ -27,9 +38,10 @@ type Product struct {
 }
 
 type RelShoppingCartsProduct struct {
-	ShoppingCartID uuid.UUID `json:"shopping_cart_id"`
-	ProductID      uuid.UUID `json:"product_id"`
-	Amount         int64     `json:"amount"`
+	ShoppingCartID     uuid.UUID `json:"shopping_cart_id"`
+	ProductID          uuid.UUID `json:"product_id"`
+	Amount             int64     `json:"amount"`
+	AmountFreeProducts int64     `json:"amount_free_products"`
 }
 
 type ShoppingCart struct {
@@ -37,6 +49,8 @@ type ShoppingCart struct {
 	UserID        uuid.UUID     `json:"user_id"`
 	TransactionID uuid.NullUUID `json:"transaction_id"`
 	Status        string        `json:"status"`
+	UseEvent      bool          `json:"use_event"`
+	EventID       uuid.UUID     `json:"event_id"`
 }
 
 type StripeLastEventID struct {

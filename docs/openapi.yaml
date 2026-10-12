@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: KIOSK API
-  version: 0.0.3
+  version: 0.0.3.b
 
 tags:
   - name: products
@@ -10,8 +10,55 @@ tags:
   - name: auth
   - name: pushes
   - name: chargements
+  - name: events
 
 paths:
+
+  /events/current:
+    post:
+      summary: Create a new event and set it as the current one
+      tags:
+        - events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEvent'
+      responses:
+        '200':
+          description: Event created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+    get:
+      summary: Get current event
+      tags:
+        - events
+      responses:
+        '200':
+          description: Event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+
+  /events/current/usage/current:
+    get:
+      summary: Get the event usage of the current logged in user and the current event
+      tags:
+        - events
+      responses:
+        '200':
+          description: Event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventUsage'
+
+
+    
 
   /chargements/current:
     post:
@@ -155,6 +202,34 @@ paths:
                 schema:
                   $ref: '#/components/schemas/Shopping-Cart'
 
+  /shopping-carts/current/cancel:
+    post:
+      summary: Cancel and delete the current shopping cart
+      tags:
+        - shopping-carts
+      responses:
+        '200':
+          description: Successfully canceled the current shopping cart
+  
+  /shopping-carts/current/use-event:
+      put:
+        summary: Set if the shopping cart should use the current event
+        tags:
+          - shopping-carts
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetShoppingCartEventUsage'
+        responses:
+          '200':
+            description: Successfully changed the useEvent state
+            content:
+              application/json:
+                  schema:
+                    $ref: '#/components/schemas/Shopping-Cart'
+
 
 
 
@@ -270,6 +345,8 @@ components:
         - userId
         - status
         - transactionId
+        - useEvent
+        - eventUsage
       properties:
         id:
           type: string
@@ -296,6 +373,13 @@ components:
           type: string
           examples: 
             - "00000000-0000-0000-0000-000000000000"
+        useEvent:
+          type: boolean
+          examples:
+            - true
+        eventUsage:
+          $ref: '#/components/schemas/EventUsage'
+        
 
     LineItem:
       type: object
@@ -322,6 +406,18 @@ components:
           examples: 
             - 10.0
 
+    SetShoppingCartEventUsage:
+      type: object
+      required:
+        - useEvent
+      properties:
+        useEvent:
+          type: boolean
+          description: When its set to true, the current event will be set as the event to use
+          examples:
+            - true
+
+
     User:
       type: object
       required:
@@ -345,7 +441,7 @@ components:
 
     SSEEvent:
       type: string
-      enum: [user.login, shoppingcart.update, chargement_intent.completed]
+      enum: [user.login, shoppingcart.update, chargement_intent.completed, event.end]
 
 
 
@@ -358,7 +454,8 @@ components:
       properties:
         amountToAdd:
           type: number
-          example: 50.0
+          examples: 
+            - 50.0
 
     Chargement:
       type: object
@@ -368,7 +465,65 @@ components:
       properties:
         paymentLink:
           type: string
-          example: "https://checkout.stripe.com/..."
+          examples: 
+            - "https://checkout.stripe.com/..."
         amount:
           type: number
-          example: 50.0
+          examples: 
+            - 50.0
+
+
+    Event:
+      type: object
+      required:
+        - authorName
+        - eventEndDateTime
+        - eventUsage
+        - availableFreeAmountPerPerson
+      properties:
+        authorName:
+          type: string
+          examples: 
+            - "Max Musterman"
+        eventEndDateTime:
+          type: string
+          format: date-time
+          examples: 
+            - "2026-09-13T14:32:28Z"
+        availableFreeAmountPerPerson:
+          type: integer
+          examples:
+          - 4
+            
+
+
+    EventUsage:
+      type: object
+      required:
+        - usedFreeAmount
+        - availableFreeAmountPerPerson
+      properties:
+        usedFreeAmount:
+          type: integer
+          examples:
+            - 2
+        availableFreeAmountPerPerson:
+          type: integer
+          examples:
+            - 4
+            
+    CreateEvent:
+      type: object
+      required:
+        - amountPerPerson
+        - endDateTime
+      properties:
+        amountPerPerson:
+          type: integer
+          examples: 
+            - 4
+        endDateTime:
+          type: string
+          format: date-time
+          examples: 
+            - "2026-09-13T14:32:28Z"

@@ -28,6 +28,10 @@ func (p *PushService) PushChargementIntentCompleted() {
 	p.push(string(pushapi.ChargementIntentCompleted))
 }
 
+func (p *PushService) PushEventEnd() {
+	p.push(string(pushapi.EventEnd))
+}
+
 func (p *PushService) push(event string) {
 	select {
 	case p.eventChannel <- event:

@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log/slog"
 
+	"github.com/KochKevin/effective-spoon-v2/internal/events"
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
 	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
@@ -17,6 +19,7 @@ type Repo interface {
 	CreateShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) (shoppingcarts.ShoppingCart, error)
 	GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (shoppingcarts.ShoppingCart, error)
 	SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingcarts.ShoppingCart) error
+	DeleteShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) error
 }
 
 type ProductRepo interface {
@@ -25,6 +28,15 @@ type ProductRepo interface {
 
 type UserRepo interface {
 	CreateTransaction(ctx context.Context, tx *sql.Tx, transaction users.Transaction) (users.Transaction, error)
+}
+
+type EventService interface {
+	GetEvent(ctx context.Context, eventId uuid.UUID) (event events.Event, err error)
+	GetCurrentEvent(ctx context.Context) (event events.Event, err error)
+}
+
+type EventUsage interface {
+	GetEventUsage(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (eventUsage events.EventUsage, err error)
 }
 
 type ShoppingCartCache interface {
@@ -37,20 +49,25 @@ type ShoppingCartService struct {
 	Repo              Repo
 	ProductRepo       ProductRepo
 	UserRepo          UserRepo
+	EventService      EventService
 	ShoppingCartCache ShoppingCartCache
+	EventUsage        EventUsage
 	Txm               infrastructure.TxManager
 }
 
-func New(repo Repo, productRepo ProductRepo, userRepo UserRepo, shoppingCartCache ShoppingCartCache, txm infrastructure.TxManager) *ShoppingCartService {
+func New(repo Repo, productRepo ProductRepo, userRepo UserRepo, shoppingCartCache ShoppingCartCache, eventSerice EventService, eventUsage EventUsage, txm infrastructure.TxManager) *ShoppingCartService {
 	return &ShoppingCartService{
 		Repo:              repo,
 		ProductRepo:       productRepo,
 		UserRepo:          userRepo,
 		ShoppingCartCache: shoppingCartCache,
+		EventService:      eventSerice,
+		EventUsage:        eventUsage,
 		Txm:               txm,
 	}
 }
 
+// Rename to: is User Authorized to use
 func (s *ShoppingCartService) checkIfShoppingCartCanBeUsed(cart shoppingcarts.ShoppingCart, userId uuid.UUID) error {
 
 	//Check if cart owner and current user are the same
@@ -69,14 +86,31 @@ func (s *ShoppingCartService) checkIfShoppingCartCanBeUsed(cart shoppingcarts.Sh
 // Crate the current Shopping cart
 func (s *ShoppingCartService) CreateCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
 
+	// Connect an shopping cart to an event only when an event is active to the creation time of the shopping cart
+	currentEvent, err := s.EventService.GetCurrentEvent(ctx)
+
+	slog.Debug("Create Current Shopping Cart - Get Current Event error: ", "error", err)
+
+	if errors.Is(err, events.NoCurrentEventErr) {
+
+		cart = shoppingcarts.NewShoppingCart(userId, uuid.Nil, false)
+	} else {
+		cart = shoppingcarts.NewShoppingCart(userId, currentEvent.Id, true)
+	}
+
+	//Only break if an real error appears
+	if err != nil && !errors.Is(err, events.NoCurrentEventErr) {
+
+		slog.Error("getting current event", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	slog.Debug("Create Current Shopping Cart", "cart", cart)
+
 	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
-
-		cart, err = s.Repo.CreateShoppingCart(ctx, tx, shoppingcarts.NewShoppingCart(userId))
-
+		_, err = s.Repo.CreateShoppingCart(ctx, tx, cart)
 		if err != nil {
-			//TODO: give client more inforamtion instead of an timeout
-			slog.Error("Error creating shopping cart", "error:", err)
-			return err
+			return fmt.Errorf("in creating shopping cart: %w", err)
 		}
 
 		//Ignore if an current cart is already set, replace it!
@@ -87,8 +121,8 @@ func (s *ShoppingCartService) CreateCurrentShoppingCart(ctx context.Context, use
 	})
 
 	if err != nil {
-		slog.Error("Error in /products transaction", "error:", err)
-		return shoppingcarts.ShoppingCart{}, err
+
+		return shoppingcarts.ShoppingCart{}, fmt.Errorf("in transaction: %w")
 	}
 
 	return cart, nil
@@ -221,8 +255,9 @@ func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCartTx(ctx context
 
 	cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
 	if err != nil {
-		slog.Error("error getting shopping cart", "error:", err)
-		return shoppingcarts.ShoppingCart{}, err
+		//fmt.Errorf("error getting shopping cart: %w", err)
+		//slog.Error("error getting shopping cart", "error:", err)
+		return shoppingcarts.ShoppingCart{}, fmt.Errorf("error getting shopping cart: %w", err)
 	}
 
 	err = s.checkIfShoppingCartCanBeUsed(cart, userId)
@@ -239,7 +274,32 @@ func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCartTx(ctx context
 		return shoppingcarts.ShoppingCart{}, err
 	}
 
-	cart.IncreaseProductAmount(product)
+	if cart.UseEvent {
+
+		//Get the amount of free products the user already used
+		eventUsage, err := s.EventUsage.GetEventUsage(ctx, userId, cart.EventId)
+		if err != nil {
+			slog.Error("getting event usage", "error:", err)
+			return shoppingcarts.ShoppingCart{}, err
+		}
+
+		//Get the event which is connected with the shopping cart
+		event, err := s.EventService.GetEvent(ctx, cart.EventId)
+		if err != nil {
+			slog.Error("getting event", "error:", err)
+			return shoppingcarts.ShoppingCart{}, err
+		}
+
+		//Use free products first before adding products which the user needs to pay for
+		if eventUsage.AmountUsed >= event.AmountFreeProductsPerUser {
+			cart.IncreaseProductAmount(product, false)
+		} else {
+			cart.IncreaseProductAmount(product, true)
+		}
+
+	} else {
+		cart.IncreaseProductAmount(product, false)
+	}
 
 	err = s.Repo.SaveShoppingCart(ctx, tx, cart)
 	if err != nil {
@@ -267,19 +327,7 @@ func (s *ShoppingCartService) GetCurrentShoppingCart(ctx context.Context, userId
 
 	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
-		//Get Current Cart id
-		cartId, err := s.GetCurrentShoppingCartId()
-		if err != nil {
-			slog.Error("error can not get current shopping cart id", "error:", err)
-			return err
-		}
-
-		cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
-		if err != nil {
-			slog.Error("error getting shopping cart", "error:", err)
-			return err
-		}
-
+		cart, err = s.GetCurrentShoppingCartTx(ctx, tx, userId)
 		return err
 	})
 
@@ -290,4 +338,159 @@ func (s *ShoppingCartService) GetCurrentShoppingCart(ctx context.Context, userId
 
 	return cart, err
 
+}
+
+func (s *ShoppingCartService) GetCurrentShoppingCartTx(ctx context.Context, tx *sql.Tx, userId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
+
+	//Get Current Cart id
+	cartId, err := s.GetCurrentShoppingCartId()
+	if err != nil {
+		slog.Error("error can not get current shopping cart id", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
+	if err != nil {
+		slog.Error("error getting shopping cart", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	return cart, err
+
+}
+
+func (s *ShoppingCartService) CancelCurrentShoppingCart(ctx context.Context, userId uuid.UUID) (err error) {
+
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
+
+		//Get Current Cart id
+		cartId, err := s.GetCurrentShoppingCartId()
+		if err != nil {
+
+			return fmt.Errorf("can not get current shopping cart id: %w", err)
+		}
+
+		cart, err := s.Repo.GetShoppingCart(ctx, tx, cartId)
+		if err != nil {
+			return fmt.Errorf("getting shopping cart: %w", err)
+		}
+
+		err = s.checkIfShoppingCartCanBeUsed(cart, userId)
+		if err != nil {
+			return fmt.Errorf("cart can not be used: %w", err)
+		}
+
+		err = s.Repo.DeleteShoppingCart(ctx, tx, cartId)
+		if err != nil {
+			return fmt.Errorf("in deleting: %w", err)
+		}
+
+		s.ShoppingCartCache.ClearCurrentCartId()
+
+		return nil
+
+	})
+
+	if err != nil {
+		return fmt.Errorf("in transaction: %w", err)
+	}
+
+	return nil
+
+}
+
+func (s *ShoppingCartService) ToggleEventUsageOfCurrentCart(ctx context.Context, userId uuid.UUID, useEvent bool) (cart shoppingcarts.ShoppingCart, err error) {
+
+	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
+
+		//Get Current Cart id
+		cartId, err := s.GetCurrentShoppingCartId()
+		if err != nil {
+
+			return fmt.Errorf("can not get current shopping cart id: %w", err)
+		}
+
+		cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
+		if err != nil {
+			return fmt.Errorf("getting shopping cart: %w", err)
+		}
+
+		err = s.checkIfShoppingCartCanBeUsed(cart, userId)
+		if err != nil {
+			return fmt.Errorf("cart can not be used: %w", err)
+		}
+
+		if cart.EventId == uuid.Nil {
+			// No evnt set with cart. An Event needs to be assigned be first
+			return errors.New("There is no event assigned to the cart. Assigne an Event first, before toggeling its usage")
+		}
+
+		cart.UseEvent = useEvent
+
+		err = s.Repo.SaveShoppingCart(ctx, tx, cart)
+		if err != nil {
+			return fmt.Errorf("in saving: %w", err)
+		}
+
+		return nil
+
+	})
+
+	if err != nil {
+		return shoppingcarts.ShoppingCart{}, fmt.Errorf("in transaction: %w", err)
+	}
+
+	return cart, nil
+}
+
+// Enriches the Shopping Cart with information about its connected event and its event usage
+func (s *ShoppingCartService) GetShoppingCartView(ctx context.Context, cart shoppingcarts.ShoppingCart) (shoppingcarts.ShoppingCartView, error) {
+
+	event, err := s.EventService.GetEvent(ctx, cart.EventId)
+
+	if err != nil {
+
+		if errors.Is(err, events.ErrNoEventFound) {
+			event = events.Event{}
+		} else {
+			return shoppingcarts.ShoppingCartView{}, fmt.Errorf("getting event: %w", err)
+		}
+	}
+
+	eventUsage, err := s.EventUsage.GetEventUsage(ctx, cart.UserId, cart.EventId)
+	if err != nil {
+		return shoppingcarts.ShoppingCartView{}, fmt.Errorf("getting event usage: %w", err)
+	}
+
+	if !cart.UseEvent {
+
+		//Only show paid items in cart view, when no event is active
+		cart.LineItems = cart.GetOnlyPaidLineItems()
+
+	}
+
+	return shoppingcarts.ShoppingCartView{
+		Cart:                 cart,
+		EventUsage:           eventUsage,
+		FreeProductPerPerson: event.AmountFreeProductsPerUser,
+	}, nil
+
+}
+
+func (s *ShoppingCartService) AssignEventToCurrentShoppingCartTx(ctx context.Context, tx *sql.Tx, userId uuid.UUID, eventId uuid.UUID) error {
+
+	currentCart, err := s.GetCurrentShoppingCartTx(ctx, tx, userId)
+
+	if err != nil {
+		return fmt.Errorf("error in getting current cart: %w", err)
+	}
+
+	currentCart.SetEvent(eventId)
+
+	err = s.Repo.SaveShoppingCart(ctx, tx, currentCart)
+	if err != nil {
+		return fmt.Errorf("error in saving cart: %w", err)
+	}
+
+	return nil
 }

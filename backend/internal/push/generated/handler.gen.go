@@ -13,6 +13,7 @@ import (
 // Defines values for SSEEvent.
 const (
 	ChargementIntentCompleted SSEEvent = "chargement_intent.completed"
+	EventEnd                  SSEEvent = "event.end"
 	ShoppingcartUpdate        SSEEvent = "shoppingcart.update"
 	UserLogin                 SSEEvent = "user.login"
 )
@@ -21,6 +22,8 @@ const (
 func (e SSEEvent) Valid() bool {
 	switch e {
 	case ChargementIntentCompleted:
+		return true
+	case EventEnd:
 		return true
 	case ShoppingcartUpdate:
 		return true

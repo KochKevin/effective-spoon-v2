@@ -12,6 +12,15 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// EventUsage defines model for EventUsage.
+type EventUsage struct {
+	// AvailableFreeAmountPerPerson Examples: 4
+	AvailableFreeAmountPerPerson int `json:"availableFreeAmountPerPerson"`
+
+	// UsedFreeAmount Examples: 2
+	UsedFreeAmount int `json:"usedFreeAmount"`
+}
+
 // LineItem defines model for LineItem.
 type LineItem struct {
 	// Amount Examples: 5
@@ -27,8 +36,18 @@ type LineItem struct {
 	ProductName string `json:"productName"`
 }
 
+// SetShoppingCartEventUsage defines model for SetShoppingCartEventUsage.
+type SetShoppingCartEventUsage struct {
+	// UseEvent When its set to true, the current event will be set as the event to use
+	//
+	// Examples: true
+	UseEvent bool `json:"useEvent"`
+}
+
 // ShoppingCart defines model for Shopping-Cart.
 type ShoppingCart struct {
+	EventUsage EventUsage `json:"eventUsage"`
+
 	// FullPrice Examples: 10
 	FullPrice float32 `json:"fullPrice"`
 
@@ -41,6 +60,9 @@ type ShoppingCart struct {
 
 	// TransactionId Examples: 00000000-0000-0000-0000-000000000000
 	TransactionId string `json:"transactionId"`
+
+	// UseEvent Examples: true
+	UseEvent bool `json:"useEvent"`
 
 	// UserId Examples: 00000000-0000-0000-0000-000000000000
 	UserId string `json:"userId"`
@@ -58,6 +80,9 @@ type PostShoppingCartsCurrentIncreaseParams struct {
 	ProductID string `form:"productID" json:"productID"`
 }
 
+// PutShoppingCartsCurrentUseEventJSONRequestBody defines body for PutShoppingCartsCurrentUseEvent for application/json ContentType.
+type PutShoppingCartsCurrentUseEventJSONRequestBody = SetShoppingCartEventUsage
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// GetShoppingCartsCurrent Get the current shopping cart
@@ -66,6 +91,9 @@ type ServerInterface interface {
 	// PostShoppingCartsCurrent Create a new shopping cart and set it as the current cart
 	// (POST /shopping-carts/current)
 	PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request)
+	// PostShoppingCartsCurrentCancel Cancel and delete the current shopping cart
+	// (POST /shopping-carts/current/cancel)
+	PostShoppingCartsCurrentCancel(w http.ResponseWriter, r *http.Request)
 	// PostShoppingCartsCurrentCheckout Check out of the current shopping cart
 	// (POST /shopping-carts/current/checkout)
 	PostShoppingCartsCurrentCheckout(w http.ResponseWriter, r *http.Request)
@@ -75,6 +103,9 @@ type ServerInterface interface {
 	// PostShoppingCartsCurrentIncrease Add product to the current shopping cart
 	// (POST /shopping-carts/current/increase)
 	PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Request, params PostShoppingCartsCurrentIncreaseParams)
+	// PutShoppingCartsCurrentUseEvent Set if the shopping cart should use the current event
+	// (PUT /shopping-carts/current/use-event)
+	PutShoppingCartsCurrentUseEvent(w http.ResponseWriter, r *http.Request)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -93,6 +124,12 @@ func (_ Unimplemented) PostShoppingCartsCurrent(w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// PostShoppingCartsCurrentCancel Cancel and delete the current shopping cart
+// (POST /shopping-carts/current/cancel)
+func (_ Unimplemented) PostShoppingCartsCurrentCancel(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // PostShoppingCartsCurrentCheckout Check out of the current shopping cart
 // (POST /shopping-carts/current/checkout)
 func (_ Unimplemented) PostShoppingCartsCurrentCheckout(w http.ResponseWriter, r *http.Request) {
@@ -108,6 +145,12 @@ func (_ Unimplemented) PostShoppingCartsCurrentDecrease(w http.ResponseWriter, r
 // PostShoppingCartsCurrentIncrease Add product to the current shopping cart
 // (POST /shopping-carts/current/increase)
 func (_ Unimplemented) PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Request, params PostShoppingCartsCurrentIncreaseParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// PutShoppingCartsCurrentUseEvent Set if the shopping cart should use the current event
+// (PUT /shopping-carts/current/use-event)
+func (_ Unimplemented) PutShoppingCartsCurrentUseEvent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -139,6 +182,20 @@ func (siw *ServerInterfaceWrapper) PostShoppingCartsCurrent(w http.ResponseWrite
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostShoppingCartsCurrent(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PostShoppingCartsCurrentCancel operation middleware
+func (siw *ServerInterfaceWrapper) PostShoppingCartsCurrentCancel(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostShoppingCartsCurrentCancel(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -219,6 +276,20 @@ func (siw *ServerInterfaceWrapper) PostShoppingCartsCurrentIncrease(w http.Respo
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostShoppingCartsCurrentIncrease(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutShoppingCartsCurrentUseEvent operation middleware
+func (siw *ServerInterfaceWrapper) PutShoppingCartsCurrentUseEvent(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutShoppingCartsCurrentUseEvent(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -355,6 +426,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/shopping-carts/current/checkout", wrapper.PostShoppingCartsCurrentCheckout)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/shopping-carts/current/cancel", wrapper.PostShoppingCartsCurrentCancel)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/shopping-carts/current/use-event", wrapper.PutShoppingCartsCurrentUseEvent)
 	})
 
 	return r
