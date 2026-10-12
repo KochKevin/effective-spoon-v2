@@ -12,11 +12,14 @@ type Config struct {
 func ParseConfig() (Config, error) {
 
 	//Load Env
-	godotenv.Load()
+	err := godotenv.Load()
+	if err != nil {
+		return Config{}, err
+	}
 
 	//Parse Env
 	var cfg Config
-	err := env.Parse(&cfg)
+	err = env.Parse(&cfg)
 	if err != nil {
 		return Config{}, err
 	}

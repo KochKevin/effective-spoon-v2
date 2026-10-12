@@ -42,7 +42,7 @@ func (s *Service) Ticker(ctx context.Context) {
 				slog.Debug("ticker tick")
 				err := s.stripeEventCheckoutCompletedChecker(ctx)
 				if err != nil {
-					slog.Error("stripe event checkout complete checker failed: %w", err)
+					slog.Error("stripe event checkout complete checker failed", "err", err)
 				}
 			}
 		}
@@ -120,8 +120,7 @@ func (s *Service) stripeEventCheckoutCompletedChecker(ctx context.Context) error
 			}
 
 			if err != nil {
-				slog.Error("error", err)
-				return err
+				return fmt.Errorf("in completing chargement: %w", err)
 			}
 
 			_, err = s.UserRepo.CreateTransaction(ctx, tx, transaction)
@@ -132,8 +131,7 @@ func (s *Service) stripeEventCheckoutCompletedChecker(ctx context.Context) error
 
 			err = s.Repo.SaveBalanceChargementIntent(ctx, tx, chargementIntent)
 			if err != nil {
-				slog.Error("error", err)
-				return err
+				return fmt.Errorf("in saving balance chargement intent: %w", err)
 			}
 
 			err = s.Repo.SetStripeLastEventId(ctx, tx, lastEventId)
@@ -143,7 +141,10 @@ func (s *Service) stripeEventCheckoutCompletedChecker(ctx context.Context) error
 			}
 
 			// Set Payment link Invalid
-			s.deactivateStripePaymentLink(ctx, chargementIntent.PaymentLinkId)
+			err = s.deactivateStripePaymentLink(ctx, chargementIntent.PaymentLinkId)
+			if err != nil {
+				return fmt.Errorf("an error occured while deactivating an stripe payment link: %w", err)
+			}
 
 			return nil
 

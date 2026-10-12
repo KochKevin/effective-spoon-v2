@@ -92,13 +92,13 @@ func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingca
 			AmountFreeProducts: int64(item.Amount.GetFreeAmount()),
 		})
 		if err != nil {
-			slog.Error("Error in creating line item query", err)
-			return err
+
+			return fmt.Errorf("error in creating line item: %w", err)
 		}
 	}
 
 	//Update Shopping Cart
-	r.Queries.WithTx(tx).UpdateShoppingCart(ctx, sqlc.UpdateShoppingCartParams{
+	err = r.Queries.WithTx(tx).UpdateShoppingCart(ctx, sqlc.UpdateShoppingCartParams{
 		UserID:        cart.UserId,
 		TransactionID: cart.TransactionId,
 		ID:            cart.Id,
@@ -106,6 +106,10 @@ func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingca
 		UseEvent:      cart.UseEvent,
 		EventID:       cart.EventId,
 	})
+
+	if err != nil {
+		return fmt.Errorf("error updating shopping cart: %w", err)
+	}
 
 	return nil
 }

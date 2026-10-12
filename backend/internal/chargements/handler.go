@@ -66,9 +66,16 @@ func (a *Api) PostAddBalance(w http.ResponseWriter, r *http.Request) {
 func (a *Api) PostChargementsCurrent(w http.ResponseWriter, r *http.Request) {
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		slog.Error("error reading body: %v", err)
+		slog.Error("error reading body", "err", err)
 	}
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+
+		if err != nil {
+			slog.Error("err when closing body", "err", err)
+		}
+
+	}()
 
 	createChargement := chargementsapi.CreateChargement{}
 	err = json.Unmarshal(bodyBytes, &createChargement)

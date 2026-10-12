@@ -143,7 +143,7 @@ func (s *Service) CancelCurrentChargementIntent(ctx context.Context) error {
 
 		err = s.deactivateStripePaymentLink(ctx, chargementIntent.PaymentLinkId)
 		if err != nil {
-			return fmt.Errorf("an error occured while deactivting an stripe payment link: %w", err)
+			return fmt.Errorf("an error occured while deactivating an stripe payment link: %w", err)
 		}
 
 		chargementIntent.Status = chargements.StatusCanceld

@@ -58,7 +58,7 @@ func (a *Api) GetEventsCurrentUsageCurrent(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		slog.Error("getting event", "err", err)
 
-		if errors.Is(err, NoCurrentEventErr) {
+		if errors.Is(err, ErrNoCurrentEvent) {
 			render.Status(r, http.StatusInternalServerError)
 			http.Error(w, "Not Found", http.StatusNotFound)
 		} else {
@@ -90,7 +90,10 @@ func (a *Api) PostEventsCurrent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("reading request body", "err", err)
 	}
-	defer r.Body.Close()
+
+	defer func() {
+		err = r.Body.Close()
+	}()
 
 	createEvent := eventsapi.CreateEvent{}
 	err = json.Unmarshal(bodyBytes, &createEvent)
@@ -140,7 +143,7 @@ func (a *Api) GetEventsCurrent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("getting event", "err", err)
 
-		if errors.Is(err, NoCurrentEventErr) {
+		if errors.Is(err, ErrNoCurrentEvent) {
 			render.Status(r, http.StatusInternalServerError)
 			http.Error(w, "Not Found", http.StatusNotFound)
 		} else {

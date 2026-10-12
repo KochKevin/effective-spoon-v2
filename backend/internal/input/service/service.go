@@ -64,7 +64,7 @@ func (i *InputService) EnterBarcode(ctx context.Context, input string) error {
 	err := i.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
 		userId, err := i.AuthService.GetCurrentUserId()
-		if errors.Is(err, authservice.NoCurrentUser) {
+		if errors.Is(err, authservice.ErrNoCurrentUser) {
 			slog.Error("error: to add an product via the barcode scanner, an user must be logged in", "error:", err)
 			return err
 		}
