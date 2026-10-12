@@ -99,7 +99,7 @@ func main() {
 		return
 	}
 
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	migrationsFS, err := fs.Sub(infrastructure.DBMigrations, "db/migrations")
 	if err != nil {
@@ -247,7 +247,7 @@ func main() {
 						return
 					}
 
-					slog.Debug("Auth Middlewear uses ", userId, " UserId")
+					slog.Debug("auth middlewear", "user_id", userId)
 
 					r = r.WithContext(context.WithValue(r.Context(), "user_id", userId))
 
@@ -258,7 +258,7 @@ func main() {
 			protectedRouter.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{"status": "pong"}`))
+				_, _ = w.Write([]byte(`{"status": "pong"}`))
 			})
 
 			//Routes

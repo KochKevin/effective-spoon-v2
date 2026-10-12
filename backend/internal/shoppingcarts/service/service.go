@@ -91,7 +91,7 @@ func (s *ShoppingCartService) CreateCurrentShoppingCart(ctx context.Context, use
 
 	slog.Debug("Create Current Shopping Cart - Get Current Event error: ", "error", err)
 
-	if errors.Is(err, events.NoCurrentEventErr) {
+	if errors.Is(err, events.ErrNoCurrentEvent) {
 
 		cart = shoppingcarts.NewShoppingCart(userId, uuid.Nil, false)
 	} else {
@@ -99,7 +99,7 @@ func (s *ShoppingCartService) CreateCurrentShoppingCart(ctx context.Context, use
 	}
 
 	//Only break if an real error appears
-	if err != nil && !errors.Is(err, events.NoCurrentEventErr) {
+	if err != nil && !errors.Is(err, events.ErrNoCurrentEvent) {
 
 		slog.Error("getting current event", "error:", err)
 		return shoppingcarts.ShoppingCart{}, err
@@ -122,7 +122,7 @@ func (s *ShoppingCartService) CreateCurrentShoppingCart(ctx context.Context, use
 
 	if err != nil {
 
-		return shoppingcarts.ShoppingCart{}, fmt.Errorf("in transaction: %w")
+		return shoppingcarts.ShoppingCart{}, fmt.Errorf("in transaction: %w", err)
 	}
 
 	return cart, nil
@@ -311,13 +311,13 @@ func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCartTx(ctx context
 
 }
 
-var NoCurrentShoppingCart = errors.New("error: no current shopping cart is setted to be getted. Set an current shopping cart first")
+var ErrNoCurrentShoppingCart = errors.New("no current shopping cart is setted to be getted. Set an current shopping cart first")
 
 func (s *ShoppingCartService) GetCurrentShoppingCartId() (uuid.UUID, error) {
 	cartId := s.ShoppingCartCache.GetCurrentCartId()
 
 	if cartId == uuid.Nil {
-		return uuid.Nil, NoCurrentShoppingCart
+		return uuid.Nil, ErrNoCurrentShoppingCart
 	}
 
 	return cartId, nil
@@ -422,7 +422,7 @@ func (s *ShoppingCartService) ToggleEventUsageOfCurrentCart(ctx context.Context,
 
 		if cart.EventId == uuid.Nil {
 			// No evnt set with cart. An Event needs to be assigned be first
-			return errors.New("There is no event assigned to the cart. Assigne an Event first, before toggeling its usage")
+			return errors.New("there is no event assigned to the cart. Assigne an Event first, before toggeling its usage")
 		}
 
 		cart.UseEvent = useEvent

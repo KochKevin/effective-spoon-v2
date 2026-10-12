@@ -22,7 +22,7 @@ func (a *AuthService) Login(userId uuid.UUID) error {
 		return nil
 	}
 
-	return errors.New("Error: Login is not possible now. An other user is already logged in.")
+	return errors.New("login is not possible now. An other user is already logged in")
 }
 
 func (a *AuthService) Logout() {
@@ -31,14 +31,14 @@ func (a *AuthService) Logout() {
 
 }
 
-var NoCurrentUser = errors.New("error: no current user is setted to be getted. Set an current user first")
+var ErrNoCurrentUser = errors.New("error: no current user is setted to be getted. Set an current user first")
 
 func (a *AuthService) GetCurrentUserId() (uuid.UUID, error) {
 
 	userId := a.Repo.GetCurrentUserId()
 
 	if userId == uuid.Nil {
-		return uuid.Nil, NoCurrentUser
+		return uuid.Nil, ErrNoCurrentUser
 	}
 
 	return userId, nil

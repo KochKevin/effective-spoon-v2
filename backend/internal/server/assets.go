@@ -33,7 +33,8 @@ func ServeFrontend(r chi.Router) {
 		if strings.HasPrefix(path, "/api") {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(`{"error": "API route not found"}`))
+			_, _ = w.Write([]byte(`{"error": "API route not found"}`))
+
 			return
 		}
 
@@ -46,7 +47,7 @@ func ServeFrontend(r chi.Router) {
 		// Search for the static asset (js, css, favicon, etc.)
 		file, err := frontendFilesystem.Open(filePath)
 		if err == nil {
-			file.Close()
+			_ = file.Close()
 			fileServer.ServeHTTP(w, r) // File exists, serve it directly
 			return
 		}
@@ -57,7 +58,8 @@ func ServeFrontend(r chi.Router) {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-		defer indexFile.Close()
+
+		defer func() { err = indexFile.Close() }()
 
 		stat, _ := indexFile.Stat()
 		http.ServeContent(w, r, "index.html", stat.ModTime(), indexFile)

@@ -242,7 +242,9 @@ func (a *Api) PutShoppingCartsCurrentUseEvent(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		slog.Error("reading request body", "err", err)
 	}
-	defer r.Body.Close()
+	defer func() {
+		err = r.Body.Close()
+	}()
 
 	toggelUseEvent := shoppingcartsapi.PutShoppingCartsCurrentUseEventJSONRequestBody{}
 	err = json.Unmarshal(bodyBytes, &toggelUseEvent)

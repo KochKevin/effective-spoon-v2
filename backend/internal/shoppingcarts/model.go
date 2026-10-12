@@ -45,12 +45,12 @@ func (s *ShoppingCart) GetFullPrice() money.Money {
 // Increase the amount of an line item, if no product is found. It will be added
 func (s *ShoppingCart) IncreaseProductAmount(product products.Product, addAsFreeProduct bool) {
 
-	slog.Debug("Searching for product to increase: ", product.Id)
+	slog.Debug("searching for product to increase", "product_id", product.Id)
 
 	for i := range s.LineItems {
 
 		if s.LineItems[i].Product.Id == product.Id {
-			slog.Debug("Increase amount on product", product.Id.String())
+			slog.Debug("increase amount on product", "product_id" ,product.Id.String())
 
 			if addAsFreeProduct {
 				s.LineItems[i].Amount.IncreaseFreeAmount()
@@ -78,7 +78,7 @@ func (s *ShoppingCart) IncreaseProductAmount(product products.Product, addAsFree
 }
 func (s *ShoppingCart) DecreaseProductAmount(productId uuid.UUID) {
 
-	slog.Debug("Searching for product to decrease: ", productId)
+	slog.Debug("searching for product to decrease", "product_id", productId)
 
 	for i := range s.LineItems {
 

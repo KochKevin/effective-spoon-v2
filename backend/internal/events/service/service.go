@@ -82,7 +82,7 @@ func (s *Service) CreateCurrentEvent(ctx context.Context, authorId uuid.UUID, am
 
 		event, err = s.CreateCurrentEventTx(ctx, tx, authorId, amountPerPerson, endDateTime)
 		if err != nil {
-			fmt.Errorf("in create current event tx: %w", err)
+			return fmt.Errorf("in create current event tx: %w", err)
 		}
 
 		return nil
@@ -123,7 +123,7 @@ func (s *Service) GetCurrentEvent(ctx context.Context) (event events.Event, err 
 
 	//Only proceed if an event is currently loaded
 	if uuid.Nil == s.CacheRepo.GetCurrentEventId() {
-		return events.Event{}, events.NoCurrentEventErr
+		return events.Event{}, events.ErrNoCurrentEvent
 	}
 
 	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {

@@ -22,7 +22,7 @@ func (r *Repo) GetProducts(ctx context.Context, tx *sql.Tx) (domains []products.
 
 	dbProducts, err := r.Queries.WithTx(tx).GetAllProducts(ctx)
 	if err != nil {
-		slog.Error("Error in products query", err)
+		slog.Error("error in products query","err", err)
 		return nil, err
 	}
 
@@ -38,7 +38,7 @@ func (r *Repo) GetProduct(ctx context.Context, tx *sql.Tx, id uuid.UUID) (produc
 
 	product, err := r.Queries.WithTx(tx).GetProduct(ctx, id)
 	if err != nil {
-		slog.Error("Error in products query", err)
+		slog.Error("error in products query","err", err)
 		return products.Product{}, err
 	}
 
