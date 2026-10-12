@@ -70,7 +70,7 @@ func (i *InputService) EnterBarcode(ctx context.Context, input string) error {
 		}
 
 		_, err = i.ShoppingCartService.GetCurrentShoppingCartId()
-		if errors.Is(err, shoppingcartservice.NoCurrentShoppingCart) {
+		if errors.Is(err, shoppingcartservice.ErrNoCurrentShoppingCart) {
 			slog.Error("error: to add an product to the current shopping cart, an current shopping cart must exist", "error:", err)
 			return err
 		}

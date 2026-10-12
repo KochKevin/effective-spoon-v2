@@ -22,7 +22,7 @@ func (a *AuthService) Login(userId uuid.UUID) error {
 		return nil
 	}
 
-	return errors.New("Error: Login is not possible now. An other user is already logged in")
+	return errors.New("login is not possible now. An other user is already logged in")
 }
 
 func (a *AuthService) Logout() {

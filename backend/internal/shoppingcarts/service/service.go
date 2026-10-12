@@ -311,13 +311,13 @@ func (s *ShoppingCartService) IncreaseProductOfCurrentShoppingCartTx(ctx context
 
 }
 
-var NoCurrentShoppingCart = errors.New("error: no current shopping cart is setted to be getted. Set an current shopping cart first")
+var ErrNoCurrentShoppingCart = errors.New("no current shopping cart is setted to be getted. Set an current shopping cart first")
 
 func (s *ShoppingCartService) GetCurrentShoppingCartId() (uuid.UUID, error) {
 	cartId := s.ShoppingCartCache.GetCurrentCartId()
 
 	if cartId == uuid.Nil {
-		return uuid.Nil, NoCurrentShoppingCart
+		return uuid.Nil, ErrNoCurrentShoppingCart
 	}
 
 	return cartId, nil

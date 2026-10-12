@@ -36,7 +36,7 @@ func (a *Api) GetProducts(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			//TODO: give client more inforamtion instead of an timeout
-			slog.Error("Error loading products", err)
+			slog.Error("error loading products", "err", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
@@ -54,7 +54,7 @@ func (a *Api) GetProducts(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		slog.Error("Error in /products transaction", err)
+		slog.Error("error in /products transaction", "err", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
