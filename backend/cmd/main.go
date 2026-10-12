@@ -22,6 +22,7 @@ import (
 	"github.com/KochKevin/effective-spoon-v2/internal/events"
 	"github.com/KochKevin/effective-spoon-v2/internal/events/eventscache"
 	eventsapi "github.com/KochKevin/effective-spoon-v2/internal/events/generated"
+	eventslifecycle "github.com/KochKevin/effective-spoon-v2/internal/events/lifecycle"
 	eventsservice "github.com/KochKevin/effective-spoon-v2/internal/events/service"
 	eventssqlite "github.com/KochKevin/effective-spoon-v2/internal/events/sqlite"
 	eventsusage "github.com/KochKevin/effective-spoon-v2/internal/events/usage"
@@ -153,18 +154,26 @@ func main() {
 			Txm:         *infrastructure.NewTxManager(db),
 		}, apiRouter)
 
+		//User Service
+
+		userService := userservice.Service{
+			Repo: &userssqlite.Repo{
+				Queries: *sqlc.New(db),
+			},
+			Txm: *infrastructure.NewTxManager(db),
+		}
+
 		//Events
-		eventsService, err := eventsservice.NewService(
+		eventsService := eventsservice.NewService(
 			*infrastructure.NewTxManager(db),
 			&eventssqlite.Repo{
 				Queries: *sqlc.New(db),
 			},
-			eventscache.New())
+			eventscache.New(),
+			new(userService),
+		)
 
-		if err != nil {
-			slog.Error("error while wiring event service", "err", err)
-		}
-
+		//Event Usage
 		eventsUsageService := eventsusage.NewService(
 			*infrastructure.NewTxManager(db),
 			&eventssqlite.Repo{
@@ -172,6 +181,7 @@ func main() {
 			},
 		)
 
+		//Shoppingcart
 		shoppingCartService := shoppingcartservice.New(
 			&shoppingcartssqlite.Repo{
 				Queries: *sqlc.New(db),
@@ -187,6 +197,20 @@ func main() {
 			&eventsUsageService,
 			*infrastructure.NewTxManager(db),
 		)
+
+		//Event Lifecycle
+
+		eventLifecycle := eventslifecycle.NewService(
+			*infrastructure.NewTxManager(db),
+			&eventsService,
+			shoppingCartService,
+			pushService,
+		)
+
+		err := eventLifecycle.Initalize(context.Background())
+		if err != nil {
+			slog.Error("error while Initlizing Event Lifecycle Service", "err", err)
+		}
 
 		inputapi.HandlerFromMux(
 			&input.Api{
@@ -252,14 +276,6 @@ func main() {
 				}, protectedRouter)
 
 			//Users
-
-			userService := userservice.Service{
-				Repo: &userssqlite.Repo{
-					Queries: *sqlc.New(db),
-				},
-				Txm: *infrastructure.NewTxManager(db),
-			}
-
 			userssapi.HandlerFromMux(
 				&users.Api{
 					Service: &userService,
@@ -290,6 +306,7 @@ func main() {
 				Service:     &eventsService,
 				UserService: &userService,
 				Usage:       &eventsUsageService,
+				Lifecycle:   new(eventLifecycle),
 			}, protectedRouter)
 
 		})

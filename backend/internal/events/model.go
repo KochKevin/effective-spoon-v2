@@ -1,6 +1,7 @@
 package events
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,8 +10,9 @@ import (
 type State string
 
 const (
-	Active   State = "ACTIVE"
-	Inactive State = "INACTIVE"
+	Active     State = "ACTIVE"
+	Inactive   State = "INACTIVE"
+	CheckedOut State = "CHECKED_OwUT"
 )
 
 func NewEvent(userId uuid.UUID, amountFreeProductsPerUser int, startTimestamp time.Time, endTimestamp time.Time, status State) (Event, error) {
@@ -37,6 +39,18 @@ type Event struct {
 	StartTimestamp            time.Time
 	EndTimestamp              time.Time
 	Status                    State
+}
+
+func (e *Event) Checkout() error {
+
+	if e.Status != Active {
+		return fmt.Errorf("to check out an event it needs to be active first")
+	}
+
+	e.Status = CheckedOut
+
+	return nil
+
 }
 
 type EventUsage struct {

@@ -130,3 +130,55 @@ func (q *Queries) GetEventUsage(ctx context.Context, arg GetEventUsageParams) (i
 	err := row.Scan(&event_usage)
 	return event_usage, err
 }
+
+const getTotalCostOfEvent = `-- name: GetTotalCostOfEvent :one
+SELECT 
+CAST( COALESCE(SUM(rel_shopping_carts_products.amount_free_products * products.price), 0) AS INTEGER) AS total_cost
+FROM rel_shopping_carts_products
+JOIN shopping_carts ON shopping_carts.id = rel_shopping_carts_products.shopping_cart_id
+JOIN products ON products.id = rel_shopping_carts_products.product_id
+
+WHERE shopping_carts.event_id = ?
+`
+
+func (q *Queries) GetTotalCostOfEvent(ctx context.Context, eventID uuid.UUID) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getTotalCostOfEvent, eventID)
+	var total_cost int64
+	err := row.Scan(&total_cost)
+	return total_cost, err
+}
+
+const updateEvent = `-- name: UpdateEvent :exec
+UPDATE events 
+SET 
+id = ?,
+user_id = ?,
+amount_free_products_per_user = ?,
+start_timestamp = ?,
+end_timestamp = ?,
+status = ?
+WHERE id = ?
+`
+
+type UpdateEventParams struct {
+	ID                        uuid.UUID `json:"id"`
+	UserID                    uuid.UUID `json:"user_id"`
+	AmountFreeProductsPerUser int64     `json:"amount_free_products_per_user"`
+	StartTimestamp            time.Time `json:"start_timestamp"`
+	EndTimestamp              time.Time `json:"end_timestamp"`
+	Status                    string    `json:"status"`
+	ID_2                      uuid.UUID `json:"id_2"`
+}
+
+func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) error {
+	_, err := q.db.ExecContext(ctx, updateEvent,
+		arg.ID,
+		arg.UserID,
+		arg.AmountFreeProductsPerUser,
+		arg.StartTimestamp,
+		arg.EndTimestamp,
+		arg.Status,
+		arg.ID_2,
+	)
+	return err
+}

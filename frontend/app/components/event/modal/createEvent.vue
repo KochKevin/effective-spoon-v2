@@ -38,16 +38,23 @@ const amountFreeProducts = ref(1)
 
 
 const formattedTime = computed((): ZonedDateTime => {
+
+    console.log(now(getLocalTimeZone()))
+    console.log(now(getLocalTimeZone()).add({ hours: amountDurationHours.value }))
+
     return now(getLocalTimeZone()).add({ hours: amountDurationHours.value })
 })
 
 const eventStore = useEventStore()
 const eventUsageStore = useEventUsageStore()
+const cartStore = useShoppingCartStore()
 
 async function handleSubmit() {
 
     await eventStore.createCurrentEvent(amountFreeProducts.value, formattedTime.value)
     eventUsageStore.getEventUsageOfCurrentEventAndCurrentUser()
+    //Reload cart
+    cartStore.getCurrentShoppingCart()
 
 }
 

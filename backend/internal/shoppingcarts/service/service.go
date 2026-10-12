@@ -327,24 +327,31 @@ func (s *ShoppingCartService) GetCurrentShoppingCart(ctx context.Context, userId
 
 	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
-		//Get Current Cart id
-		cartId, err := s.GetCurrentShoppingCartId()
-		if err != nil {
-			slog.Error("error can not get current shopping cart id", "error:", err)
-			return err
-		}
-
-		cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
-		if err != nil {
-			slog.Error("error getting shopping cart", "error:", err)
-			return err
-		}
-
+		cart, err = s.GetCurrentShoppingCartTx(ctx, tx, userId)
 		return err
 	})
 
 	if err != nil {
 		slog.Error("Error in shoppingcart decrease transaction", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	return cart, err
+
+}
+
+func (s *ShoppingCartService) GetCurrentShoppingCartTx(ctx context.Context, tx *sql.Tx, userId uuid.UUID) (cart shoppingcarts.ShoppingCart, err error) {
+
+	//Get Current Cart id
+	cartId, err := s.GetCurrentShoppingCartId()
+	if err != nil {
+		slog.Error("error can not get current shopping cart id", "error:", err)
+		return shoppingcarts.ShoppingCart{}, err
+	}
+
+	cart, err = s.Repo.GetShoppingCart(ctx, tx, cartId)
+	if err != nil {
+		slog.Error("error getting shopping cart", "error:", err)
 		return shoppingcarts.ShoppingCart{}, err
 	}
 
@@ -468,4 +475,22 @@ func (s *ShoppingCartService) GetShoppingCartView(ctx context.Context, cart shop
 		FreeProductPerPerson: event.AmountFreeProductsPerUser,
 	}, nil
 
+}
+
+func (s *ShoppingCartService) AssignEventToCurrentShoppingCartTx(ctx context.Context, tx *sql.Tx, userId uuid.UUID, eventId uuid.UUID) error {
+
+	currentCart, err := s.GetCurrentShoppingCartTx(ctx, tx, userId)
+
+	if err != nil {
+		return fmt.Errorf("error in getting current cart: %w", err)
+	}
+
+	currentCart.SetEvent(eventId)
+
+	err = s.Repo.SaveShoppingCart(ctx, tx, currentCart)
+	if err != nil {
+		return fmt.Errorf("error in saving cart: %w", err)
+	}
+
+	return nil
 }

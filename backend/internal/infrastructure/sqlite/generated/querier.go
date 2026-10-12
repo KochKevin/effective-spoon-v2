@@ -30,10 +30,12 @@ type Querier interface {
 	GetProduct(ctx context.Context, id uuid.UUID) (Product, error)
 	GetProductByCode(ctx context.Context, code string) (Product, error)
 	GetShoppingCart(ctx context.Context, id uuid.UUID) (ShoppingCart, error)
+	GetTotalCostOfEvent(ctx context.Context, eventID uuid.UUID) (int64, error)
 	GetUser(ctx context.Context, id uuid.UUID) (GetUserRow, error)
 	GetUserIdByCode(ctx context.Context, code string) (uuid.UUID, error)
 	SetLastStripeEventId(ctx context.Context, eventID string) error
 	UpdateChargementIntent(ctx context.Context, arg UpdateChargementIntentParams) error
+	UpdateEvent(ctx context.Context, arg UpdateEventParams) error
 	UpdateShoppingCart(ctx context.Context, arg UpdateShoppingCartParams) error
 }
 

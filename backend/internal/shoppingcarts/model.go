@@ -126,6 +126,11 @@ func (s *ShoppingCart) Checkout(transactionId uuid.UUID) {
 	s.Status = ShoppingCartCheckedOut
 }
 
+func (s *ShoppingCart) SetEvent(id uuid.UUID) {
+	s.EventId = id
+	s.UseEvent = true
+}
+
 func (s *ShoppingCart) GetOnlyPaidLineItems() []LineItem {
 
 	var lineItems []LineItem

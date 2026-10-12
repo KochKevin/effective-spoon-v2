@@ -13,6 +13,7 @@ import (
 
 type Repo interface {
 	GetUser(ctx context.Context, tx *sql.Tx, id uuid.UUID) (users.User, error)
+	CreateTransaction(ctx context.Context, tx *sql.Tx, transaction users.Transaction) (users.Transaction, error)
 }
 
 type Service struct {
@@ -39,5 +40,12 @@ func (s *Service) GetUser(ctx context.Context, userId uuid.UUID) (user users.Use
 	}
 
 	return user, nil
+
+}
+
+func (s *Service) CreateTransactionTx(ctx context.Context, tx *sql.Tx, transaction users.Transaction) error {
+
+	_,err := s.Repo.CreateTransaction(ctx, tx, transaction)
+	return err
 
 }

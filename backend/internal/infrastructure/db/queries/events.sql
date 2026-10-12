@@ -44,3 +44,25 @@ JOIN shopping_carts ON shopping_carts.id = rel_shopping_carts_products.shopping_
 WHERE shopping_carts.event_id = ? 
 AND shopping_carts.user_id = ?
 AND shopping_carts.use_event = ?;
+
+
+
+-- name: GetTotalCostOfEvent :one
+SELECT 
+CAST( COALESCE(SUM(rel_shopping_carts_products.amount_free_products * products.price), 0) AS INTEGER) AS total_cost
+FROM rel_shopping_carts_products
+JOIN shopping_carts ON shopping_carts.id = rel_shopping_carts_products.shopping_cart_id
+JOIN products ON products.id = rel_shopping_carts_products.product_id
+
+WHERE shopping_carts.event_id = ?;
+
+-- name: UpdateEvent :exec
+UPDATE events 
+SET 
+id = ?,
+user_id = ?,
+amount_free_products_per_user = ?,
+start_timestamp = ?,
+end_timestamp = ?,
+status = ?
+WHERE id = ?;

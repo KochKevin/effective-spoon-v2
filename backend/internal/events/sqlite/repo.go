@@ -10,6 +10,7 @@ import (
 
 	"github.com/KochKevin/effective-spoon-v2/internal/events"
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
+	"github.com/KochKevin/effective-spoon-v2/internal/money"
 )
 
 //r *Repo github.com/KochKevin/effective-spoon-v2/internal/events/Service.Repo
@@ -91,6 +92,35 @@ func (r *Repo) GetActiveEvent(ctx context.Context, tx *sql.Tx) (events.Event, er
 		EndTimestamp:              event.EndTimestamp,
 		Status:                    events.State(event.Status),
 	}, nil
+}
+
+func (r *Repo) GetTotalCostsOfEvent(ctx context.Context, tx *sql.Tx, id uuid.UUID) (money.Money, error) {
+
+	totalCost, err := r.Queries.WithTx(tx).GetTotalCostOfEvent(ctx, id)
+
+	if err != nil {
+		return money.Money{}, fmt.Errorf("in getting total cost of event query: %w", err)
+	}
+
+	return money.MoneyFrom(int(totalCost)), nil
+}
+
+func (r *Repo) SaveEvent(ctx context.Context, tx *sql.Tx, event events.Event) error {
+	err := r.Queries.WithTx(tx).UpdateEvent(ctx, sqlc.UpdateEventParams{
+		ID:                        event.Id,
+		UserID:                    event.UserId,
+		AmountFreeProductsPerUser: int64(event.AmountFreeProductsPerUser),
+		StartTimestamp:            event.StartTimestamp,
+		EndTimestamp:              event.EndTimestamp,
+		Status:                    string(event.Status),
+		ID_2:                      event.Id,
+	})
+
+	if err != nil {
+		return fmt.Errorf("in saving event query: %w", err)
+	}
+
+	return nil
 }
 
 /*
