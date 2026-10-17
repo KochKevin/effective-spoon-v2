@@ -31,7 +31,7 @@ tasks:
       - go.mod
       - go.sum
     cmds:
-      - go install -x tool
+      - go install tool
       - echo "finished installing go tools"
 
   _setup:frontend:
