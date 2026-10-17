@@ -9,6 +9,7 @@ import (
 
 	"log/slog"
 
+	authservice "github.com/KochKevin/effective-spoon-v2/internal/auth/service"
 	shoppingcartsapi "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
@@ -69,7 +70,7 @@ func (a *Api) ToDto(cartView ShoppingCartView) (dto shoppingcartsapi.ShoppingCar
 // (POST /shopping-carts/current)
 func (a *Api) PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	userID, ok := authservice.UserIdFrom(r.Context())
 	if !ok {
 		err := errors.New("cannot get user_id from context")
 		slog.Error(err.Error())
@@ -98,7 +99,7 @@ func (a *Api) PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 // (POST /shopping-carts/current/checkout)
 func (a *Api) PostShoppingCartsCurrentCheckout(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	userID, ok := authservice.UserIdFrom(r.Context())
 	if !ok {
 		err := errors.New("cannot get user_id from context")
 		slog.Error(err.Error())
@@ -127,7 +128,7 @@ func (a *Api) PostShoppingCartsCurrentCheckout(w http.ResponseWriter, r *http.Re
 // (POST /shopping-carts/current/decrease)
 func (a *Api) PostShoppingCartsCurrentDecrease(w http.ResponseWriter, r *http.Request, params shoppingcartsapi.PostShoppingCartsCurrentDecreaseParams) {
 
-	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	userID, ok := authservice.UserIdFrom(r.Context())
 	if !ok {
 		err := errors.New("cannot get user_id from context")
 		slog.Error(err.Error())
@@ -157,7 +158,7 @@ func (a *Api) PostShoppingCartsCurrentDecrease(w http.ResponseWriter, r *http.Re
 // (POST /shopping-carts/current/increase)
 func (a *Api) PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Request, params shoppingcartsapi.PostShoppingCartsCurrentIncreaseParams) {
 
-	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	userID, ok := authservice.UserIdFrom(r.Context())
 	if !ok {
 		err := errors.New("cannot get user_id from context")
 		slog.Error(err.Error())
@@ -186,7 +187,7 @@ func (a *Api) PostShoppingCartsCurrentIncrease(w http.ResponseWriter, r *http.Re
 // (GET /shopping-carts/current)
 func (a *Api) GetShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	userID, ok := authservice.UserIdFrom(r.Context())
 	if !ok {
 		err := errors.New("cannot get user_id from context")
 		slog.Error(err.Error())
@@ -214,7 +215,7 @@ func (a *Api) GetShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 // PostShoppingCartsCurrentCancel Cancel and delete the current shopping cart
 // (POST /shopping-carts/current/cancel)
 func (a *Api) PostShoppingCartsCurrentCancel(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	userID, ok := authservice.UserIdFrom(r.Context())
 	if !ok {
 		err := errors.New("cannot get user_id from context")
 		slog.Error(err.Error())
@@ -254,7 +255,7 @@ func (a *Api) PutShoppingCartsCurrentUseEvent(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	userID, ok := authservice.UserIdFrom(r.Context())
 	if !ok {
 		err := errors.New("cannot get user_id from context")
 		slog.Error(err.Error())

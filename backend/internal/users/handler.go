@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	authservice "github.com/KochKevin/effective-spoon-v2/internal/auth/service"
 	userssapi "github.com/KochKevin/effective-spoon-v2/internal/users/generated"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
@@ -35,7 +36,7 @@ func (a *Api) ToDto(user User) userssapi.User {
 // (GET /users/current)
 func (a *Api) GetUsersCurrent(w http.ResponseWriter, r *http.Request) {
 
-	userId, ok := r.Context().Value("user_id").(uuid.UUID)
+	userId, ok := authservice.UserIdFrom(r.Context())
 	if !ok {
 		err := errors.New("cannot get user_id from context")
 		slog.Error(err.Error())

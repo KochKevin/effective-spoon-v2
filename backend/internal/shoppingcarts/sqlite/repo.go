@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 
-	"log/slog"
-
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
 	"github.com/KochKevin/effective-spoon-v2/internal/money"
 	"github.com/KochKevin/effective-spoon-v2/internal/products"
@@ -47,8 +45,7 @@ func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (s
 
 	lineItems, err := r.Queries.WithTx(tx).GetLineItemsOfShoppingCart(ctx, id)
 	if err != nil {
-		slog.Error("Error in get line items of shopping cart query", err)
-		return shoppingcarts.ShoppingCart{}, err
+		return shoppingcarts.ShoppingCart{}, fmt.Errorf("in get line items of shopping cart query: %w", err)
 	}
 
 	cart := shoppingcarts.ShoppingCart{
@@ -79,8 +76,7 @@ func (r *Repo) SaveShoppingCart(ctx context.Context, tx *sql.Tx, cart shoppingca
 	//Update Line Items
 	err := r.Queries.WithTx(tx).DeleteAllLineItemsOfShoppingCart(ctx, cart.Id)
 	if err != nil {
-		slog.Error("Error in deleting all line items of an shopping cart query", err)
-		return err
+		return fmt.Errorf("in deleting all line items of in shopping cart query: %w", err)
 	}
 
 	for _, item := range cart.LineItems {

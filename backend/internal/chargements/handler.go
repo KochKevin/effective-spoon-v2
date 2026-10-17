@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	authservice "github.com/KochKevin/effective-spoon-v2/internal/auth/service"
 	chargementsapi "github.com/KochKevin/effective-spoon-v2/internal/chargements/generated"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
@@ -42,7 +43,7 @@ func (a *Api) PostAddBalance(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Fehler beim Unmarshal: %v", err)
 	}
 	/*
-		userID, ok := r.Context().Value("user_id").(uuid.UUID)
+		userID, ok := authservice.UserIdFrom(r.Context())
 		if !ok {
 			err := errors.New("cannot get user_id from context")
 			slog.Error(err.Error())
@@ -83,7 +84,8 @@ func (a *Api) PostChargementsCurrent(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("error unmarshaling json to struct: %v", err)
 	}
 
-	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	userID, ok := authservice.UserIdFrom(r.Context())
+
 	if !ok {
 		err := errors.New("cannot get user_id from context")
 		slog.Error(err.Error())
