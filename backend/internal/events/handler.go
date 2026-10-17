@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 
+	authservice "github.com/KochKevin/effective-spoon-v2/internal/auth/service"
 	eventsapi "github.com/KochKevin/effective-spoon-v2/internal/events/generated"
 	"github.com/KochKevin/effective-spoon-v2/internal/users"
 )
@@ -45,7 +46,7 @@ type Api struct {
 // (GET /events/current/usage/current)
 func (a *Api) GetEventsCurrentUsageCurrent(w http.ResponseWriter, r *http.Request) {
 
-	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	userID, ok := authservice.UserIdFrom(r.Context())
 	if !ok {
 		err := errors.New("cannot get user_id from context")
 		slog.Error(err.Error())
@@ -103,7 +104,7 @@ func (a *Api) PostEventsCurrent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	userID, ok := authservice.UserIdFrom(r.Context())
 	if !ok {
 		err := errors.New("cannot get user_id from context")
 		slog.Error(err.Error())
@@ -185,7 +186,7 @@ func (a *Api) PostAddBalance(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Fehler beim Unmarshal: %v", err)
 	}
 	/*
-		userID, ok := r.Context().Value("user_id").(uuid.UUID)
+		userID, ok := authservice.UserIdFrom(r.Context())
 		if !ok {
 			err := errors.New("cannot get user_id from context")
 			slog.Error(err.Error())
@@ -217,7 +218,7 @@ func (a *Api) PostChargementsCurrent(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("error unmarshaling json to struct: %v", err)
 	}
 
-	userID, ok := r.Context().Value("user_id").(uuid.UUID)
+	userID, ok := authservice.UserIdFrom(r.Context())
 	if !ok {
 		err := errors.New("cannot get user_id from context")
 		slog.Error(err.Error())

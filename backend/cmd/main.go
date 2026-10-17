@@ -249,7 +249,7 @@ func main() {
 
 					slog.Debug("auth middlewear", "user_id", userId)
 
-					r = r.WithContext(context.WithValue(r.Context(), "user_id", userId))
+					r = r.WithContext(authservice.WithUser(r.Context(), userId))
 
 					next.ServeHTTP(w, r)
 				})

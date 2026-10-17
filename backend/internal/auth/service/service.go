@@ -1,6 +1,7 @@
 package authservice
 
 import (
+	"context"
 	"errors"
 
 	"github.com/google/uuid"
@@ -42,4 +43,17 @@ func (a *AuthService) GetCurrentUserId() (uuid.UUID, error) {
 	}
 
 	return userId, nil
+}
+
+type ctxKey string
+
+const UserIdCtxKey ctxKey = "user_id"
+
+func WithUser(ctx context.Context, userId uuid.UUID) context.Context {
+	return context.WithValue(ctx, UserIdCtxKey, userId)
+}
+
+func UserIdFrom(ctx context.Context) (userId uuid.UUID, ok bool) {
+	userId, ok = ctx.Value(UserIdCtxKey).(uuid.UUID)
+	return userId, ok
 }
