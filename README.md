@@ -1,6 +1,7 @@
 # effective-spoon-v2
 
-# RUN
+# RUN DEV
 '''
-docker compose -f docker-compose.dev.yml up
+in backend folder:
+go tool task dev
 '''
