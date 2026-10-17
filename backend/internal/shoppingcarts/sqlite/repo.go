@@ -47,8 +47,7 @@ func (r *Repo) GetShoppingCart(ctx context.Context, tx *sql.Tx, id uuid.UUID) (s
 
 	lineItems, err := r.Queries.WithTx(tx).GetLineItemsOfShoppingCart(ctx, id)
 	if err != nil {
-		slog.Error("Error in get line items of shopping cart query", err)
-		return shoppingcarts.ShoppingCart{}, err
+		return shoppingcarts.ShoppingCart{}, fmt.Errorf("in get line items of shopping cart query: %w", err)
 	}
 
 	cart := shoppingcarts.ShoppingCart{

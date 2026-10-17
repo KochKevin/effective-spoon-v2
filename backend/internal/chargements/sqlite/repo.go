@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
 
 	"github.com/KochKevin/effective-spoon-v2/internal/chargements"
 	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
@@ -59,8 +58,7 @@ func (r *Repo) SaveBalanceChargementIntent(ctx context.Context, tx *sql.Tx, char
 		StripePaymentLinkID: &chargementIntent.PaymentLinkId,
 	})
 	if err != nil {
-		slog.Error("Error in save chargement query", err)
-		return err
+		return fmt.Errorf("in saving chargement query: %w", err)
 	}
 
 	return nil
@@ -79,8 +77,7 @@ func (r *Repo) CreateBalanceChargementIntent(ctx context.Context, tx *sql.Tx, ch
 		StripePaymentLinkID: &chargementIntent.PaymentLinkId,
 	})
 	if err != nil {
-		slog.Error("Error in create chargement query", err)
-		return err
+		return fmt.Errorf("in creating chargement query: %w", err)
 	}
 
 	return nil
