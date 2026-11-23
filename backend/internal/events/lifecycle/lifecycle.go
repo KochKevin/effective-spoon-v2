@@ -3,6 +3,7 @@ package eventslifecycle
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -28,27 +29,41 @@ type PushService interface {
 }
 
 type Service struct {
-	Txm                 infrastructure.TxManager
+	Txm                 *infrastructure.TxManager
 	EventService        EventService
 	ShoppingCartService ShoppingCartService
 	PushService         PushService
 }
 
-func NewService(txm infrastructure.TxManager, eventService EventService, shoppingCartService ShoppingCartService, pushService PushService) Service {
+func NewService(ctx context.Context, txm *infrastructure.TxManager, eventService EventService, shoppingCartService ShoppingCartService, pushService PushService) (*Service, error) {
 
-	return Service{
+	s := &Service{
 		Txm:                 txm,
 		EventService:        eventService,
 		ShoppingCartService: shoppingCartService,
 		PushService:         pushService,
 	}
+
+	err := s.Initalize(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("in initlizing Event Lifecycle Service: %w", err)
+	}
+
+	return s, nil
 }
 
 // Check if an event is should be currently active and load it from the DB into cache
 func (s *Service) Initalize(ctx context.Context) error {
 	event, err := s.EventService.LoadCurrentlyActiveEventIntoCache(ctx)
+
 	if err != nil {
-		return fmt.Errorf("loading currently active event into cache: %w", err)
+
+		if errors.Is(err, events.ErrNoActiveEventFound) {
+			//Drop error and dont schedule
+			return nil
+		}
+
+		return fmt.Errorf("in loading currently active event into cache: %w", err)
 	}
 
 	s.ScheduleEnd(event.EndTimestamp, event.Id)

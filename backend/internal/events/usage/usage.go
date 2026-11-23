@@ -15,23 +15,23 @@ type Repo interface {
 	GetEventUsage(ctx context.Context, tx *sql.Tx, eventId uuid.UUID, userId uuid.UUID) (events.EventUsage, error)
 }
 
-type Usage struct {
-	Txm  infrastructure.TxManager
+type UsageService struct {
+	Txm  *infrastructure.TxManager
 	Repo Repo
 }
 
-func NewService(txm infrastructure.TxManager, repo Repo) Usage {
+func NewService(txm *infrastructure.TxManager, repo Repo) *UsageService {
 
-	service := Usage{
+	service := UsageService{
 		Txm:  txm,
 		Repo: repo,
 	}
 
-	return service
+	return &service
 
 }
 
-func (u *Usage) GetEventUsage(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (eventUsage events.EventUsage, err error) {
+func (u *UsageService) GetEventUsage(ctx context.Context, userId uuid.UUID, eventId uuid.UUID) (eventUsage events.EventUsage, err error) {
 
 	err = u.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 

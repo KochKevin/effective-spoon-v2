@@ -17,7 +17,7 @@ type Repo interface {
 }
 
 type Service struct {
-	Txm  infrastructure.TxManager
+	Txm  *infrastructure.TxManager
 	Repo Repo
 }
 
@@ -45,7 +45,7 @@ func (s *Service) GetUser(ctx context.Context, userId uuid.UUID) (user users.Use
 
 func (s *Service) CreateTransactionTx(ctx context.Context, tx *sql.Tx, transaction users.Transaction) error {
 
-	_,err := s.Repo.CreateTransaction(ctx, tx, transaction)
+	_, err := s.Repo.CreateTransaction(ctx, tx, transaction)
 	return err
 
 }

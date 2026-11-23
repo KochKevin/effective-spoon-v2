@@ -81,6 +81,11 @@ func (r *Repo) GetActiveEvent(ctx context.Context, tx *sql.Tx) (events.Event, er
 	event, err := r.Queries.WithTx(tx).GetEventByStatus(ctx, string(events.Active))
 
 	if err != nil {
+
+		if errors.Is(err, sql.ErrNoRows) {
+			return events.Event{}, events.ErrNoActiveEventFound
+		}
+
 		return events.Event{}, fmt.Errorf("in getting event query: %w", err)
 	}
 

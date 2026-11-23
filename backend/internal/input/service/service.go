@@ -45,10 +45,10 @@ type InputService struct {
 	AuthService         AuthService
 	UserRepo            UserRepo
 	PushService         PushService
-	Txm                 infrastructure.TxManager
+	Txm                 *infrastructure.TxManager
 }
 
-func New(productRepo ProductRepo, shoppingCartService ShoppingCartService, authService AuthService, userRepo UserRepo, pushService PushService, txm infrastructure.TxManager) *InputService {
+func NewService(productRepo ProductRepo, shoppingCartService ShoppingCartService, authService AuthService, userRepo UserRepo, pushService PushService, txm *infrastructure.TxManager) *InputService {
 	return &InputService{
 		ProductRepo:         productRepo,
 		ShoppingCartService: shoppingCartService,

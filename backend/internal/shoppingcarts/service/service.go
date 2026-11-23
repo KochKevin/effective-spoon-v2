@@ -52,10 +52,10 @@ type ShoppingCartService struct {
 	EventService      EventService
 	ShoppingCartCache ShoppingCartCache
 	EventUsage        EventUsage
-	Txm               infrastructure.TxManager
+	Txm               *infrastructure.TxManager
 }
 
-func New(repo Repo, productRepo ProductRepo, userRepo UserRepo, shoppingCartCache ShoppingCartCache, eventSerice EventService, eventUsage EventUsage, txm infrastructure.TxManager) *ShoppingCartService {
+func NewService(repo Repo, productRepo ProductRepo, userRepo UserRepo, shoppingCartCache ShoppingCartCache, eventSerice EventService, eventUsage EventUsage, txm *infrastructure.TxManager) *ShoppingCartService {
 	return &ShoppingCartService{
 		Repo:              repo,
 		ProductRepo:       productRepo,

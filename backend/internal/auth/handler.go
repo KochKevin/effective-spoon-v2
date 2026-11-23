@@ -25,7 +25,7 @@ type AuthService interface {
 type Api struct {
 	UserRepo    UserRepo
 	AuthService AuthService
-	Txm         infrastructure.TxManager
+	Txm         *infrastructure.TxManager
 }
 
 //a *Api github.com/KochKevin/effective-spoon-v2/internal/auth/generated.ServerInterface
@@ -35,7 +35,6 @@ type Api struct {
 
 //LOGOUT
 //curl -X POST "https://effective-waddle-4j7xj7vp44pxh7xrp-8080.app.github.dev/api/auth/logout"
-
 
 // Login with usercode. Only for testing purposes
 // (POST /auth/usercode)
@@ -63,7 +62,6 @@ func (a *Api) PostAuthUsercode(w http.ResponseWriter, r *http.Request, params au
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return err
 		}
-
 
 		return nil
 

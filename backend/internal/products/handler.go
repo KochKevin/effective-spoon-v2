@@ -18,7 +18,7 @@ type Repo interface {
 
 type Api struct {
 	Repo Repo
-	Txm  infrastructure.TxManager
+	Txm  *infrastructure.TxManager
 }
 
 // Load all products

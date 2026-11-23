@@ -44,10 +44,10 @@ type Service struct {
 
 // Setup timer to load current event and end it after end time
 
-func NewService(txm infrastructure.TxManager, repo Repo, cacheRepo CacheRepo, userService UserService) Service {
+func NewService(txm *infrastructure.TxManager, repo Repo, cacheRepo CacheRepo, userService UserService) *Service {
 
-	return Service{
-		Txm:         txm,
+	return &Service{
+		Txm:         *txm,
 		Repo:        repo,
 		CacheRepo:   cacheRepo,
 		UserService: userService,
@@ -57,8 +57,8 @@ func NewService(txm infrastructure.TxManager, repo Repo, cacheRepo CacheRepo, us
 func (s *Service) LoadCurrentlyActiveEventIntoCache(ctx context.Context) (event events.Event, err error) {
 	err = s.Txm.WithTx(ctx, func(tx *sql.Tx) error {
 
-		event, err = s.Repo.GetActiveEvent(ctx, tx)
-
+		event,err = s.Repo.GetActiveEvent(ctx, tx)
+		
 		if err != nil {
 			return fmt.Errorf("error getting currently active event from persitent volume: %w", err)
 		}

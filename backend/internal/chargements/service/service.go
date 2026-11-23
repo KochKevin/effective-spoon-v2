@@ -31,9 +31,32 @@ type Service struct {
 	Repo                         Repo
 	BalanceChargementIntentCache BalanceChargementIntentCache
 	UserRepo                     UserRepo
-	Txm                          infrastructure.TxManager
+	Txm                          *infrastructure.TxManager
 	StripeClient                 *stripe.Client
 	PushService                  PushService
+}
+
+func NewService(
+	ctx context.Context,
+	txm *infrastructure.TxManager,
+	repo Repo,
+	balanceChargementIntentCache BalanceChargementIntentCache,
+	userRepo UserRepo,
+	stripeClient *stripe.Client,
+	pushService PushService,
+) (*Service, error) {
+	svc := Service{
+		Repo:                         repo,
+		BalanceChargementIntentCache: balanceChargementIntentCache,
+		UserRepo:                     userRepo,
+		Txm:                          txm,
+		StripeClient:                 stripeClient,
+		PushService:                  pushService,
+	}
+
+	svc.Ticker(ctx)
+
+	return &svc, nil
 }
 
 func (s *Service) CreateChargementIntent(ctx context.Context, userId uuid.UUID, amount float32) (chargements.ChargementIntent, error) {

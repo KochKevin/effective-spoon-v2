@@ -2,57 +2,18 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"log"
 	"log/slog"
-	"net/http"
 	"os"
 	"path/filepath"
 
-	"github.com/KochKevin/effective-spoon-v2/internal/auth"
-	"github.com/KochKevin/effective-spoon-v2/internal/auth/authcache"
-	authapi "github.com/KochKevin/effective-spoon-v2/internal/auth/generated"
-	authservice "github.com/KochKevin/effective-spoon-v2/internal/auth/service"
-	"github.com/KochKevin/effective-spoon-v2/internal/chargements"
-	"github.com/KochKevin/effective-spoon-v2/internal/chargements/chargementcache"
-	chargementsapi "github.com/KochKevin/effective-spoon-v2/internal/chargements/generated"
-	chargementservice "github.com/KochKevin/effective-spoon-v2/internal/chargements/service"
-	chargementssqlite "github.com/KochKevin/effective-spoon-v2/internal/chargements/sqlite"
+	"github.com/KochKevin/effective-spoon-v2/internal/application"
 	"github.com/KochKevin/effective-spoon-v2/internal/config"
-	"github.com/KochKevin/effective-spoon-v2/internal/events"
-	"github.com/KochKevin/effective-spoon-v2/internal/events/eventscache"
-	eventsapi "github.com/KochKevin/effective-spoon-v2/internal/events/generated"
-	eventslifecycle "github.com/KochKevin/effective-spoon-v2/internal/events/lifecycle"
-	eventsservice "github.com/KochKevin/effective-spoon-v2/internal/events/service"
-	eventssqlite "github.com/KochKevin/effective-spoon-v2/internal/events/sqlite"
-	eventsusage "github.com/KochKevin/effective-spoon-v2/internal/events/usage"
 	"github.com/KochKevin/effective-spoon-v2/internal/infrastructure"
-	sqlc "github.com/KochKevin/effective-spoon-v2/internal/infrastructure/sqlite/generated"
-	"github.com/KochKevin/effective-spoon-v2/internal/input"
-	inputapi "github.com/KochKevin/effective-spoon-v2/internal/input/generated"
-	inputservice "github.com/KochKevin/effective-spoon-v2/internal/input/service"
-	"github.com/KochKevin/effective-spoon-v2/internal/products"
-	productsapi "github.com/KochKevin/effective-spoon-v2/internal/products/generated"
-	productssqlite "github.com/KochKevin/effective-spoon-v2/internal/products/sqlite"
-	"github.com/KochKevin/effective-spoon-v2/internal/push"
-	pushapi "github.com/KochKevin/effective-spoon-v2/internal/push/generated"
-	pushservice "github.com/KochKevin/effective-spoon-v2/internal/push/service"
-	"github.com/KochKevin/effective-spoon-v2/internal/server"
-	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts"
-	shoppingcartssapi "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/generated"
-	shoppingcartservice "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/service"
-	"github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/shoppingcartcache"
-	shoppingcartssqlite "github.com/KochKevin/effective-spoon-v2/internal/shoppingcarts/sqlite"
-	"github.com/KochKevin/effective-spoon-v2/internal/users"
-	userssapi "github.com/KochKevin/effective-spoon-v2/internal/users/generated"
-	userservice "github.com/KochKevin/effective-spoon-v2/internal/users/service"
-	userssqlite "github.com/KochKevin/effective-spoon-v2/internal/users/sqlite"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
 	"github.com/google/uuid"
 	"github.com/pressly/goose/v3"
-	"github.com/stripe/stripe-go/v86"
 
 	_ "modernc.org/sqlite"
 )
@@ -120,205 +81,216 @@ func main() {
 		return
 	}
 
-	//Router Setup
-	r := chi.NewRouter()
+	app, err := application.New(ctx, db, cfg)
+	if err != nil {
+		slog.Error("Error in app", "error", fmt.Errorf("in building app: %w", err))
+		return
+	}
 
-	//Middlewear
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://*", "http://localhost:*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           300,
-	}))
+	app.Run()
 
-	//Serve everything under /api
+	/*
 
-	r.Route("/api", func(apiRouter chi.Router) {
+		//Router Setup
+		r := chi.NewRouter()
 
-		authService := &authservice.AuthService{
-			Repo: authcache.New(),
-		}
+		//Middlewear
+		r.Use(middleware.Logger)
+		r.Use(middleware.Recoverer)
+		r.Use(cors.Handler(cors.Options{
+			AllowedOrigins:   []string{"https://*", "http://localhost:*"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+			ExposedHeaders:   []string{"Link"},
+			AllowCredentials: true,
+			MaxAge:           300,
+		}))
 
-		pushService := pushservice.New()
+		//Serve everything under /api
 
-		//The auth api should only be used for testing purposes
-		authapi.HandlerFromMux(&auth.Api{
-			UserRepo: &userssqlite.Repo{
-				Queries: *sqlc.New(db),
-			},
-			AuthService: authService,
-			Txm:         *infrastructure.NewTxManager(db),
-		}, apiRouter)
+		r.Route("/api", func(apiRouter chi.Router) {
 
-		//User Service
+			authService := &authservice.AuthService{
+				Repo: authcache.New(),
+			}
 
-		userService := userservice.Service{
-			Repo: &userssqlite.Repo{
-				Queries: *sqlc.New(db),
-			},
-			Txm: *infrastructure.NewTxManager(db),
-		}
+			pushService := pushservice.New()
 
-		//Events
-		eventsService := eventsservice.NewService(
-			*infrastructure.NewTxManager(db),
-			&eventssqlite.Repo{
-				Queries: *sqlc.New(db),
-			},
-			eventscache.New(),
-			new(userService),
-		)
-
-		//Event Usage
-		eventsUsageService := eventsusage.NewService(
-			*infrastructure.NewTxManager(db),
-			&eventssqlite.Repo{
-				Queries: *sqlc.New(db),
-			},
-		)
-
-		//Shoppingcart
-		shoppingCartService := shoppingcartservice.New(
-			&shoppingcartssqlite.Repo{
-				Queries: *sqlc.New(db),
-			},
-			&productssqlite.Repo{
-				Queries: *sqlc.New(db),
-			},
-			&userssqlite.Repo{
-				Queries: *sqlc.New(db),
-			},
-			shoppingcartcache.New(),
-			&eventsService,
-			&eventsUsageService,
-			*infrastructure.NewTxManager(db),
-		)
-
-		//Event Lifecycle
-
-		eventLifecycle := eventslifecycle.NewService(
-			*infrastructure.NewTxManager(db),
-			&eventsService,
-			shoppingCartService,
-			pushService,
-		)
-
-		err := eventLifecycle.Initalize(context.Background())
-		if err != nil {
-			slog.Error("error while Initlizing Event Lifecycle Service", "err", err)
-		}
-
-		inputapi.HandlerFromMux(
-			&input.Api{
-				InputService: inputservice.New(
-					&productssqlite.Repo{
-						Queries: *sqlc.New(db),
-					},
-					shoppingCartService,
-					authService,
-					&userssqlite.Repo{
-						Queries: *sqlc.New(db),
-					},
-					pushService,
-					*infrastructure.NewTxManager(db),
-				),
-			}, apiRouter)
-
-		//Server Sent Events, Push Api endpoint
-		pushapi.HandlerFromMux(&push.Api{PushService: pushService}, apiRouter)
-
-		apiRouter.Group(func(protectedRouter chi.Router) {
-
-			//GetLoggedInUser Middlewear
-			protectedRouter.Use(func(next http.Handler) http.Handler {
-				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-					// Create/Get test user id
-					//userId := uuid.Nil
-
-					userId, err := authService.GetCurrentUserId()
-					if err != nil {
-						slog.Error("error: a user needs to be logged in to access this endpoint", "error", err)
-						http.Error(w, "Internal Server Error - a user need to be logged in", http.StatusUnauthorized)
-						return
-					}
-
-					slog.Debug("auth middlewear", "user_id", userId)
-
-					r = r.WithContext(authservice.WithUser(r.Context(), userId))
-
-					next.ServeHTTP(w, r)
-				})
-			})
-
-			protectedRouter.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"status": "pong"}`))
-			})
-
-			//Routes
-			productsapi.HandlerFromMux(
-				&products.Api{
-					Repo: &productssqlite.Repo{
-						Queries: *sqlc.New(db),
-					},
-					Txm: *infrastructure.NewTxManager(db),
-				}, protectedRouter)
-
-			shoppingcartssapi.HandlerFromMux(
-				&shoppingcarts.Api{
-					Service: shoppingCartService,
-				}, protectedRouter)
-
-			//Users
-			userssapi.HandlerFromMux(
-				&users.Api{
-					Service: &userService,
-				}, protectedRouter)
-
-			//Chargements
-			chargementService := chargementservice.Service{
-				Repo: &chargementssqlite.Repo{
-					Queries: *sqlc.New(db),
-				},
-				BalanceChargementIntentCache: chargementcache.New(),
+			//The auth api should only be used for testing purposes
+			authapi.HandlerFromMux(&auth.Api{
 				UserRepo: &userssqlite.Repo{
 					Queries: *sqlc.New(db),
 				},
-				Txm:          *infrastructure.NewTxManager(db),
-				StripeClient: stripe.NewClient(cfg.StripeClientKey),
-				PushService:  pushService,
+				AuthService: authService,
+				Txm:         *infrastructure.NewTxManager(db),
+			}, apiRouter)
+
+			//User Service
+
+			userService := userservice.Service{
+				Repo: &userssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				Txm: *infrastructure.NewTxManager(db),
 			}
 
-			chargementService.Ticker(context.Background())
+			//Events
+			eventsService := eventsservice.NewService(
+				*infrastructure.NewTxManager(db),
+				&eventssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				eventscache.New(),
+				new(userService),
+			)
 
-			chargementsapi.HandlerFromMux(&chargements.Api{
-				Service: &chargementService,
-			}, protectedRouter)
+			//Event Usage
+			eventsUsageService := eventsusage.NewService(
+				*infrastructure.NewTxManager(db),
+				&eventssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+			)
 
-			//Events handler
-			eventsapi.HandlerFromMux(&events.Api{
-				Service:     &eventsService,
-				UserService: &userService,
-				Usage:       &eventsUsageService,
-				Lifecycle:   new(eventLifecycle),
-			}, protectedRouter)
+			//Shoppingcart
+			shoppingCartService := shoppingcartservice.NewService(
+				&shoppingcartssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				&productssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				&userssqlite.Repo{
+					Queries: *sqlc.New(db),
+				},
+				shoppingcartcache.New(),
+				&eventsService,
+				&eventsUsageService,
+				*infrastructure.NewTxManager(db),
+			)
+
+			//Event Lifecycle
+
+			eventLifecycle := eventslifecycle.NewService(
+				*infrastructure.NewTxManager(db),
+				&eventsService,
+				shoppingCartService,
+				pushService,
+			)
+
+			err := eventLifecycle.Initalize(context.Background())
+			if err != nil {
+				slog.Error("error while Initlizing Event Lifecycle Service", "err", err)
+			}
+
+			inputapi.HandlerFromMux(
+				&input.Api{
+					InputService: inputservice.NewService(
+						&productssqlite.Repo{
+							Queries: *sqlc.New(db),
+						},
+						shoppingCartService,
+						authService,
+						&userssqlite.Repo{
+							Queries: *sqlc.New(db),
+						},
+						pushService,
+						*infrastructure.NewTxManager(db),
+					),
+				}, apiRouter)
+
+			//Server Sent Events, Push Api endpoint
+			pushapi.HandlerFromMux(&push.Api{PushService: pushService}, apiRouter)
+
+			apiRouter.Group(func(protectedRouter chi.Router) {
+
+				//GetLoggedInUser Middlewear
+				protectedRouter.Use(func(next http.Handler) http.Handler {
+					return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+						// Create/Get test user id
+						//userId := uuid.Nil
+
+						userId, err := authService.GetCurrentUserId()
+						if err != nil {
+							slog.Error("error: a user needs to be logged in to access this endpoint", "error", err)
+							http.Error(w, "Internal Server Error - a user need to be logged in", http.StatusUnauthorized)
+							return
+						}
+
+						slog.Debug("auth middlewear", "user_id", userId)
+
+						r = r.WithContext(authservice.WithUser(r.Context(), userId))
+
+						next.ServeHTTP(w, r)
+					})
+				})
+
+				protectedRouter.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					_, _ = w.Write([]byte(`{"status": "pong"}`))
+				})
+
+				//Routes
+				productsapi.HandlerFromMux(
+					&products.Api{
+						Repo: &productssqlite.Repo{
+							Queries: *sqlc.New(db),
+						},
+						Txm: *infrastructure.NewTxManager(db),
+					}, protectedRouter)
+
+				shoppingcartssapi.HandlerFromMux(
+					&shoppingcarts.Api{
+						Service: shoppingCartService,
+					}, protectedRouter)
+
+				//Users
+				userssapi.HandlerFromMux(
+					&users.Api{
+						Service: &userService,
+					}, protectedRouter)
+
+				//Chargements
+				chargementService := chargementservice.Service{
+					Repo: &chargementssqlite.Repo{
+						Queries: *sqlc.New(db),
+					},
+					BalanceChargementIntentCache: chargementcache.New(),
+					UserRepo: &userssqlite.Repo{
+						Queries: *sqlc.New(db),
+					},
+					Txm:          *infrastructure.NewTxManager(db),
+					StripeClient: stripe.NewClient(cfg.StripeClientKey),
+					PushService:  pushService,
+				}
+
+				chargementService.Ticker(context.Background())
+
+				chargementsapi.HandlerFromMux(&chargements.Api{
+					Service: &chargementService,
+				}, protectedRouter)
+
+				//Events handler
+				eventsapi.HandlerFromMux(&events.Api{
+					Service:     &eventsService,
+					UserService: &userService,
+					Usage:       &eventsUsageService,
+					Lifecycle:   new(eventLifecycle),
+				}, protectedRouter)
+
+			})
 
 		})
 
-	})
+		//Frontend
+		server.ServeFrontend(r)
 
-	//Frontend
-	server.ServeFrontend(r)
+		//Serve
+		err = http.ListenAndServe(":8080", r)
 
-	//Serve
-	err = http.ListenAndServe(":8080", r)
-
-	slog.Error("Error serving api", "error", err)
+		slog.Error("Error serving api", "error", err)
+	*/
 
 }
