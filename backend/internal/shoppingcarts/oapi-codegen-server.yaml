@@ -5,6 +5,7 @@ generate:
   models: true
 output: ./generated/handler.gen.go
 
+
 output-options:
   include-tags:
     - shopping-carts

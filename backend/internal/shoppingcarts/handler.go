@@ -69,7 +69,6 @@ func (a *Api) ToDto(cartView ShoppingCartView) (dto shoppingcartsapi.ShoppingCar
 // Create a new shopping cart and set it as the current cart
 // (POST /shopping-carts/current)
 func (a *Api) PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
-
 	userID, ok := authservice.UserIdFrom(r.Context())
 	if !ok {
 		err := errors.New("cannot get user_id from context")
@@ -92,7 +91,11 @@ func (a *Api) PostShoppingCartsCurrent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render.JSON(w, r, a.ToDto(cartView))
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	if err := json.NewEncoder(w).Encode(a.ToDto(cartView)); err != nil {
+		slog.Error("error while encoding shopping cart response", "error", err.Error())
+	}
 }
 
 // Check out of the current shopping cart

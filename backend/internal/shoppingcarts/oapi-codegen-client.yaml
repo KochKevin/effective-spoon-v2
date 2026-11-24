@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/oapi-codegen/oapi-codegen/v2.9.0/configuration-schema.json
+package: shoppingcartsclient
+generate:
+  models: true
+  client: true
+output: ./generated/client/client.gen.go
+
+output-options:
+  include-tags:
+    - shopping-carts
