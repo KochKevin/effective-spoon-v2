@@ -16,6 +16,7 @@ type Querier interface {
 	CreateShoppingCart(ctx context.Context, arg CreateShoppingCartParams) (ShoppingCart, error)
 	CreateShoppingCartLineItem(ctx context.Context, arg CreateShoppingCartLineItemParams) error
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (UserTransaction, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) error
 	//order by to keep the order in which they are inserted
 	DeleteAllLineItemsOfShoppingCart(ctx context.Context, shoppingCartID uuid.UUID) error
 	DeleteShoppingCart(ctx context.Context, id uuid.UUID) error

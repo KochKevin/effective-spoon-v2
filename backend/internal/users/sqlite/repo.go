@@ -3,6 +3,7 @@ package userssqlite
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"log/slog"
 
@@ -54,5 +55,21 @@ func (r *Repo) GetUserIdByCode(ctx context.Context, tx *sql.Tx, usercode users.U
 	}
 
 	return userId, nil
+
+}
+
+func (r *Repo) CreateUser(ctx context.Context, tx *sql.Tx, user users.User) error {
+
+	err := r.Queries.WithTx(tx).CreateUser(ctx, sqlc.CreateUserParams{
+		ID:   user.Id,
+		Name: user.Name,
+		Code: string(user.Code),
+	})
+
+	if err != nil {
+		return fmt.Errorf("in create user query: %w", err)
+	}
+
+	return nil
 
 }

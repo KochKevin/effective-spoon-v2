@@ -7,6 +7,15 @@ import (
 
 type Usercode string
 
+func NewUser(name string, startBalance money.Money, code Usercode) User {
+	return User{
+		Id:      uuid.New(),
+		Name:    name,
+		Balance: startBalance,
+		Code:    code,
+	}
+}
+
 type User struct {
 	Id      uuid.UUID
 	Name    string

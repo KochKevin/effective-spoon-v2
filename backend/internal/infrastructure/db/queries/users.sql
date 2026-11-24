@@ -1,12 +1,12 @@
 -- name: GetUser :one
-SELECT 
+SELECT
 users.id,
 users.name,
 users.code,
 CAST(COALESCE(
 (
-    SELECT SUM(user_transactions.amount) 
-    FROM user_transactions 
+    SELECT SUM(user_transactions.amount)
+    FROM user_transactions
     WHERE user_transactions.user_id = users.id
 ),0
 ) AS INTEGER) as balance -- Fallback to zero if no transaction exists
@@ -20,6 +20,14 @@ users.id
 FROM users
 WHERE users.code = ?;
 
+
+-- name: CreateUser :exec
+INSERT INTO users(
+    id,
+    name,
+    code
+)
+VALUES (?,?,?);
 
 
 -- name: CreateTransaction :one
