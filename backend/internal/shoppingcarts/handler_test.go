@@ -191,3 +191,59 @@ func Test_RemoveProductFromEmptyCart(t *testing.T) {
 	require.Equal(t, user.Id.String(), res.JSON200.UserId, "cart must have the same user id as the user who created it")
 
 }
+
+func Test_AddProductDuplicates(t *testing.T) {
+
+	t.Parallel()
+
+	env := testenv.New(t)
+
+	c, err := shoppingcartsclient.NewClientWithResponses(env.URL + "/api/")
+	require.NoError(t, err, "no error when creating client")
+
+	user := login(t, env)
+
+	//Create Cart
+	_, err = c.PostShoppingCartsCurrentWithResponse(t.Context())
+	require.NoError(t, err, "no error at posting shopping cart")
+
+	//Create Product
+	p, err := env.SeedProduct(t)
+	require.NoError(t, err, "no error at seeding a product")
+
+	//Add Product
+	_, err = c.PostShoppingCartsCurrentIncreaseWithResponse(
+		t.Context(),
+		&shoppingcartsclient.PostShoppingCartsCurrentIncreaseParams{
+			ProductID: p.Id.String(),
+		},
+	)
+	require.NoError(t, err, "no error at posting shopping cart")
+
+	//Add Product
+	res, err := c.PostShoppingCartsCurrentIncreaseWithResponse(
+		t.Context(),
+		&shoppingcartsclient.PostShoppingCartsCurrentIncreaseParams{
+			ProductID: p.Id.String(),
+		},
+	)
+	require.NoError(t, err, "no error at posting shopping cart")
+
+	//Check return value
+	require.Equal(t, http.StatusOK, res.StatusCode(), "has wrong status code")
+	require.NotNil(t, res.Body, "response body is not nil")
+	require.Equal(t, string(shoppingcarts.ShoppingCartActive), res.JSON200.Status, "cart should have correct status")
+	require.NotEmpty(t, res.JSON200.LineItems, "line items should be not empty")
+
+	require.Len(t, res.JSON200.LineItems, 1, "only one line item")
+	require.Equal(t, p.Id.String(), res.JSON200.LineItems[0].ProductId, "should be the correct product id")
+	require.Equal(t, 2, res.JSON200.LineItems[0].Amount, "should be two products")
+	require.Equal(t, p.Name, res.JSON200.LineItems[0].ProductName, "should be same name")
+	require.Equal(t, 2*p.Price.GetAsEuro(), res.JSON200.LineItems[0].Price, "should be same price")
+
+	require.Equal(t, 2*p.Price.GetAsEuro(), res.JSON200.FullPrice, "full price should be only one product price")
+
+	require.False(t, res.JSON200.UseEvent, "cart shouldn't use an event")
+	require.Equal(t, user.Id.String(), res.JSON200.UserId, "cart must have the same user id as the user who created it")
+
+}
