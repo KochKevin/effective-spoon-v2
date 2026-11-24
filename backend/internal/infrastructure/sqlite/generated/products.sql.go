@@ -11,6 +11,33 @@ import (
 	"github.com/google/uuid"
 )
 
+const createProduct = `-- name: CreateProduct :exec
+INSERT INTO products(
+id,
+name,
+price,
+code
+)
+VALUES (?, ?, ?, ?)
+`
+
+type CreateProductParams struct {
+	ID    uuid.UUID `json:"id"`
+	Name  string    `json:"name"`
+	Price int64     `json:"price"`
+	Code  string    `json:"code"`
+}
+
+func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) error {
+	_, err := q.db.ExecContext(ctx, createProduct,
+		arg.ID,
+		arg.Name,
+		arg.Price,
+		arg.Code,
+	)
+	return err
+}
+
 const getAllProducts = `-- name: GetAllProducts :many
 SELECT id, name, price, code FROM products
 `
@@ -44,7 +71,7 @@ func (q *Queries) GetAllProducts(ctx context.Context) ([]Product, error) {
 }
 
 const getProduct = `-- name: GetProduct :one
-SELECT 
+SELECT
 id,
 name,
 price,
@@ -66,7 +93,7 @@ func (q *Queries) GetProduct(ctx context.Context, id uuid.UUID) (Product, error)
 }
 
 const getProductByCode = `-- name: GetProductByCode :one
-SELECT 
+SELECT
 id,
 name,
 price,

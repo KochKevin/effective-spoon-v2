@@ -13,6 +13,7 @@ import (
 type Querier interface {
 	CreateChargementIntent(ctx context.Context, arg CreateChargementIntentParams) (Chargement, error)
 	CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error)
+	CreateProduct(ctx context.Context, arg CreateProductParams) error
 	CreateShoppingCart(ctx context.Context, arg CreateShoppingCartParams) (ShoppingCart, error)
 	CreateShoppingCartLineItem(ctx context.Context, arg CreateShoppingCartLineItemParams) error
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (UserTransaction, error)

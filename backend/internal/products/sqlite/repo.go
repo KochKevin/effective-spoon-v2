@@ -3,6 +3,7 @@ package productssqlite
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"log/slog"
 
@@ -22,13 +23,13 @@ func (r *Repo) GetProducts(ctx context.Context, tx *sql.Tx) (domains []products.
 
 	dbProducts, err := r.Queries.WithTx(tx).GetAllProducts(ctx)
 	if err != nil {
-		slog.Error("error in products query","err", err)
+		slog.Error("error in products query", "err", err)
 		return nil, err
 	}
 
 	for _, product := range dbProducts {
 
-		domains = append(domains, products.NewProduct(product.ID, product.Name, money.MoneyFrom(int(product.Price))))
+		domains = append(domains, products.NewProduct(product.ID, product.Name, money.MoneyFrom(int(product.Price)), products.ProductCode(product.Code)))
 	}
 
 	return domains, nil
@@ -38,11 +39,11 @@ func (r *Repo) GetProduct(ctx context.Context, tx *sql.Tx, id uuid.UUID) (produc
 
 	product, err := r.Queries.WithTx(tx).GetProduct(ctx, id)
 	if err != nil {
-		slog.Error("error in products query","err", err)
+		slog.Error("error in products query", "err", err)
 		return products.Product{}, err
 	}
 
-	return products.NewProduct(product.ID, product.Name, money.MoneyFrom(int(product.Price))), nil
+	return products.NewProduct(product.ID, product.Name, money.MoneyFrom(int(product.Price)), products.ProductCode(product.Code)), nil
 
 }
 
@@ -54,6 +55,22 @@ func (r *Repo) GetProductByCode(ctx context.Context, tx *sql.Tx, code string) (p
 		return products.Product{}, err
 	}
 
-	return products.NewProduct(product.ID, product.Name, money.MoneyFrom(int(product.Price))), nil
+	return products.NewProduct(product.ID, product.Name, money.MoneyFrom(int(product.Price)), products.ProductCode(product.Code)), nil
+
+}
+
+func (r *Repo) CreateProduct(ctx context.Context, tx *sql.Tx, p products.Product) error {
+
+	err := r.Queries.WithTx(tx).CreateProduct(ctx, sqlc.CreateProductParams{
+		ID:    p.Id,
+		Name:  p.Name,
+		Price: int64(p.Price.Cents),
+		Code:  string(p.Code),
+	})
+	if err != nil {
+		return fmt.Errorf("in creating product query: %w", err)
+	}
+
+	return nil
 
 }

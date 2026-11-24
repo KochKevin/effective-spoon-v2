@@ -2,7 +2,7 @@
 SELECT * FROM products;
 
 -- name: GetProduct :one
-SELECT 
+SELECT
 id,
 name,
 price,
@@ -12,10 +12,19 @@ ORDER BY rowid ASC;
 
 
 -- name: GetProductByCode :one
-SELECT 
+SELECT
 id,
 name,
 price,
 code
 FROM products WHERE code = ?
 ORDER BY rowid ASC;
+
+-- name: CreateProduct :exec
+INSERT INTO products(
+id,
+name,
+price,
+code
+)
+VALUES (?, ?, ?, ?);
